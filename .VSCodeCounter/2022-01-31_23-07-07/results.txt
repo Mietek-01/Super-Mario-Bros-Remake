@@ -1,0 +1,118 @@
+Date : 2022-01-31 23:07:07
+Directory : c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes
+Total : 88 files,  7787 codes, 636 comments, 2607 blanks, all 11030 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         88 |      7,787 |        636 |      2,607 |     11,030 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                             | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                |         88 |      7,787 |        636 |      2,607 |     11,030 |
+| GUIClasses                                                                                                       |         13 |        966 |         90 |        331 |      1,387 |
+| GameClasses                                                                                                      |         61 |      4,920 |        388 |      1,648 |      6,956 |
+| GameClasses\Blocks                                                                                               |         14 |        804 |         65 |        305 |      1,174 |
+| GameClasses\Enemies                                                                                              |         12 |      1,601 |        146 |        517 |      2,264 |
+| GameClasses\Items                                                                                                |         24 |      1,152 |         67 |        429 |      1,648 |
+| Scens                                                                                                            |          8 |      1,297 |        102 |        423 |      1,822 |
++------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                                         | language | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\EventHandler.cpp                          | C++      |        127 |          8 |         21 |        156 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\EventHandler.h                            | C++      |         37 |          0 |         18 |         55 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\Animator.cpp                   | C++      |         81 |         13 |         30 |        124 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\Animator.h                     | C++      |         60 |          2 |         23 |         85 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\FlowText.cpp                   | C++      |         69 |          7 |         17 |         93 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\FlowText.h                     | C++      |         24 |          0 |          9 |         33 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\GUI.cpp                        | C++      |        241 |         26 |         69 |        336 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\GUI.h                          | C++      |         47 |          5 |         17 |         69 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\GUIObject.h                    | C++      |         17 |          0 |          9 |         26 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\Label.cpp                      | C++      |         29 |          4 |          9 |         42 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\Menu.cpp                       | C++      |        190 |         24 |         67 |        281 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\Menu.h                         | C++      |         64 |          2 |         37 |        103 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\PointerToLabel.cpp             | C++      |         42 |          4 |         11 |         57 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\SpecialEffects.cpp             | C++      |         71 |          3 |         20 |         94 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GUIClasses\SpecialEffects.h               | C++      |         31 |          0 |         13 |         44 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\Barse.cpp              | C++      |         36 |          1 |          8 |         45 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\Block.cpp              | C++      |         64 |          6 |         19 |         89 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\Block.h                | C++      |         37 |          2 |         20 |         59 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\Blocks.h               | C++      |          8 |          0 |          4 |         12 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\FieryBlock.cpp         | C++      |         29 |          3 |         10 |         42 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\FieryBlock.h           | C++      |         24 |          0 |         15 |         39 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\MoveableBlock.cpp      | C++      |        107 |          5 |         30 |        142 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\MoveableBlock.h        | C++      |         24 |          0 |         12 |         36 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\MysterBox.cpp          | C++      |         98 |          7 |         31 |        136 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\MysterBox.h            | C++      |         46 |          0 |         23 |         69 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\Pipe.cpp               | C++      |         12 |          1 |          4 |         17 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\Pipe.h                 | C++      |         49 |          0 |         22 |         71 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\SpecialPipe.cpp        | C++      |        220 |         36 |         77 |        333 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Blocks\SpecialPipe.h          | C++      |         50 |          4 |         30 |         84 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\ArmedTurtle.cpp       | C++      |        224 |         32 |         65 |        321 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\ArmedTurtle.h         | C++      |         54 |          1 |         25 |         80 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\ArmoredTurtle.cpp     | C++      |         31 |          3 |         12 |         46 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\Bowser.cpp            | C++      |        477 |         52 |        158 |        687 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\Bowser.h              | C++      |        135 |          9 |         56 |        200 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\CreatorRedTurtles.cpp | C++      |        200 |         18 |         45 |        263 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\Enemies.h             | C++      |        106 |          5 |         48 |        159 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\Flower.cpp            | C++      |         98 |          6 |         26 |        130 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\FlyingTurtle.cpp      | C++      |         81 |          5 |         22 |        108 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\Goombas.cpp           | C++      |         63 |          3 |         18 |         84 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\RedTurtle.cpp         | C++      |         41 |          4 |         15 |         60 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Enemies\Turtle.cpp            | C++      |         91 |          8 |         27 |        126 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\GameObject.cpp                | C++      |        146 |         16 |         34 |        196 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\GameObject.h                  | C++      |         82 |          4 |         30 |        116 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Coin.cpp                | C++      |         65 |          6 |         21 |         92 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Coin.h                  | C++      |         20 |          0 |         11 |         31 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\FireballBullets.cpp     | C++      |        132 |         10 |         43 |        185 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\FireballBullets.h       | C++      |         51 |          3 |         31 |         85 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Gun.cpp                 | C++      |         20 |          2 |          7 |         29 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Gun.h                   | C++      |         31 |          0 |         21 |         52 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\GunBullet.cpp           | C++      |         69 |          3 |         21 |         93 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Hammer.cpp              | C++      |         46 |          6 |         17 |         69 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Items.h                 | C++      |         10 |          0 |          4 |         14 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\LavaBullet.cpp          | C++      |         55 |          4 |         21 |         80 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\LavaBullet.h            | C++      |         24 |          0 |         18 |         42 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\LavaWaves.cpp           | C++      |         27 |          3 |         11 |         41 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\LavaWaves.h             | C++      |         16 |          0 |         12 |         28 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\LineWithFlag.cpp        | C++      |        155 |         13 |         55 |        223 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\LineWithFlag.h          | C++      |         37 |          0 |         18 |         55 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\MarioBullet.cpp         | C++      |         99 |          4 |         27 |        130 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Mushroom.cpp            | C++      |         77 |          3 |         15 |         95 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Shell.cpp               | C++      |         67 |          3 |         13 |         83 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Shell.h                 | C++      |         12 |          0 |          8 |         20 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\SpecialFlower.cpp       | C++      |         25 |          2 |          6 |         33 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Trampoline.cpp          | C++      |         58 |          3 |         14 |         75 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\Trampoline.h            | C++      |         20 |          0 |         14 |         34 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\WaterWaves.cpp          | C++      |         20 |          2 |          9 |         31 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Items\WaterWaves.h            | C++      |         16 |          0 |         12 |         28 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Landscape.cpp                 | C++      |         15 |          0 |          4 |         19 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Landscape.h                   | C++      |         13 |          0 |          8 |         21 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Mario.cpp                     | C++      |        560 |         49 |        157 |        766 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Mario.h                       | C++      |         94 |          3 |         35 |        132 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\PhysicalObject.cpp            | C++      |        125 |         17 |         32 |        174 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\PhysicalObject.h              | C++      |         36 |          1 |         16 |         53 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Princess.cpp                  | C++      |        118 |         11 |         26 |        155 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Shield.cpp                    | C++      |        124 |          8 |         28 |        160 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\GameClasses\Shield.h                      | C++      |         50 |          1 |         27 |         78 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Managers.cpp                              | C++      |        103 |         11 |         31 |        145 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Managers.h                                | C++      |         97 |          7 |         28 |        132 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\MarioGame.cpp                             | C++      |        180 |         26 |         78 |        284 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\MarioGame.h                               | C++      |         60 |          4 |         29 |         93 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\GameScen.cpp                        | C++      |        672 |         68 |        182 |        922 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\GameScen.h                          | C++      |         98 |          5 |         31 |        134 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\LoadingGameScen.cpp                 | C++      |        289 |         12 |        113 |        414 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\LoadingGameScen.h                   | C++      |        113 |          3 |         30 |        146 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\MenuScen.cpp                        | C++      |         80 |         12 |         39 |        131 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\MenuScen.h                          | C++      |         14 |          0 |         11 |         25 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\Scen.cpp                            | C++      |         10 |          1 |          4 |         15 |
+| c:\Users\micha\Desktop\Projekty gier C++\Mario vs\Mario vs\Src\Classes\Scens\Scen.h                              | C++      |         21 |          1 |         13 |         35 |
+| Total                                                                                                            |          |      7,787 |        636 |      2,607 |     11,030 |
++------------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
