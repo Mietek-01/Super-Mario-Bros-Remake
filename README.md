@@ -8,7 +8,7 @@ Tworzyłem go przez okres drugiej klasy liceum i był to mój pierwszy tak rozbu
 Zaczynałem z bardzo małym doświadczeniem w programowaniu obiektowym, także projekt ten pozwolił mi na lepsze zrozumienie tego paradygmatu. 
 Przełożyło się to znacznie na moją późniejszą naukę języka C#, a to na stworzenie mojej własnej gry pt. [Depther.](https://github.com/Mietek-01/Depther) 
 
-Gra jest przeznaczona na Windows-a a assety tj. textury i dźwięki pobrałem z [tego projektu.](https://github.com/PfAndrey/supermariohd)
+Gra jest przeznaczona na Windows-a a textury i audio pobrałem z [tego projektu.](https://github.com/PfAndrey/supermariohd)
  Dzięki nim mogłem w pełni skupić się na pisaniu kodu i implementowaniu własnych rozwiązań, za co jestem autorowi bardzo wdzięczny.
 
 ## Opis gry
