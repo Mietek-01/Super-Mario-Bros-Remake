@@ -6,9 +6,9 @@ Remake-a tej jakże kultowej gry napisałem przy użyciu języka C++ z wykorzyst
 Tworzyłem go przez okres drugiej klasy liceum i był to mój pierwszy tak rozbudowany projekt.
 
 Zaczynałem z bardzo małym doświadczeniem w programowaniu obiektowym, także projekt ten pozwolił mi na lepsze zrozumienie tego paradygmatu. 
-Przełożyło się to znacznie na moją późniejszą naukę języka C#, a to na stworzenie mojej własnej gry pt. [Depther.](https://github.com/Mietek-01/Depther) 
+Przełożyło się to znacznie na moją późniejszą naukę języka C#, a to na stworzenie mojej własnej gry pt. ["Depther"](https://github.com/Mietek-01/Depther). 
 
-Gra jest przeznaczona na Windows-a a textury i audio pobrałem z [tego projektu.](https://github.com/PfAndrey/supermariohd)
+Gra jest przeznaczona na Windows-a a textury i audio pobrałem z [tego projektu](https://github.com/PfAndrey/supermariohd).
  Dzięki tym assetom mogłem w pełni skupić się na pisaniu kodu i implementowaniu własnych rozwiązań, za co jestem autorowi bardzo wdzięczny.
 
 ## Opis gry
@@ -33,8 +33,6 @@ Tworzenie AI dla Bowsera było jednym z fajniejszych etapów podczas tworzenia t
 
 - Jeśli chcesz zagrać możesz pobrać folder Mario.zip z sekcji [Releases](https://github.com/Mietek-01/Super-Mario-Bros-Remake/releases).
 
-- W folderze [Gameplay](https://github.com/Mietek-01/Super-Mario-Bros-Remake/tree/master/Gameplay) znajduje się filmik prezętujący grę.
-
 - W folderze [VSCodeCounter](https://github.com/Mietek-01/Super-Mario-Bros-Remake/blob/master/.VSCodeCounter/2022-01-31_23-07-07/results.md) znajduje się spis wszystkich
 plików jakie owa gra zawiera.
 
@@ -43,14 +41,14 @@ plików jakie owa gra zawiera.
 ## Opis projektu
 
 Gra NIE jest stworzona na silniku, a z wykorzystaniem biblioteki SFML. Wszystko musiałem pisać ręcznie jak np. system kolizji, podstawową fizykę
-, mechanizm wczytywania poziomu czy system usuwania i dynamicznego tworzenia obiektów. 
+, mechanizm wczytywania poziomu, czy system usuwania i dynamicznego tworzenia obiektów. 
 
 W efekcie stworzyłem ok. 90 plików które w rezultacie dają 11 000 linijek kodu. 
 
 Niestety z faktu, iż ową grę pisałem trzy lata temu i dopiero stawiałem pierwsze kroki w programowaniu obiektowym, czytelność kodu nie jest na zbyt dobrym poziomie.
 
 Z doświadczeniem jakie teraz posiadam wiele rzeczy zrobił bym inaczej, a zwłaszcza lepiej nazywał poszczególne zmiennie czy metody.
-Komentarze również mogą nie być na za dobrym poziomie, bo prawdopodobnie nie przykładałem wtedy do tego zbyt dużej wagi.
+Komentarze również mogą nie być na zbyt dobrym poziomie, bo prawdopodobnie nie przykładałem wtedy do tego zbyt dużej wagi.
 
 Na całkowity refactoring projektu nie mam po prostu czasu ani jakiś szczególnych chęci zwłaszcza, że z C++ już raczej nie chce mieć do czynienia
 , ale jak to mówią nigdy nie mów nigdy. 
