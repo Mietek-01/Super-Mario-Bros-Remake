@@ -1,40 +1,39 @@
 #include "LavaWaves.h"
 
-CAnimations CLavaWaves::s_static_animator;
+#include <vector>
 
-CLavaWaves::CLavaWaves(sf::Vector2f pos)
-:CGameObject(new CSprite(CGUI::createSprite("Tiles",{0,0,32,32},{pos.x,pos.y+1},m_scale_to_tile,true)),Parentage::ITEM,pos)
+Animations LavaWaves::sStaticAnimator;
+
+LavaWaves::LavaWaves(sf::Vector2f pPos)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("Tiles", {0, 0, 32, 32}, {pPos.x, pPos.y + 1}, kScaleToTile, true)), Parentage::Item, pPos)
 {
-
 }
 
 ///------
-void CLavaWaves::actOnObject(CGameObject* obj,KindCollision how_collision)
+void LavaWaves::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        obj->actOnMe(KindAction::HIT);
+    if (pObject->GetParentage() == Parentage::Mario)
+        pObject->ActOnMe(KindAction::Hit);
     else
-        removeObject(obj);
+        RemoveObject(pObject);
 }
 
 ///-----
-void CLavaWaves::setStaticAnimation()
+void LavaWaves::SetStaticAnimation()
 {
-    vector<sf::IntRect> m_frames_animation;
+    std::vector<sf::IntRect> framesAnimation;
 
-    m_frames_animation.push_back(sf::IntRect(0,64,32,32));
-    m_frames_animation.push_back(sf::IntRect(32,64,32,32));
-    m_frames_animation.push_back(sf::IntRect(64,64,32,32));
-    m_frames_animation.push_back(sf::IntRect(96,64,32,32));
+    framesAnimation.push_back(sf::IntRect(0, 64, 32, 32));
+    framesAnimation.push_back(sf::IntRect(32, 64, 32, 32));
+    framesAnimation.push_back(sf::IntRect(64, 64, 32, 32));
+    framesAnimation.push_back(sf::IntRect(96, 64, 32, 32));
 
-    s_static_animator.create(CAnimations::STANDARD,CMarioGame::s_texture_manager["AnimTiles"],m_frames_animation,2.0f,m_scale_to_tile,true);
+    sStaticAnimator.Create(Animations::Standard, MarioGame::sTextureManager["AnimTiles"], framesAnimation, 2.0f, kScaleToTile, true);
 }
 
 ///------
-void CLavaWaves::draw(const unique_ptr<sf::RenderWindow>& window)
+void LavaWaves::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    s_static_animator.setPosition(m_current_position);
-    s_static_animator.draw(window);
+    sStaticAnimator.SetPosition(mCurrentPosition);
+    sStaticAnimator.Draw(pWindow);
 }
-
-

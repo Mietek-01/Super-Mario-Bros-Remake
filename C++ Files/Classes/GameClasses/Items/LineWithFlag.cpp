@@ -3,220 +3,212 @@
 #include "../Blocks/Block.h"
 #include "../Mario.h"
 
-CLineWithFlag::CLineWithFlag(sf::Vector2f pos)
-:CGameObject(new CSprite(CGUI::createSprite("TheEndLvlLine", { 17,0,18,(int)((CMarioGame::s_size_window.y - CScen::s_tile_size * 5) / m_scale_to_tile) }, pos, m_scale_to_tile, true)), Parentage::ITEM, pos)
-,m_castle(CGUI::createSprite("Castle",{pos.x+CScen::s_tile_size*13,pos.y},1.0f,true))
-,m_castle_position(pos.x+CScen::s_tile_size*13)
+#include <vector>
+
+LineWithFlag::LineWithFlag(sf::Vector2f pPos)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("TheEndLvlLine", {17, 0, 18, (int)((MarioGame::sSizeWindow.y - Scene::sTileSize * 5) / kScaleToTile)}, pPos, kScaleToTile, true)), Parentage::Item, pPos)
+    , mCastle(Gui::CreateSprite("Castle", {pPos.x + Scene::sTileSize * 13, pPos.y}, 1.0f, true))
+    , mCastlePosition(pPos.x + Scene::sTileSize * 13)
 {
-    /// TWORZE FLAGE
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-	m_frame_animation.push_back({ 0,180,32,32 });
-	m_frame_animation.push_back({ 32,180,32,32 });
-	m_frame_animation.push_back({ 64,180,32,32 });
-	m_frame_animation.push_back({ 96,180,32,32 });
+    frameAnimation.push_back({0, 180, 32, 32});
+    frameAnimation.push_back({32, 180, 32, 32});
+    frameAnimation.push_back({64, 180, 32, 32});
+    frameAnimation.push_back({96, 180, 32, 32});
 
-    m_line_flag.create(MyKindsAnimations::FLAG_ANIMATION,CMarioGame::s_texture_manager["Items"],m_frame_animation,1.5f,m_scale_to_tile,false);
+    mLineFlag.Create(MyKindsAnimations::FlagAnimation, MarioGame::sTextureManager["Items"], frameAnimation, 1.5f, kScaleToTile, false);
 
-    m_line_flag_position=m_current_position;
-    m_line_flag_position.y-=getBounds().height;
-    m_line_flag_position.y+=22;
-    m_line_flag_position.x+=3;
+    mLineFlagPosition = mCurrentPosition;
+    mLineFlagPosition.y -= GetBounds().height;
+    mLineFlagPosition.y += 22;
+    mLineFlagPosition.x += 3;
 
-    m_line_flag.setPosition(m_line_flag_position);
+    mLineFlag.SetPosition(mLineFlagPosition);
 }
 
 ///--------
-void CLineWithFlag::update()
+void LineWithFlag::Update()
 {
-    ///---- ETAPY MARIA
-    if(m_mario)
+    if (mMario)
     {
-        switch(m_ratcheting_flag_state)
+        switch (mRatchetingFlagState)
         {
-        case MarioAnimationsStates::LEFT_RATCHETING:
+        case MarioAnimationsStates::LeftRatcheting:
         {
-            m_mario_position.y+=m_mario_speed_ratcheting;
+            mMarioPosition.y += mMarioSpeedRatcheting;
 
-            if(m_mario_position.y>=m_current_position.y)
+            if (mMarioPosition.y >= mCurrentPosition.y)
             {
-                m_mario->play(MyKindsAnimations::R_RATCHETING_BY_MARIO,m_current_position);
-                m_mario_position.x=m_current_position.x+m_mario->getGlobalBounds().width/2.0f;
-                m_mario_position.y=m_current_position.y;
+                mMario->Play(MyKindsAnimations::RRatchetingByMario, mCurrentPosition);
+                mMarioPosition.x = mCurrentPosition.x + mMario->GetGlobalBounds().width / 2.0f;
+                mMarioPosition.y = mCurrentPosition.y;
 
-                m_ratcheting_flag_state=MarioAnimationsStates::RIGHT_RATHETING;
+                mRatchetingFlagState = MarioAnimationsStates::RightRatcheting;
             }
 
             break;
         }
 
-        case MarioAnimationsStates::RIGHT_RATHETING:
+        case MarioAnimationsStates::RightRatcheting:
         {
             break;
         }
 
-        case MarioAnimationsStates::GO_TO_CASTLE:
+        case MarioAnimationsStates::GoToCastle:
         {
-            m_mario_position.x+=m_mario_speed;
-            CMarioGame::instance().getScen<CGameScen>().changePositionView(m_mario_speed);
+            mMarioPosition.x += mMarioSpeed;
+            MarioGame::Instance().GetScene<GameScene>().ChangePositionView(mMarioSpeed);
 
-            if(m_mario_position.x>=m_castle_position)
+            if (mMarioPosition.x >= mCastlePosition)
             {
-                m_mario.reset();
-                CMarioGame::instance().getScen<CGameScen>().marioInCastle(true);
+                mMario.reset();
+                MarioGame::Instance().GetScene<GameScene>().MarioInCastle(true);
 
-                /// TWORZE FLAGE ZAMKU
+                mCastleFlag.reset(new Animations);
 
-                m_castle_flag.reset(new CAnimations);
+                std::vector<sf::IntRect> castleFrameAnimation;
 
-                vector<sf::IntRect> m_frame_animation;
+                castleFrameAnimation.push_back(sf::IntRect(0, 147, 32, 32));
+                castleFrameAnimation.push_back(sf::IntRect(32, 147, 32, 32));
+                castleFrameAnimation.push_back(sf::IntRect(64, 147, 32, 32));
+                castleFrameAnimation.push_back(sf::IntRect(96, 147, 32, 32));
 
-                m_frame_animation.push_back(sf::IntRect(0,147,32,32));
-                m_frame_animation.push_back(sf::IntRect(32,147,32,32));
-                m_frame_animation.push_back(sf::IntRect(64,147,32,32));
-                m_frame_animation.push_back(sf::IntRect(96,147,32,32));
+                mCastleFlag->Create(MyKindsAnimations::FlagAnimation, MarioGame::sTextureManager["Items"], castleFrameAnimation, 1.5f, kScaleToTile, false);
 
-                m_castle_flag->create(MyKindsAnimations::FLAG_ANIMATION,CMarioGame::s_texture_manager["Items"],m_frame_animation,1.5f,m_scale_to_tile,false);
+                mCastleFlagPosition = mCastle->getPosition();
 
-                m_castle_flag_position=m_castle->getPosition();
+                mCastleFlagPosition.y -= mCastle->getGlobalBounds().height;
+                mCastleFlagPosition.y += mCastleFlag->GetGlobalBounds().height / 2.0f;
 
-                m_castle_flag_position.y-=m_castle->getGlobalBounds().height;
-                m_castle_flag_position.y+=m_castle_flag->getGlobalBounds().height/2.0f;
+                mCastleFlagPosition.x += mCastleFlag->GetGlobalBounds().width / 2.4f;
 
-                m_castle_flag_position.x+=m_castle_flag->getGlobalBounds().width/2.4f;
-
-                m_castle_flag->setPosition(m_castle_flag_position);
+                mCastleFlag->SetPosition(mCastleFlagPosition);
             }
 
             break;
         }
         }
 
-        ///----- OPUSZCZANIE FLAGI
-        if(m_is_flag_ratcheting)
+        if (mIsFlagRatcheting)
         {
-            m_line_flag_position.y+=m_flag_speed_ratcheting;
+            mLineFlagPosition.y += mFlagSpeedRatcheting;
 
-            if(m_line_flag_position.y>=m_current_position.y-m_line_flag.getGlobalBounds().height)
+            if (mLineFlagPosition.y >= mCurrentPosition.y - mLineFlag.GetGlobalBounds().height)
             {
-                m_is_flag_ratcheting=false;
-                m_ratcheting_flag_state=MarioAnimationsStates::GO_TO_CASTLE;
+                mIsFlagRatcheting = false;
+                mRatchetingFlagState = MarioAnimationsStates::GoToCastle;
 
-                m_mario->play(MyKindsAnimations::MOVEMENT_MARIO,m_current_position);
+                mMario->Play(MyKindsAnimations::MovementMario, mCurrentPosition);
             }
         }
     }
 
-    ///--- UPDATY OBIEKTOW
-    m_line_flag.update(m_line_flag_position);
+    mLineFlag.Update(mLineFlagPosition);
 
-    if(m_castle_flag)
+    if (mCastleFlag)
     {
-        if(m_castle_flag_position.y>=m_castle->getPosition().y-m_castle->getGlobalBounds().height-m_castle_flag->getGlobalBounds().height)
-            m_castle_flag_position.y-=m_castle_flag_speed;
+        if (mCastleFlagPosition.y >= mCastle->getPosition().y - mCastle->getGlobalBounds().height - mCastleFlag->GetGlobalBounds().height)
+            mCastleFlagPosition.y -= mCastleFlagSpeed;
 
-        m_castle_flag->update(m_castle_flag_position);
+        mCastleFlag->Update(mCastleFlagPosition);
     }
 
-    if(m_mario)
-        m_mario->update(m_mario_position);
+    if (mMario)
+        mMario->Update(mMarioPosition);
 }
 
 ///-----------
-void CLineWithFlag::actOnObject(CGameObject* obj,KindCollision how_collision)
+void LineWithFlag::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    CMario *mario=dynamic_cast<CMario*>(obj);
+    Mario* mario = dynamic_cast<Mario*>(pObject);
 
-    if(mario)
+    if (mario)
     {
-        vector<sf::IntRect> m_frame_animation;
-        m_mario.reset(new CAnimations);
+        std::vector<sf::IntRect> frameAnimation;
+        mMario.reset(new Animations);
 
-        switch(mario->getLevelMario())
+        switch (mario->GetLevelMario())
         {
-            case CMario::LevelMario::SMALL_MARIO:
+            case Mario::LevelMario::SmallMario:
             {
-                m_frame_animation.push_back(sf::IntRect(35,96,25,32));
-                m_frame_animation.push_back(sf::IntRect(68,96,25,32));
-                m_frame_animation.push_back(sf::IntRect(97,96,30,32));
+                frameAnimation.push_back(sf::IntRect(35, 96, 25, 32));
+                frameAnimation.push_back(sf::IntRect(68, 96, 25, 32));
+                frameAnimation.push_back(sf::IntRect(97, 96, 30, 32));
 
-                m_mario->create(MyKindsAnimations::MOVEMENT_MARIO,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.2f,m_scale_to_tile);
+                mMario->Create(MyKindsAnimations::MovementMario, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.2f, kScaleToTile);
 
-                ///----
-                m_frame_animation.clear();
-                m_frame_animation.push_back(sf::IntRect(226,96,27,32));
-                m_frame_animation.push_back(sf::IntRect(258,97,27,32));
+                frameAnimation.clear();
+                frameAnimation.push_back(sf::IntRect(226, 96, 27, 32));
+                frameAnimation.push_back(sf::IntRect(258, 97, 27, 32));
 
-                m_mario->create(MyKindsAnimations::R_RATCHETING_BY_MARIO,CMarioGame::s_texture_manager["Mario_left"],m_frame_animation,1.5f,m_scale_to_tile);
+                mMario->Create(MyKindsAnimations::RRatchetingByMario, MarioGame::sTextureManager["Mario_left"], frameAnimation, 1.5f, kScaleToTile);
 
-                ///------
-                m_frame_animation.clear();
-                m_frame_animation.push_back(sf::IntRect(258,96,27,32));
-                m_frame_animation.push_back(sf::IntRect(226,97,27,32));
+                frameAnimation.clear();
+                frameAnimation.push_back(sf::IntRect(258, 96, 27, 32));
+                frameAnimation.push_back(sf::IntRect(226, 97, 27, 32));
 
-                m_mario->create(MyKindsAnimations::L_RATCHETING_BY_MARIO,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.5f,m_scale_to_tile);
+                mMario->Create(MyKindsAnimations::LRatchetingByMario, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.5f, kScaleToTile);
 
                 break;
             }
 
-            case CMario::LevelMario::BIG_MARIO:
+            case Mario::LevelMario::BigMario:
             {
-                m_frame_animation.push_back(sf::IntRect(32,36,32,60));
-                m_frame_animation.push_back(sf::IntRect(65,36,30,60));
-                m_frame_animation.push_back(sf::IntRect(95,35,32,60));
+                frameAnimation.push_back(sf::IntRect(32, 36, 32, 60));
+                frameAnimation.push_back(sf::IntRect(65, 36, 30, 60));
+                frameAnimation.push_back(sf::IntRect(95, 35, 32, 60));
 
-                m_mario->create(MyKindsAnimations::MOVEMENT_MARIO,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.2f,m_scale_to_tile);
+                mMario->Create(MyKindsAnimations::MovementMario, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.2f, kScaleToTile);
 
-                ///----
-                m_frame_animation.clear();
-                m_frame_animation.push_back(sf::IntRect(192,39,30,57));
-                m_frame_animation.push_back(sf::IntRect(226,44,30,52));
+                frameAnimation.clear();
+                frameAnimation.push_back(sf::IntRect(192, 39, 30, 57));
+                frameAnimation.push_back(sf::IntRect(226, 44, 30, 52));
 
-                m_mario->create(MyKindsAnimations::R_RATCHETING_BY_MARIO,CMarioGame::s_texture_manager["Mario_left"],m_frame_animation,1.5f,m_scale_to_tile);
+                mMario->Create(MyKindsAnimations::RRatchetingByMario, MarioGame::sTextureManager["Mario_left"], frameAnimation, 1.5f, kScaleToTile);
 
-                ///------
-                m_frame_animation.clear();
-                m_frame_animation.push_back(sf::IntRect(290,39,30,57));
-                m_frame_animation.push_back(sf::IntRect(256,44,30,52));
+                frameAnimation.clear();
+                frameAnimation.push_back(sf::IntRect(290, 39, 30, 57));
+                frameAnimation.push_back(sf::IntRect(256, 44, 30, 52));
 
-                m_mario->create(MyKindsAnimations::L_RATCHETING_BY_MARIO,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.5f,m_scale_to_tile);
+                mMario->Create(MyKindsAnimations::LRatchetingByMario, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.5f, kScaleToTile);
 
                 break;
             }
         }
 
-        m_mario->play(MyKindsAnimations::L_RATCHETING_BY_MARIO,m_current_position);
+        mMario->Play(MyKindsAnimations::LRatchetingByMario, mCurrentPosition);
 
-        m_mario_position=mario->getCurrentPosition();
-        m_mario_position.x=m_current_position.x;
-        m_mario_position.x-=m_mario->getGlobalBounds().width/2.0f;
+        mMarioPosition = mario->GetCurrentPosition();
+        mMarioPosition.x = mCurrentPosition.x;
+        mMarioPosition.x -= mMario->GetGlobalBounds().width / 2.0f;
 
-        m_mario->setPosition(m_mario_position);
+        mMario->SetPosition(mMarioPosition);
 
-        actOnMe(KindAction::HIT);
-        removeObject(obj);
+        ActOnMe(KindAction::Hit);
+        RemoveObject(pObject);
     }
 }
 
 ///-------
-void CLineWithFlag::actOnMe(KindAction how_action)
+void LineWithFlag::ActOnMe(KindAction pAction)
 {
-    if(how_action==KindAction::HIT)
-        if(CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::LVL_COMPLETED))
-            m_is_flag_ratcheting=true;
+    if (pAction == KindAction::Hit)
+        if (MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::LevelCompleted))
+            mIsFlagRatcheting = true;
 }
 
 ///--------
-void CLineWithFlag::draw(const unique_ptr<sf::RenderWindow>& window)
+void LineWithFlag::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    m_animator->draw(window);
-    m_line_flag.draw(window);
+    mAnimator->Draw(pWindow);
+    mLineFlag.Draw(pWindow);
 
-    if(m_castle_flag)
-        m_castle_flag->draw(window);
+    if (mCastleFlag)
+        mCastleFlag->Draw(pWindow);
 
-    window->draw(*m_castle);
+    pWindow->draw(*mCastle);
 
-    if(m_mario)
-        m_mario->draw(window);
+    if (mMario)
+        mMario->Draw(pWindow);
 }

@@ -3,333 +3,326 @@
 #include "../Scens/GameScen.h"
 #include "SpecialEffects.h"
 #include "../MarioGame.h"
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include "../GameClasses/Items/Coin.h"
 
-const size_t CGUI::s_basic_size_text=25;
+using namespace std;
 
-bool CGUI::s_is_any_menu_active=false;
-bool CGUI::s_maintenance_label=false;
-bool CGUI::s_visible_main_labels=true;
+const size_t Gui::sBasicSizeText = 25;
 
-std::vector<unique_ptr<sf::Text>> CGUI::m_main_labels;
-std::vector<unique_ptr<CMenu>> CGUI::m_menus;
-std::vector<CGuiObject*>  CGUI::m_gui_objects;
+bool Gui::sIsAnyMenuActive = false;
+bool Gui::sIsMaintenanceLabel = false;
+bool Gui::sIsVisibleMainLabels = true;
+
+std::vector<unique_ptr<sf::Text>> Gui::mMainLabels;
+std::vector<unique_ptr<Menu>> Gui::mMenus;
+std::vector<GuiObject*> Gui::mGuiObjects;
 
 ///---------
-CGUI::CGUI()
+Gui::Gui()
 {
-    sf::Text* main_label_text;
+    sf::Text* mainLabelText;
 
-    for(int i=0;i<4;i++)
-    {
-        main_label_text=createText(" ",{0,0},sf::Color::White,"score_font",false,31);
-        m_main_labels.push_back(unique_ptr<sf::Text>(main_label_text));
+    for (int i = 0; i < 4; i++) {
+        mainLabelText = CreateText(" ", {0, 0}, sf::Color::White, "score_font", false, 31);
+        mMainLabels.push_back(unique_ptr<sf::Text>(mainLabelText));
     }
 
-    resetMainLabels();
+    ResetMainLabels();
 }
 
 ///------
-void CGUI::update()
+void Gui::Update()
 {
-    for(auto it=m_gui_objects.begin();it!=m_gui_objects.end();)
-    {
+    for (auto it = mGuiObjects.begin(); it != mGuiObjects.end();) {
         (*it)->update();
 
-        if((*it)->isRemove())
-        {
-            /// BARDZO WAZNA JEST TAKA KOLEJNOSC
-            /// BO W DESTRUKTORACH GUI OBJECTU MOGE DODAWAC
-            /// KOLEJNY GUI OBJECT A TO WTEDY POWODUJE BLAD
+        if ((*it)->isRemove()) {
+            /// THIS ORDER IS VERY IMPORTANT
+            /// BECAUSE IN GUI OBJECT DESTRUCTORS I MAY ADD
+            /// ANOTHER GUI OBJECT WHICH WOULD THEN CAUSE AN ERROR
 
-            CGuiObject *remove_obj=(*it);
-            it=m_gui_objects.erase(it);
-            delete remove_obj;
+            GuiObject* removeObj = (*it);
+            it = mGuiObjects.erase(it);
+            delete removeObj;
 
-        }else
+        } else
             it++;
     }
 }
 
 ///------
-void CGUI::draw(unique_ptr<sf::RenderWindow>&window)
+void Gui::Draw(unique_ptr<sf::RenderWindow>& pWindow)
 {
-    for(auto obj:m_gui_objects)obj->draw(window);
+    for (auto obj : mGuiObjects) obj->draw(pWindow);
 
-    if(s_visible_main_labels)
-        for(auto &label:m_main_labels)window->draw(*label);
+    if (sIsVisibleMainLabels)
+        for (auto& label : mMainLabels) pWindow->draw(*label);
 
-    for(auto &menu:m_menus)
-        menu->draw(window);
+    for (auto& menu : mMenus)
+        menu->Draw(pWindow);
 }
 
 ///--------
-void CGUI::resetGuiObjects()
+void Gui::ResetGuiObjects()
 {
-    CSpecialEffects::deactivateDeathAnimations(true);
+    SpecialEffects::deactivateDeathAnimations(true);
 
-    for(auto obj:m_gui_objects)
+    for (auto obj : mGuiObjects)
         delete obj;
 
-    m_gui_objects.clear();
+    mGuiObjects.clear();
 
-    CSpecialEffects::deactivateDeathAnimations(false);
+    SpecialEffects::deactivateDeathAnimations(false);
 }
 
-///------------------DO OBSLUGI GOWNYCH ETYKIET-------------////
-void CGUI::moveMainLabels(float road)
+///------------------FOR HANDLING MAIN LABELS-------------////
+void Gui::MoveMainLabels(float pRoad)
 {
-    for(auto &obj:m_main_labels)
-        obj->move(road,0);
+    for (auto& obj : mMainLabels)
+        obj->move(pRoad, 0);
 }
 
 ///------------
-void CGUI::setTime(int time)
+void Gui::SetTime(int pTime)
 {
-    string fill_zeros="";
+    string fillZeros = "";
 
-    if(time<10)
-        fill_zeros="00";
+    if (pTime < 10)
+        fillZeros = "00";
     else
-    if(time<100)
-        fill_zeros="0";
+    if (pTime < 100)
+        fillZeros = "0";
 
-    m_main_labels[3]->setString("TIME: "+fill_zeros+toString(time));
+    mMainLabels[3]->setString("TIME: " + fillZeros + ToString(pTime));
 }
 
 ///------------
-void CGUI::setWorldName(const string &name)
+void Gui::SetWorldName(const string& pName)
 {
-    m_main_labels[2]->setString(name);
+    mMainLabels[2]->setString(pName);
 }
 
 ///------------
-void CGUI::setPoints(int points)
+void Gui::SetPoints(int pPoints)
 {
-    string fill_zeros;
+    string fillZeros;
 
-    if(points<10)
-        fill_zeros="00000";
-    else if(points<100)
-        fill_zeros="0000";
-    else if(points<1000)
-        fill_zeros="000";
-    else if(points<10000)
-        fill_zeros="00";
-    else if(points<100000)
-        fill_zeros="0";
-    else if(points<1000000)
-        fill_zeros="";
-    else
-    {
-        fill_zeros="";
-        points=999999;
+    if (pPoints < 10)
+        fillZeros = "00000";
+    else if (pPoints < 100)
+        fillZeros = "0000";
+    else if (pPoints < 1000)
+        fillZeros = "000";
+    else if (pPoints < 10000)
+        fillZeros = "00";
+    else if (pPoints < 100000)
+        fillZeros = "0";
+    else if (pPoints < 1000000)
+        fillZeros = "";
+    else {
+        fillZeros = "";
+        pPoints = 999999;
     }
 
-    m_main_labels[0]->setString("MARIO: "+fill_zeros+toString(points));
+    mMainLabels[0]->setString("MARIO: " + fillZeros + ToString(pPoints));
 }
 
 ///------------
-void CGUI::setCoinCounter(int number)
+void Gui::SetCoinCounter(int pNumber)
 {
     string name;
 
-    if(number<10)
-        name="x00"+toString(number);
-    else if(number<100)
-        name="x0"+toString(number);
-    else if(number<1000)
-        name="x"+toString(number);
+    if (pNumber < 10)
+        name = "x00" + ToString(pNumber);
+    else if (pNumber < 100)
+        name = "x0" + ToString(pNumber);
+    else if (pNumber < 1000)
+        name = "x" + ToString(pNumber);
     else
-        name="x999";
+        name = "x999";
 
-    m_main_labels[1]->setString(name);
+    mMainLabels[1]->setString(name);
 }
 
 ///------------
-void CGUI::resetMainLabels()
+void Gui::ResetMainLabels()
 {
-    CGameScen::resetPoints();
-    CCoin::resetCountGatheredCoins();
+    GameScene::ResetPoints();
+    Coin::ResetCountGatheredCoins();
 
-    setPoints(0);
-    setCoinCounter(0);
-    setWorldName("WORLD 1-1");
-    setTime(0);
+    SetPoints(0);
+    SetCoinCounter(0);
+    SetWorldName("WORLD 1-1");
+    SetTime(0);
 
-    setPositionMainLabels(CMarioGame::s_size_window.x/2.0f);
+    SetPositionMainLabels(MarioGame::sSizeWindow.x / 2.0f);
 }
 
 ///---------
-void CGUI::setPositionMainLabels(float center)
+void Gui::SetPositionMainLabels(float pCenter)
 {
-    center-=CMarioGame::s_size_window.x/2.0f;
+    pCenter -= MarioGame::sSizeWindow.x / 2.0f;
 
-    m_main_labels[0]->setPosition(center+50,20);
-    m_main_labels[1]->setPosition(center+480,20);
-    m_main_labels[2]->setPosition(center+735,20);
-    m_main_labels[3]->setPosition(center+1075,20);
+    mMainLabels[0]->setPosition(pCenter + 50, 20);
+    mMainLabels[1]->setPosition(pCenter + 480, 20);
+    mMainLabels[2]->setPosition(pCenter + 735, 20);
+    mMainLabels[3]->setPosition(pCenter + 1075, 20);
 }
 
-///---------------DO OBSLUGI MENU--------------///
-void CGUI::handleMenus(int which_key)
+///---------------FOR HANDLING MENU--------------///
+void Gui::HandleMenus(int pWhichKey)
 {
-    if(!s_maintenance_label)
-    {
-        if(which_key==sf::Keyboard::Return)
-           getCurrentMenu()->handleLabel(which_key);
+    if (!sIsMaintenanceLabel) {
+        if (pWhichKey == sf::Keyboard::Return)
+            GetCurrentMenu()->HandleLabel(pWhichKey);
         else
-            if(CGUI::getCurrentMenu()->m_vertical_control)
-            {
-                if(which_key==sf::Keyboard::Up)
-                    getCurrentMenu()->switchPointer(true);
-                else if(which_key==sf::Keyboard::Down)
-                   getCurrentMenu()->switchPointer(false);
+            if (Gui::GetCurrentMenu()->mIsVerticalControl) {
+                if (pWhichKey == sf::Keyboard::Up)
+                    GetCurrentMenu()->SwitchPointer(true);
+                else if (pWhichKey == sf::Keyboard::Down)
+                    GetCurrentMenu()->SwitchPointer(false);
+            } else {
+                if (pWhichKey == sf::Keyboard::Right)
+                    GetCurrentMenu()->SwitchPointer(false);
+                else if (pWhichKey == sf::Keyboard::Left)
+                    GetCurrentMenu()->SwitchPointer(true);
             }
-            else
-            {
-                if(which_key==sf::Keyboard::Right)
-                    getCurrentMenu()->switchPointer(false);
-                else if(which_key==sf::Keyboard::Left)
-                    getCurrentMenu()->switchPointer(true);
-            }
-    }
-    else getCurrentMenu()->handleLabel(which_key);
+    } else
+        GetCurrentMenu()->HandleLabel(pWhichKey);
 }
 
 ///-----
-const unique_ptr<CMenu>& CGUI::getCurrentMenu()
+const unique_ptr<Menu>& Gui::GetCurrentMenu()
 {
-    if(m_menus.size()==0)
+    if (mMenus.size() == 0)
         return nullptr;
 
-    return m_menus.back();
+    return mMenus.back();
 }
 
 ///------------
-void CGUI::removeCurrentMenu()
+void Gui::RemoveCurrentMenu()
 {
-    if(m_menus.size()==0)
+    if (mMenus.size() == 0)
         return;
 
-    m_menus.pop_back();
+    mMenus.pop_back();
 
-    if(m_menus.size()==0)
-        s_is_any_menu_active=false;
+    if (mMenus.size() == 0)
+        sIsAnyMenuActive = false;
 }
 
 ///------------
-void CGUI::addMenu(CMenu* menu)
+void Gui::AddMenu(Menu* pMenu)
 {
-    m_menus.push_back(unique_ptr<CMenu>(menu));
-    s_is_any_menu_active=true;
+    mMenus.push_back(unique_ptr<Menu>(pMenu));
+    sIsAnyMenuActive = true;
 }
 
-///----------------------METODY POMOCNICZE-----------------///
-CMenu * CGUI::creatAreYouSureMenu(std::function<void(int)> action_for_yes)
+///----------------------HELPER METHODS-----------------///
+Menu* Gui::CreateAreYouSureMenu(std::function<void(int)> pActionForYes)
 {
-    const sf::Vector2f center_pos(CMarioGame::instance().getWindow()->getView().getCenter());
-    const sf::IntRect bounds_menu(center_pos.x,center_pos.y,400,150);
+    const sf::Vector2f centerPos(MarioGame::Instance().getWindow()->getView().getCenter());
+    const sf::IntRect boundsMenu(centerPos.x, centerPos.y, 400, 150);
 
-    vector<CLabel*> labels;
-    const float pos_y_names=center_pos.y+30.0f;
+    vector<Label*> labels;
+    const float posYNames = centerPos.y + 30.0f;
 
-    /// ---- TWORZE ETYKIETKI TAK, NIE
+    /// ---- CREATE YES, NO LABELS
 
-    sf::Text *yes_text=CGUI::createText("YES",sf::Vector2f(bounds_menu.left-60,pos_y_names),sf::Color(250,250,255,100),"menu_font");
-    sf::Text *no_text=CGUI::createText("NO", sf::Vector2f(bounds_menu.left+60,pos_y_names),sf::Color(250,250,255,100),"menu_font");
+    sf::Text* yesText = Gui::CreateText("YES", sf::Vector2f(boundsMenu.left - 60, posYNames), sf::Color(250, 250, 255, 100), "menu_font");
+    sf::Text* noText = Gui::CreateText("NO", sf::Vector2f(boundsMenu.left + 60, posYNames), sf::Color(250, 250, 255, 100), "menu_font");
 
-    labels.push_back(new CLabel(yes_text,action_for_yes));
-    labels.push_back(CMenu::createReturnLabel(no_text));
+    labels.push_back(new Label(yesText, pActionForYes));
+    labels.push_back(Menu::CreateReturnLabel(noText));
 
-    sf::RectangleShape * rctngl=CGUI::createRectangleShape(bounds_menu,sf::Color::Black,true,true);
+    sf::RectangleShape* rctngl = Gui::CreateRectangleShape(boundsMenu, sf::Color::Black, true, true);
 
-    return new CMenu(false,labels,rctngl,"ARE YOU SURE?");
+    return new Menu(false, labels, rctngl, "ARE YOU SURE?");
 }
 
 ///-------
-sf::Text* CGUI::createText(string name,sf::Vector2f poz,sf::Color color,string font_name,bool middle_origin,size_t size_text)
+sf::Text* Gui::CreateText(string pName, sf::Vector2f pPos, sf::Color pColor, string pFontName, bool pMiddleOrigin, size_t pSizeText)
 {
-    sf::Text *text=new sf::Text(name,CMarioGame::s_font_manager[font_name],size_text);
-    text->setFillColor(color);
+    sf::Text* text = new sf::Text(pName, MarioGame::sFontManager[pFontName], pSizeText);
+    text->setFillColor(pColor);
 
-    if(middle_origin)
-        text->setOrigin(text->getGlobalBounds().width/2.0f,text->getGlobalBounds().height/2.0f);
+    if (pMiddleOrigin)
+        text->setOrigin(text->getGlobalBounds().width / 2.0f, text->getGlobalBounds().height / 2.0f);
 
-    text->setPosition(poz);
+    text->setPosition(pPos);
 
     return text;
 }
 
 ///------------
-sf::RectangleShape* CGUI::createRectangleShape(sf::IntRect bounds,sf::Color color,bool midle_origin,bool out_line,sf::Color color_out_linie)
+sf::RectangleShape* Gui::CreateRectangleShape(sf::IntRect pBounds, sf::Color pColor, bool pMiddleOrigin, bool pOutLine, sf::Color pColorOutLine)
 {
-    sf::RectangleShape *rctng=new sf::RectangleShape(sf::Vector2f(bounds.width,bounds.height));
+    sf::RectangleShape* rctng = new sf::RectangleShape(sf::Vector2f(pBounds.width, pBounds.height));
 
-    if(midle_origin)
-        rctng->setOrigin(bounds.width/2.0f,bounds.height/2.0f);
+    if (pMiddleOrigin)
+        rctng->setOrigin(pBounds.width / 2.0f, pBounds.height / 2.0f);
 
-    if(out_line)
-    {
+    if (pOutLine) {
         rctng->setOutlineThickness(3);
-        rctng->setOutlineColor(color_out_linie);
+        rctng->setOutlineColor(pColorOutLine);
     }
 
-    rctng->setFillColor(color);
-    rctng->setPosition(sf::Vector2f(bounds.left,bounds.top));
+    rctng->setFillColor(pColor);
+    rctng->setPosition(sf::Vector2f(pBounds.left, pBounds.top));
 
     return rctng;
 }
 
 ///---------
-sf::Sprite * CGUI::createSprite(string name,sf::IntRect bounds_texture,sf::Vector2f pos,float scal,bool bottom_origin)
+sf::Sprite* Gui::CreateSprite(string pName, sf::IntRect pBoundsTexture, sf::Vector2f pPos, float pScale, bool pBottomOrigin)
 {
-    sf::Sprite *sprite=new sf::Sprite(CMarioGame::s_texture_manager[name]);
-    sprite->setTextureRect(bounds_texture);
+    sf::Sprite* sprite = new sf::Sprite(MarioGame::sTextureManager[pName]);
+    sprite->setTextureRect(pBoundsTexture);
 
-    if(bottom_origin)
-        sprite->setOrigin(sprite->getGlobalBounds().width/2.0f,sprite->getGlobalBounds().height);
+    if (pBottomOrigin)
+        sprite->setOrigin(sprite->getGlobalBounds().width / 2.0f, sprite->getGlobalBounds().height);
 
-    sprite->setScale(scal,scal);
-    sprite->setPosition(pos.x,pos.y);
+    sprite->setScale(pScale, pScale);
+    sprite->setPosition(pPos.x, pPos.y);
 
     return sprite;
 }
 
 ///---
-sf::Sprite * CGUI::createSprite(string name,sf::Vector2f pos,float scal,bool bottom_origin)
+sf::Sprite* Gui::CreateSprite(string pName, sf::Vector2f pPos, float pScale, bool pBottomOrigin)
 {
-    sf::Sprite *sprite=new sf::Sprite(CMarioGame::s_texture_manager[name]);
+    sf::Sprite* sprite = new sf::Sprite(MarioGame::sTextureManager[pName]);
 
-    if(bottom_origin)
-        sprite->setOrigin(sprite->getGlobalBounds().width/2.0f,sprite->getGlobalBounds().height);
+    if (pBottomOrigin)
+        sprite->setOrigin(sprite->getGlobalBounds().width / 2.0f, sprite->getGlobalBounds().height);
 
-    sprite->setScale(scal,scal);
-    sprite->setPosition(pos.x,pos.y);
+    sprite->setScale(pScale, pScale);
+    sprite->setPosition(pPos.x, pPos.y);
 
     return sprite;
 }
 
 ///--------
-string CGUI::toString(int valuee)
+string Gui::ToString(int pValue)
 {
     std::stringstream sstream;
-    sstream << valuee;
+    sstream << pValue;
     return sstream.str();
 }
 
 ///--------
-int CGUI::rand(const int &a,const int &b)
+int Gui::Rand(const int& pA, const int& pB)
 {
-    int rand_number=std::rand()%a+b;
-    int how_many=std::rand()%10+5;
+    int randNumber = std::rand() % pA + pB;
+    int howMany = std::rand() % 10 + 5;
 
-    for(int i=1;i<=how_many;i++)
-        if(i==std::rand()%i+1)
-            rand_number=std::rand()%a+b;
+    for (int i = 1; i <= howMany; i++)
+        if (i == std::rand() % i + 1)
+            randNumber = std::rand() % pA + pB;
 
-    return rand_number;
+    return randNumber;
 }

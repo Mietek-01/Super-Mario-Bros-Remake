@@ -1,5 +1,5 @@
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 #include "MarioGame.h"
 #include "Scens/GameScen.h"
@@ -14,279 +14,258 @@
 
 using namespace std;
 
-CMarioGame *CMarioGame::s_instance = nullptr;
-const sf::Vector2u CMarioGame::s_size_window{1280, 720};
+MarioGame* MarioGame::sInstance = nullptr;
+const sf::Vector2u MarioGame::sSizeWindow{1280, 720};
 
-CFontManager CMarioGame::s_font_manager;
-CTextureManager CMarioGame::s_texture_manager;
-CMusicManager CMarioGame::s_music_manager;
-CSoundManager CMarioGame::s_sound_manager;
+FontManager MarioGame::sFontManager;
+TextureManager MarioGame::sTextureManager;
+MusicManager MarioGame::sMusicManager;
+SoundManager MarioGame::sSoundManager;
 
-CMarioGame &CMarioGame::instance()
-{
-    if (!s_instance)
-        s_instance = new CMarioGame();
+MarioGame& MarioGame::Instance() {
+    if (!sInstance)
+        sInstance = new MarioGame();
 
-    return *s_instance;
+    return *sInstance;
 }
 
 ///------
-CMarioGame::~CMarioGame()
-{
-    /// ZAPISUJE LICZBE ZALICZONYCH POZIOMOW
+MarioGame::~MarioGame() {
+    /// Save completed levels number
     fstream file;
 
     file.open("Maps/Completed_lvls_number.txt", ios::out);
-    file << m_completed_lvls_number;
+    file << mCompletedLevelsNumber;
 
-    m_current_scen.reset(); /// WAZNE!!!
+    mCurrentScene.reset(); /// Important!
 
-    s_instance = nullptr;
+    sInstance = nullptr;
 }
 
 ///------
-CMarioGame::CMarioGame()
-    : m_levels_names(loadLevelsNames())
-{
+MarioGame::MarioGame()
+    : mLevelsNames(LoadLevelsNames()) {
     srand(time(NULL));
 
-    loadCompletedLvlsNumber();
+    LoadCompletedLevelsNumber();
 
-    /// USTAWIAM STATICI
-    CMarioGame::setMenagers();
+    /// Set up static resources
+    MarioGame::SetManagers();
 
-    CMysterBox::setStaticAnimation();
-    CCoin::setStaticAnimation();
-    CWaterWaves::setStaticAnimation();
-    CLavaWaves::setStaticAnimation();
+    MysteryBox::setStaticAnimation();
+    Coin::setStaticAnimation();
+    WaterWaves::setStaticAnimation();
+    LavaWaves::setStaticAnimation();
 
     ///---
-    m_gui.reset(new CGUI);
-    m_event_hadler.reset(new CEventHandler);
+    mGui.reset(new Gui);
+    mEventHandler.reset(new EventHandler);
 
     ///----
-    initEvents();
-    creatWindow();
+    InitEvents();
+    CreateWindow();
 
-    m_current_scen.reset(new CMenuScen());
+    mCurrentScene.reset(new MenuScene());
 }
 
 ///------
-void CMarioGame::initEvents()
-{
-    /// JEDYNYM EVENTEM JEST AKTYWOWANIE MENU PODCZAS ROZGRYWKI
-    std::function<void()> paused_menu_action = []()
-    {
-        if (!(CMarioGame::instance().isThisScen<CGameScen>()) || CGUI::isMenuActive())
+void MarioGame::InitEvents() {
+    /// The only event is activating the menu during gameplay
+    std::function<void()> pausedMenuAction = []() {
+        if (!(MarioGame::Instance().IsThisScene<GameScene>()) || Gui::IsMenuActive())
             return;
 
-        CMarioGame::s_music_manager.pause();
-        CMarioGame::s_sound_manager.pause();
+        MarioGame::sMusicManager.pause();
+        MarioGame::sSoundManager.pause();
 
-        sf::Text *name;
+        sf::Text* name;
 
-        const sf::Vector2f center_pos(CMarioGame::instance().getWindow()->getView().getCenter());
+        const sf::Vector2f centerPos(MarioGame::Instance().GetWindow()->getView().getCenter());
 
-        const sf::IntRect bounds_menu(center_pos.x, center_pos.y, 300, 400);
+        const sf::IntRect boundsMenu(centerPos.x, centerPos.y, 300, 400);
 
-        sf::Vector2f pos_label(center_pos.x, bounds_menu.top - bounds_menu.height / 2.0f + CMenu::s_value_margin * 2.5);
+        sf::Vector2f posLabel(centerPos.x, boundsMenu.top - boundsMenu.height / 2.0f + Menu::sValueMargin * 2.5);
 
-        vector<CLabel *> labels;
+        vector<Label*> labels;
 
-        /// ETYKIETKI
+        /// Labels
 
         ///- RESUME
-        name = CGUI::createText("REASUME", pos_label, sf::Color(250, 250, 255, 100), "menu_font");
-        labels.push_back(new CLabel(name, [](int ascii)
-                                    {
-                                        CGUI::removeCurrentMenu();
-                                        CMarioGame::s_music_manager.resume();
-                                        CMarioGame::s_sound_manager.resume(); }));
+        name = Gui::CreateText("REASUME", posLabel, sf::Color(250, 250, 255, 100), "menu_font");
+        labels.push_back(new Label(name, [](int pAscii) {
+            Gui::RemoveCurrentMenu();
+            MarioGame::sMusicManager.resume();
+            MarioGame::sSoundManager.resume();
+        }));
 
         ///- OPTIONS
-        pos_label.y += CMenu::s_value_margin * 2;
+        posLabel.y += Menu::sValueMargin * 2;
 
-        labels.push_back(CMenu::createOptionLabel(pos_label, center_pos, sf::Color(250, 250, 255, 100)));
+        labels.push_back(Menu::CreateOptionLabel(posLabel, centerPos, sf::Color(250, 250, 255, 100)));
 
         ///- BACK TO MAIN MENU
-        pos_label.y += CMenu::s_value_margin * 2;
+        posLabel.y += Menu::sValueMargin * 2;
 
-        name = CGUI::createText("BACK TO MENU", pos_label, sf::Color(250, 250, 255, 100), "menu_font");
-        labels.push_back(new CLabel(name, [](int ascii)
-                                    { CGUI::addMenu(CGUI::creatAreYouSureMenu([](int ascii)
-                                                                              {
-                                                                                    CGUI::removeAllMenus();
+        name = Gui::CreateText("BACK TO MENU", posLabel, sf::Color(250, 250, 255, 100), "menu_font");
+        labels.push_back(new Label(name, [](int pAscii) {
+            Gui::AddMenu(Gui::CreateAreYouSureMenu([](int pAscii) {
+                Gui::RemoveAllMenus();
 
-                                                                                    CMarioGame::instance().changeScen(new CMenuScen());
-                                                                                    CEnteringPipe::resetActivatedPipes();
-                                                                                    CMario::resetLvlMario();
+                MarioGame::Instance().ChangeScene(new MenuScene());
+                EnteringPipe::resetActivatedPipes();
+                Mario::resetLvlMario();
 
-                                                                                    CMarioGame::s_music_manager.resetAllMusic();
-                                                                                    CMarioGame::s_sound_manager.stop(); })); }));
+                MarioGame::sMusicManager.resetAllMusic();
+                MarioGame::sSoundManager.stop();
+            }));
+        }));
 
-        sf::RectangleShape *background = CGUI::createRectangleShape(bounds_menu, sf::Color::Black, true, true);
-        CGUI::addMenu(new CMenu(true, labels, background, "PAUSED", true));
+        sf::RectangleShape* background = Gui::CreateRectangleShape(boundsMenu, sf::Color::Black, true, true);
+        Gui::AddMenu(new Menu(true, labels, background, "PAUSED", true));
     };
 
-    m_event_hadler->addEvent(CEventHandler::Event::PAUSED_MENU, paused_menu_action);
+    mEventHandler->addEvent(EventHandler::Event::PausedMenu, pausedMenuAction);
 }
 
 ///---
-void CMarioGame::resetView()
-{
-    m_window->setView(sf::View(sf::FloatRect(0, 0, s_size_window.x, s_size_window.y)));
+void MarioGame::ResetView() {
+    mWindow->setView(sf::View(sf::FloatRect(0, 0, sSizeWindow.x, sSizeWindow.y)));
 }
 
 ///----
-void CMarioGame::creatWindow()
-{
-    if (!m_full_screan)
-        m_window.reset(new sf::RenderWindow(sf::VideoMode({s_size_window.x, s_size_window.y}), m_title, sf::Style::Titlebar | sf::Style::Close));
-    else
-    {
-        m_window.reset(new sf::RenderWindow(sf::VideoMode({s_size_window.x, s_size_window.y}), m_title, sf::Style::Fullscreen));
-        m_window->setMouseCursorVisible(false);
+void MarioGame::CreateWindow() {
+    if (!mIsFullScreen)
+        mWindow.reset(new sf::RenderWindow(sf::VideoMode({sSizeWindow.x, sSizeWindow.y}), mTitle, sf::Style::Titlebar | sf::Style::Close));
+    else {
+        mWindow.reset(new sf::RenderWindow(sf::VideoMode({sSizeWindow.x, sSizeWindow.y}), mTitle, sf::Style::Fullscreen));
+        mWindow->setMouseCursorVisible(false);
     }
 
-    m_window->setFramerateLimit(m_framerate);
-    m_window->setKeyRepeatEnabled(false);
+    mWindow->setFramerateLimit(mFramerate);
+    mWindow->setKeyRepeatEnabled(false);
 
-    sf::Image icon_image;
-    icon_image.loadFromFile("res/Textures/MarioIcon.png");
-    m_window->setIcon(25, 34, icon_image.getPixelsPtr());
+    sf::Image iconImage;
+    iconImage.loadFromFile("res/Textures/MarioIcon.png");
+    mWindow->setIcon(25, 34, iconImage.getPixelsPtr());
 }
 
 ///-----
-void CMarioGame::run()
-{
+void MarioGame::Run() {
     sf::Time timer = sf::Time::Zero;
-    sf::Clock time;
+    sf::Clock clock;
 
     int frameCounter = 0;
     float secondTimer = 0;
 
-    while (m_window->isOpen())
-    {
-        timer = time.restart();
-        m_event_hadler->handleEvents(m_window);
+    while (mWindow->isOpen()) {
+        timer = clock.restart();
+        mEventHandler->handleEvents(mWindow);
 
-        if (m_write_framerate)
-            writeFrameRate(frameCounter, secondTimer, timer.asSeconds());
+        if (mIsWriteFramerate)
+            WriteFrameRate(frameCounter, secondTimer, timer.asSeconds());
 
-        ///--- -DRAW
-        m_window->clear();
+        ///--- DRAW
+        mWindow->clear();
 
-        m_current_scen->draw(m_window);
-        m_gui->draw(m_window);
+        mCurrentScene->draw(mWindow);
+        mGui->draw(mWindow);
 
         ///----- UPDATE
-        if (!CGUI::isMenuActive())
-        {
-            CScen::updateFrameTime(timer.asSeconds());
+        if (!Gui::IsMenuActive()) {
+            Scene::UpdateFrameTime(timer.asSeconds());
 
-            m_current_scen->update();
-            m_gui->update();
+            mCurrentScene->update();
+            mGui->update();
         }
 
-        m_window->display();
+        mWindow->display();
     }
 
     delete this;
 }
 
 ///--------------
-void CMarioGame::setMenagers()
-{
-    const string MARIO_RES_PATH = "res/";
+void MarioGame::SetManagers() {
+    const string marioResPath = "res/";
 
     /// LOAD TEXTURES
-    const string textures_dir = MARIO_RES_PATH + "Textures/";
+    const string texturesDir = marioResPath + "Textures/";
     for (string texture : {"Menumshr", "MarioIcon", "LoadingMarioImage", "Mario_left", "Mario_right", "Tiles", "AnimTiles", "Enemies_left", "Enemies_right", "Bowser_left", "Bowser_right", "Items", "TheEndLvlLine", "Castle", "Barse"})
-        s_texture_manager.loadFromFile(texture, textures_dir + texture + ".png");
+        sTextureManager.LoadFromFile(texture, texturesDir + texture + ".png");
 
     for (string texture : {"Sky", "LoadingScen", "Underground", "MenuBackground", "Water"})
-        s_texture_manager.loadFromFile(texture, textures_dir + "backgrounds\\" + texture + ".png");
+        sTextureManager.LoadFromFile(texture, texturesDir + "backgrounds\\" + texture + ".png");
 
     /// LOAD SOUNDS
-    const std::string sounds_dir = MARIO_RES_PATH + "Sounds/";
+    const std::string soundsDir = marioResPath + "Sounds/";
     for (string sound : {"breakblock", "bump", "coin", "fireball", "jump_super", "kick", "stomp", "powerup_appears",
                          "powerup", "pipe", "flagpole", "bowser_falls", "bowser_fire", "mario_die", "stage_clear", "game_over", "1-up", "warning", "world_clear"})
-        s_sound_manager.loadFromFile(sound, sounds_dir + sound + ".wav");
+        sSoundManager.LoadFromFile(sound, soundsDir + sound + ".wav");
 
     /// LOAD MUSICS
-    const std::string music_dir = MARIO_RES_PATH + "Music/";
+    const std::string musicDir = marioResPath + "Music/";
     for (string music : {"overworld", "underworld", "bowsercastle", "underwater", "invincibility"})
-        s_music_manager.loadFromFile(music, music_dir + music + ".ogg");
+        sMusicManager.LoadFromFile(music, musicDir + music + ".ogg");
 
     /// LOAD FONTS
-    const std::string fonts_dir = MARIO_RES_PATH + "Fonts/";
+    const std::string fontsDir = marioResPath + "Fonts/";
     for (string font : {"arial", "menu_font", "main_font", "score_font", "some_font"})
-        s_font_manager.loadFromFile(font, fonts_dir + font + ".ttf");
+        sFontManager.LoadFromFile(font, fontsDir + font + ".ttf");
 }
 
 ///-----------
-void CMarioGame::setNextlevel()
-{
-    if (!isItLastLevel())
-        m_current_level_index++;
+void MarioGame::SetNextLevel() {
+    if (!IsLastLevel())
+        mCurrentLevelIndex++;
 }
 
 ///------
-std::vector<string> CMarioGame::loadLevelsNames()
-{
+std::vector<string> MarioGame::LoadLevelsNames() {
     fstream file;
 
-    std::vector<string> names_lvls;
+    std::vector<string> levelsNames;
     file.open("Maps/Lvls_names.txt", ios::in);
 
     if (!file.good())
-        throw runtime_error("-----------NIE MOGE WCZYTAC MAP!!!----------");
+        throw runtime_error("-----------CANNOT LOAD MAPS!!!----------");
 
     string name;
-    int number_lines = 1;
+    int numberLines = 1;
 
-    while (getline(file, name))
-    {
-        if (number_lines == 6 || name.size() == 0)
+    while (getline(file, name)) {
+        if (numberLines == 6 || name.size() == 0)
             continue;
 
-        names_lvls.push_back(name);
-        number_lines++;
+        levelsNames.push_back(name);
+        numberLines++;
     }
 
-    return names_lvls;
+    return levelsNames;
 }
 
 ///----
-void CMarioGame::loadCompletedLvlsNumber()
-{
+void MarioGame::LoadCompletedLevelsNumber() {
     fstream file;
 
     file.open("Maps/Completed_lvls_number.txt", ios::in);
 
-    if (file.good())
-    {
-        file >> m_completed_lvls_number;
+    if (file.good()) {
+        file >> mCompletedLevelsNumber;
 
-        if (m_completed_lvls_number > m_levels_names.size() || m_completed_lvls_number < 0)
-            m_completed_lvls_number = 0;
-    }
-    else
-        m_completed_lvls_number = 0;
+        if (mCompletedLevelsNumber > mLevelsNames.size() || mCompletedLevelsNumber < 0)
+            mCompletedLevelsNumber = 0;
+    } else
+        mCompletedLevelsNumber = 0;
 }
 
 ///----
-void CMarioGame::writeFrameRate(int &frameCounter, float &secondTimer, float frameTime)
-{
-    if (secondTimer >= 1)
-    {
-        cout << frameCounter << endl;
-        frameCounter = 0;
-        secondTimer = 0;
-    }
-    else
-    {
-        secondTimer += frameTime;
-        frameCounter++;
+void MarioGame::WriteFrameRate(int& pFrameCounter, float& pSecondTimer, float pFrameTime) {
+    if (pSecondTimer >= 1) {
+        cout << pFrameCounter << endl;
+        pFrameCounter = 0;
+        pSecondTimer = 0;
+    } else {
+        pSecondTimer += pFrameTime;
+        pFrameCounter++;
     }
 }

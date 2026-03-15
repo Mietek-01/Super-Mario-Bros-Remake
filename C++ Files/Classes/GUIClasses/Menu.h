@@ -2,101 +2,95 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include <assert.h>
+#include <cassert>
 
 #include <functional>
 
-using namespace std;
+class Label {
+    const sf::Color mBasicColor;
 
-class CLabel
-{
-    const sf::Color m_basic_color;
+    const std::unique_ptr<sf::Text> mName;
+    std::function<void(int)> mAction;
 
-    const unique_ptr<sf::Text> m_my_name;
-    function<void(int)> m_action;
-
-    vector<std::unique_ptr<sf::RectangleShape>> m_rectangle_shape;
-    unique_ptr<sf::Text> m_text;
+    std::vector<std::unique_ptr<sf::RectangleShape>> mRectangleShapes;
+    std::unique_ptr<sf::Text> mText;
 
 public:
 
-    CLabel(sf::Text*,function<void(int)>);
-    CLabel(sf::Text*);
+    Label(sf::Text*, std::function<void(int)>);
+    Label(sf::Text*);
 
-    void draw(const unique_ptr<sf::RenderWindow>&);
-    void handleAction(int ascii)const{assert(m_action);m_action(ascii);}
+    void Draw(const std::unique_ptr<sf::RenderWindow>&);
+    void HandleAction(int pAscii) const { assert(mAction); mAction(pAscii); }
 
-    void addAction(function<void(int)>action){m_action=action;}
-    void addText(sf::Text* text){m_text.reset(text);}
-    void addRectangleShap(sf::RectangleShape* rctng){m_rectangle_shape.push_back(unique_ptr<sf::RectangleShape>(rctng));}
+    void AddAction(std::function<void(int)> pAction) { mAction = pAction; }
+    void AddText(sf::Text* pText) { mText.reset(pText); }
+    void AddRectangleShape(sf::RectangleShape* pRectangle) { mRectangleShapes.push_back(std::unique_ptr<sf::RectangleShape>(pRectangle)); }
 
-    void setColor(sf::Color color){m_my_name->setFillColor(color);}
-    void setOnBasicColor(){m_my_name->setFillColor(m_basic_color);}
+    void SetColor(sf::Color pColor) { mName->setFillColor(pColor); }
+    void SetOnBasicColor() { mName->setFillColor(mBasicColor); }
 
-    sf::Vector2f getPosition()const;
-    sf::Color getBasicColor()const{return m_basic_color;}
-    const unique_ptr<sf::RectangleShape>& getRectangleShape(int)const;
-    const unique_ptr<sf::Text>& getText()const{return m_text;}
+    [[nodiscard]] sf::Vector2f GetPosition() const;
+    [[nodiscard]] sf::Color GetBasicColor() const { return mBasicColor; }
+    [[nodiscard]] const std::unique_ptr<sf::RectangleShape>& GetRectangleShape(int) const;
+    [[nodiscard]] const std::unique_ptr<sf::Text>& GetText() const { return mText; }
 
 };
 
 ///--------------------------------------///
-class CMenu
-{
-    class CPointerToLabel
-    {
-        using REF_TO_LABELS=const vector<unique_ptr<CLabel>>&;
+class Menu {
+    class PointerToLabel {
+        using REF_TO_LABELS = const std::vector<std::unique_ptr<Label>>&;
 
-        REF_TO_LABELS m_pointer_to_labels;
-        int m_current_label=0;
-        static const sf::Vector2f s_sprite_offset_poz;
+        REF_TO_LABELS mPointerToLabels;
+        int mCurrentLabel = 0;
+        static const sf::Vector2f sSpriteOffsetPos;
 
-        unique_ptr<sf::Sprite> m_sprite;
+        std::unique_ptr<sf::Sprite> mSprite;
 
-        void update();
+        void Update();
 
     public:
 
-        CPointerToLabel(REF_TO_LABELS,const string&);
+        PointerToLabel(REF_TO_LABELS, const std::string&);
 
-        CPointerToLabel(const CPointerToLabel&)=delete;
-        CPointerToLabel& operator=(const CPointerToLabel&)=delete;
+        PointerToLabel(const PointerToLabel&) = delete;
+        PointerToLabel& operator=(const PointerToLabel&) = delete;
 
-        void draw(const unique_ptr<sf::RenderWindow>&);
-        void switchPointer(bool);
+        void Draw(const std::unique_ptr<sf::RenderWindow>&);
+        void SwitchPointer(bool);
 
-        const unique_ptr<CLabel>& getCurrentLabel();
+        [[nodiscard]] const std::unique_ptr<Label>& GetCurrentLabel();
 
     };
 
     ///////////////
 
-    unique_ptr<CPointerToLabel> m_pointer_to_label;
+    std::unique_ptr<PointerToLabel> mPointerToLabel;
 
-    unique_ptr<sf::RectangleShape> m_background;
-    unique_ptr<sf::Text> m_title;
+    std::unique_ptr<sf::RectangleShape> mBackground;
+    std::unique_ptr<sf::Text> mTitle;
 
-    vector<std::unique_ptr<CLabel>> m_my_labels;
+    std::vector<std::unique_ptr<Label>> mLabels;
 
-    void setTitle(string,bool);
+    void SetTitle(std::string, bool);
 
 public:
 
-    const bool m_vertical_control;
-    static const float s_value_margin;
+    const bool mIsVerticalControl;
+    static const float sValueMargin;
 
-    CMenu(bool,vector<CLabel*>&,sf::RectangleShape*,sf::Text *,string ="none"); explicit
-    CMenu(bool,vector<CLabel*>&,sf::RectangleShape*,string,bool=false,string ="none"); explicit
+    explicit Menu(bool, std::vector<Label*>&, sf::RectangleShape*, sf::Text*, std::string = "none");
+    explicit Menu(bool, std::vector<Label*>&, sf::RectangleShape*, std::string, bool = false, std::string = "none");
 
-    CMenu(const CLabel&)=delete;
-    CMenu& operator=(const CLabel&)=delete;
+    Menu(const Label&) = delete;
+    Menu& operator=(const Label&) = delete;
 
-    void draw(const unique_ptr<sf::RenderWindow>&);
+    void Draw(const std::unique_ptr<sf::RenderWindow>&);
 
-    void handleLabel(int ascii){m_pointer_to_label->getCurrentLabel()->handleAction(ascii);}
-    void switchPointer(bool up_or_left){m_pointer_to_label->switchPointer(up_or_left);}
+    void HandleLabel(int pAscii) { mPointerToLabel->GetCurrentLabel()->HandleAction(pAscii); }
+    void SwitchPointer(bool pUpOrLeft) { mPointerToLabel->SwitchPointer(pUpOrLeft); }
 
-    static CLabel* createReturnLabel(sf::Text*);
-    static CLabel* createOptionLabel(const sf::Vector2f,const sf::Vector2f,const sf::Color);
+    static Label* CreateReturnLabel(sf::Text*);
+    static Label* CreateOptionLabel(const sf::Vector2f, const sf::Vector2f, const sf::Color);
 };
-

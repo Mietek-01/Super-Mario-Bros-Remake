@@ -1,28 +1,27 @@
 #include "Gun.h"
 #include "../../Scens/GameScen.h"
 
-CGun::CGun(sf::Vector2f pos,KindGun kind_gun)
-:CStaticBlock({224,96,32,static_cast<int>(kind_gun)},pos)
+Gun::Gun(sf::Vector2f pPos, KindGun pKindGun)
+    : StaticBlock({224, 96, 32, static_cast<int>(pKindGun)}, pPos)
 {
-    setWhenShoot();
+    SetWhenShoot();
 }
 
 ///------
-void CGun::update()
+void Gun::Update()
 {
-    if(m_when_shoot<CScen::getDurationScen())
+    if (mWhenShoot < Scene::GetDurationScene())
     {
-        const bool right_dir=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x>m_current_position.x;
+        const bool rightDir = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x > mCurrentPosition.x;
 
-        addNewObject(new CBullet({m_current_position.x,m_current_position.y-getBounds().height},right_dir));
+        AddNewObject(new GunBullet({mCurrentPosition.x, mCurrentPosition.y - GetBounds().height}, rightDir));
 
-        setWhenShoot();
+        SetWhenShoot();
     }
 }
 
 ///----
-inline void CGun::setWhenShoot()
+inline void Gun::SetWhenShoot()
 {
-    m_when_shoot=CScen::getDurationScen()+rand()%4+1;
+    mWhenShoot = Scene::GetDurationScene() + rand() % 4 + 1;
 }
-

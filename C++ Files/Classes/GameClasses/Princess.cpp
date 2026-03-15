@@ -1,154 +1,155 @@
 #include "Enemies/Bowser.h"
 #include "../Scens/GameScen.h"
 
-///---------------- CPrincess------------------///
-CBowser::CPrincess::CPrincess(sf::Vector2f pos)
-:CGameObject(new CSprite(CGUI::createSprite("Items",{222,106,32,54},pos,m_scale_to_tile,true)),Parentage::ITEM,pos)
-,m_bot_mario(new CBotMario(CMarioGame::instance().getScen<CGameScen>().getMarioPosition()))
+#include <memory>
+#include <vector>
+
+///---------------- Princess ------------------///
+Bowser::Princess::Princess(sf::Vector2f pPos)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("Items", {222, 106, 32, 54}, pPos, kScaleToTile, true)), Parentage::Item, pPos)
+    , mBotMario(new BotMario(MarioGame::Instance().GetScene<GameScene>().GetMarioPosition()))
 {
-    addNewObject(m_bot_mario);
+    AddNewObject(mBotMario);
 }
 
 ///------
-void CBowser::CPrincess::update()
+void Bowser::Princess::Update()
 {
-    if(!m_bot_mario_stoped)
+    if (!mBotMarioStopped)
     {
-        if(m_bot_mario->getCurrentPosition().x>=m_current_position.x-getSize().x/2.0f-m_stop_mario_position)
+        if (mBotMario->GetCurrentPosition().x >= mCurrentPosition.x - GetSize().x / 2.0f - mStopMarioPosition)
         {
-            m_bot_mario->stop();
-            m_bot_mario_stoped=true;
-            m_timer=CScen::getDurationScen()+m_when_show_message;
+            mBotMario->Stop();
+            mBotMarioStopped = true;
+            mTimer = Scene::GetDurationScene() + mWhenShowMessage;
         }
-    }else
+    } else
     {
-        if(!m_text)
+        if (!mText)
         {
-            if(m_timer<CScen::getDurationScen())
+            if (mTimer < Scene::GetDurationScene())
             {
-                m_timer=CScen::getDurationScen()+m_when_state_win_game;
-                m_text.reset(CGUI::createText(m_message_to_mario,CMarioGame::instance().getViewPosition(),sf::Color::White
-                    ,"arial",true,70));
+                mTimer = Scene::GetDurationScene() + mWhenStateWinGame;
+                mText.reset(Gui::CreateText(mMessageToMario, MarioGame::Instance().GetViewPosition(), sf::Color::White
+                    , "arial", true, 70));
             }
-        }else
+        } else
         {
-            /// WYKONA SIE RAZ BO W STANIE WIN_GAME NIE WYKONUJE JUZ UPDATOW
-            if(m_timer<CScen::getDurationScen())
-                CMarioGame::instance().getScen<CGameScen>().setGameState(CGameScen::GameStates::WIN_GAME);
+            if (mTimer < Scene::GetDurationScene())
+                MarioGame::Instance().GetScene<GameScene>().SetGameState(GameScene::GameStates::WinGame);
         }
     }
 }
 
 ///--------
-void CBowser::CPrincess::draw(const unique_ptr<sf::RenderWindow>&window)
+void Bowser::Princess::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-   m_animator->draw(window);
+   mAnimator->Draw(pWindow);
 
-   if(m_text)
-    window->draw(*m_text);
+   if (mText)
+    pWindow->draw(*mText);
 }
 
-///-----------------------------CBotMario---------------------///
-CBowser::CPrincess::CBotMario::CBotMario(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::ITEM,pos,KindMovement::RIGHT_RUN)
+///-----------------------------BotMario---------------------///
+Bowser::Princess::BotMario::BotMario(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Item, pPos, KindMovement::RightRun)
 {
-    m_value_acceleration=3.0f;
-    /// TWORZE ANIMACJE
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({32,36,32,60});
-    m_frame_animation.push_back({65,36,30,60});
-    m_frame_animation.push_back({96,38,32,58});
+    mValueAcceleration = 3.0f;
+    /// CREATE ANIMATIONS
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({32, 36, 32, 60});
+    frameAnimation.push_back({65, 36, 30, 60});
+    frameAnimation.push_back({96, 38, 32, 58});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.0f,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.0f, kScaleToTile);
 
     ///------
-    m_animations->create(CAnimations::R_STANDING,CMarioGame::s_texture_manager["Mario_right"],{0,38,32,58},m_scale_to_tile);
-    m_animations->create(CAnimations::R_JUMP,CMarioGame::s_texture_manager["Mario_right"],{160,35,32,60},m_scale_to_tile);
+    mAnimations->Create(Animations::RightStanding, MarioGame::sTextureManager["Mario_right"], {0, 38, 32, 58}, kScaleToTile);
+    mAnimations->Create(Animations::RightJump, MarioGame::sTextureManager["Mario_right"], {160, 35, 32, 60}, kScaleToTile);
 
-    m_animations->play(CAnimations::R_MOVE,m_current_position);
+    mAnimations->Play(Animations::RightMove, mCurrentPosition);
 }
 
 ///-----
-void CBowser::CPrincess::CBotMario::update()
+void Bowser::Princess::BotMario::Update()
 {
-    if(!m_iam_blocking&&m_change_animation)
+    if (!mIsBlocking && mChangeAnimation)
     {
-        if(m_jump)
-            m_animations->play(CAnimations::R_JUMP,m_current_position);
+        if (mIsJump)
+            mAnimations->Play(Animations::RightJump, mCurrentPosition);
         else
-            m_animations->play(CAnimations::R_MOVE,m_current_position);
+            mAnimations->Play(Animations::RightMove, mCurrentPosition);
 
-        m_change_animation=false;
+        mChangeAnimation = false;
     }
 
-    if(!m_iam_blocking&&m_kind_movement!=KindMovement::STANDING)
-        CMarioGame::instance().getScen<CGameScen>().changePositionView(m_value_acceleration);
+    if (!mIsBlocking && mKindMovement != KindMovement::Standing)
+        MarioGame::Instance().GetScene<GameScene>().ChangePositionView(mValueAcceleration);
 
-    CPhysicaltObject::update();
-    
-    m_iam_blocking=false;
+    PhysicalObject::Update();
+
+    mIsBlocking = false;
 }
 
 ///----
-void CBowser::CPrincess::CBotMario::updateForCollisionWithBlock(KindCollision how_collision,CBlock* block)
+void Bowser::Princess::BotMario::UpdateForCollisionWithBlock(KindCollision pCollision, Block* pBlock)
 {
-    switch(how_collision)
+    switch (pCollision)
     {
-        case KindCollision::TOP:
+        case KindCollision::Top:
         {
             return;
         }
 
-        case KindCollision::BOTTOM:
+        case KindCollision::Bottom:
         {
-            m_jump=false;
-            m_in_bottom_collision=true;
+            mIsJump = false;
+            mIsInBottomCollision = true;
 
-            m_animations->play(CAnimations::R_MOVE,m_current_position);
+            mAnimations->Play(Animations::RightMove, mCurrentPosition);
             break;
         }
 
-        case KindCollision::RIGHT_SIDE:
+        case KindCollision::RightSide:
         {
-            if(!m_iam_blocking)
+            if (!mIsBlocking)
             {
-                m_change_animation=true;
-                if(m_jump)
-                    m_animations->play(CAnimations::R_JUMP,m_current_position);
+                mChangeAnimation = true;
+                if (mIsJump)
+                    mAnimations->Play(Animations::RightJump, mCurrentPosition);
                 else
-                    m_animations->play(CAnimations::R_STANDING,m_current_position);
+                    mAnimations->Play(Animations::RightStanding, mCurrentPosition);
             }
 
-            m_iam_blocking=true;
+            mIsBlocking = true;
             break;
         }
 
-        case KindCollision::LEFT_SIDE:
+        case KindCollision::LeftSide:
         {
             return;
         }
 
-        case KindCollision::NONE:
+        case KindCollision::None:
         {
             return;
         }
 
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pCollision);
 }
 
 ///---
-void CBowser::CPrincess::CBotMario::stop()
+void Bowser::Princess::BotMario::Stop()
 {
-    m_kind_movement=KindMovement::STANDING;
-    m_animations->play(CAnimations::R_STANDING,m_current_position);
+    mKindMovement = KindMovement::Standing;
+    mAnimations->Play(Animations::RightStanding, mCurrentPosition);
 }
 
 ///------
-void CBowser::CPrincess::CBotMario::falling()
+void Bowser::Princess::BotMario::Falling()
 {
-    CPhysicaltObject::falling();
-    m_animations->play(CAnimations::R_JUMP,m_current_position);
+    PhysicalObject::Falling();
+    mAnimations->Play(Animations::RightJump, mCurrentPosition);
 }
-

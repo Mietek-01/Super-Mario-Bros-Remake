@@ -5,79 +5,80 @@
 #include "../PhysicalObject.h"
 
 #include <list>
+#include <memory>
+#include <string>
+#include <vector>
 
 ///------
-class CEnteringPipe:public CPipe
+class EnteringPipe : public Pipe
 {
-    /// POZWALA UPDATOWAC ROZGRYWKE GDY MARIO WCHODZI WYCHODZI Z RURY
-    static vector<CEnteringPipe*> s_activate_entering_pipes;
+    /// ALLOWS UPDATING THE GAMEPLAY WHEN MARIO ENTERS OR EXITS THE PIPE
+    static std::vector<EnteringPipe*> sActivateEnteringPipes;
 
-    const string m_underground_lvl_name;
-    CPipe* m_return_pipe;
+    const std::string mUndergroundLvlName;
+    Pipe* mReturnPipe;
 
-    const float m_entering_range=15.0f;
-    const float m_entering_speed=0.5f;
+    const float mEnteringRange = 15.0f;
+    const float mEnteringSpeed = 0.5f;
 
-    bool m_active=true;
-    bool m_end_entering_animation=false;
-    bool m_up_entering_animation;
-    float m_end_animation_pos;
+    bool mActive = true;
+    bool mEndEnteringAnimation = false;
+    bool mUpEnteringAnimation;
+    float mEndAnimationPos;
 
-    std::unique_ptr<sf::Sprite> m_mario_entering_animation;
+    std::unique_ptr<sf::Sprite> mMarioEnteringAnimation;
 
-    ///------DANE POTRZEBNE DO ZAPISU POZIOMU-----///
+    ///------DATA NEEDED FOR SAVING THE LEVEL-----///
 
-    shared_ptr<std::vector<CLandScape>> m_landscapes;
-    shared_ptr<std::list<unique_ptr<CBlock>>> m_blocks;
-    shared_ptr<std::list<unique_ptr<CGameObject>>> m_not_physical_objs;
-    shared_ptr<std::list<unique_ptr<CPhysicaltObject>>> m_physical_objs;
+    std::shared_ptr<std::vector<Landscape>> mLandscapes;
+    std::shared_ptr<std::list<std::unique_ptr<Block>>> mBlocks;
+    std::shared_ptr<std::list<std::unique_ptr<GameObject>>> mNotPhysicalObjs;
+    std::shared_ptr<std::list<std::unique_ptr<PhysicalObject>>> mPhysicalObjs;
 
-    string m_background_lvl_name;
+    std::string mBackgroundLvlName;
 
-    float m_duration_scen;
+    float mDurationScene;
 
-    void setEnteringToPipeAnimation(bool);
-    void setLeavingPipeAnimation();
+    void SetEnteringToPipeAnimation(bool);
+    void SetLeavingPipeAnimation();
 
-    friend class CReturnPipe;
+    friend class ReturnPipe;
 
 public:
 
-    CEnteringPipe(const pair<sf::Vector2f,CPipe::KindPipe>&,string,CPipe*);
-    CEnteringPipe(const pair<sf::Vector2f,CPipe::KindPipe>&,string);
+    EnteringPipe(const std::pair<sf::Vector2f, Pipe::KindPipe>&, std::string, Pipe*);
+    EnteringPipe(const std::pair<sf::Vector2f, Pipe::KindPipe>&, std::string);
 
-    ~CEnteringPipe(){}
+    ~EnteringPipe() {}
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&)override;
+    void Update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
-    void setUndergroundLvl();
-    void setBeforeWorld();
-    void reasumeGame();
+    void SetUndergroundLvl();
+    void SetBeforeWorld();
+    void ResumeGame();
 
-    void enteringAnimation();
+    void EnteringAnimation();
 
-    bool isTheEndEnteringAnimation()const {return m_end_entering_animation;}
-    bool isVisible()const override {return true;}
+    bool IsTheEndEnteringAnimation() const { return mEndEnteringAnimation; }
+    bool IsVisible() const override { return true; }
 
-    static CEnteringPipe* getActivatePipe();
-    static void resetActivatedPipes();
+    static EnteringPipe* GetActivatePipe();
+    static void ResetActivatedPipes();
 
 };
 
 ///--------
-class CReturnPipe:public CStaticBlock
+class ReturnPipe : public StaticBlock
 {
-    const float m_entering_range=15;
+    const float mEnteringRange = 15;
 
 public:
 
-    CReturnPipe(sf::Vector2f);
-    ~CReturnPipe(){}
+    ReturnPipe(sf::Vector2f);
+    ~ReturnPipe() {}
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&)override;
+    void Update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
 };
-
-

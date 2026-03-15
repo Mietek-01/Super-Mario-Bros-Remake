@@ -1,92 +1,90 @@
 #include "FlowText.h"
 
+using namespace std;
+
 ///------
-CFlowText::CFlowText(sf::Text* text,float when_remove,float speed_changing)
-:m_text(text)
-,CGuiObject(when_remove)
-,m_speed_changing_transparency(speed_changing)
+FlowText::FlowText(sf::Text* pText, float pWhenRemove, float pSpeedChanging)
+    : mText(pText)
+    , GuiObject(pWhenRemove)
+    , mSpeedChangingTransparency(pSpeedChanging)
 {
-    m_color=m_text->getFillColor();
+    mColor = mText->getFillColor();
 
-    /// LOWER - PRZEZROCZYSTOSC MA MALEC
-    /// TALLER - MA ROSNAC
+    /// LOWER - transparency decreases
+    /// TALLER - transparency increases
 
-    /// ZNAK JEST MI POTRZEBNY TYLKO BY OKRESLIC ODPOWIEDNIA OPCJE
-    if(m_speed_changing_transparency<0)
-        m_kind_changing_transparency=KindChangingTransparency::LOWER;
-    else
-        if(m_speed_changing_transparency>0)
-       m_kind_changing_transparency=KindChangingTransparency::TALLER;
-    else
-        m_kind_changing_transparency=KindChangingTransparency::NONE;
+    /// Sign is only needed to determine the appropriate option
+    if (mSpeedChangingTransparency < 0) {
+        mKindChangingTransparency = KindChangingTransparency::Lower;
+    } else if (mSpeedChangingTransparency > 0) {
+        mKindChangingTransparency = KindChangingTransparency::Taller;
+    } else {
+        mKindChangingTransparency = KindChangingTransparency::None;
+    }
 }
 
 ///----
-CFlowText::CFlowText(sf::Text* text,std::function<bool(unique_ptr<sf::Text>&)> special_update,float speed_changing)
-:m_text(text)
-,m_speed_changing_transparency(speed_changing)
+FlowText::FlowText(sf::Text* pText, std::function<bool(unique_ptr<sf::Text>&)> pSpecialUpdate, float pSpeedChanging)
+    : mText(pText)
+    , mSpeedChangingTransparency(pSpeedChanging)
 {
-    m_special_update=special_update;
-    m_color=m_text->getFillColor();
+    mSpecialUpdate = pSpecialUpdate;
+    mColor = mText->getFillColor();
 
-    if(m_speed_changing_transparency<0)
-        m_kind_changing_transparency=KindChangingTransparency::LOWER;
-    else
-        if(m_speed_changing_transparency>0)
-       m_kind_changing_transparency=KindChangingTransparency::TALLER;
-    else
-        m_kind_changing_transparency=KindChangingTransparency::NONE;
+    if (mSpeedChangingTransparency < 0) {
+        mKindChangingTransparency = KindChangingTransparency::Lower;
+    } else if (mSpeedChangingTransparency > 0) {
+        mKindChangingTransparency = KindChangingTransparency::Taller;
+    } else {
+        mKindChangingTransparency = KindChangingTransparency::None;
+    }
 }
 
 ///--------------
-void CFlowText::update()
+void FlowText::Update()
 {
-    if(m_special_update)
-        m_remove=m_special_update(m_text);
-    else
-    {
-        m_text->move(0,-1);
-        if(m_text->getPosition().y<=m_when_remove)
-            m_remove=true;
+    if (mSpecialUpdate) {
+        mIsRemove = mSpecialUpdate(mText);
+    } else {
+        mText->move(0, -1);
+        if (mText->getPosition().y <= mWhenRemove) {
+            mIsRemove = true;
+        }
     }
 
-    /// WYKONUJE WYBRANY RODZAJ ZMIANY PRZEZROCZYSTOSCI
+    /// Perform the selected kind of transparency change
 
-    switch(m_kind_changing_transparency)
-    {
-    case KindChangingTransparency::LOWER:
+    switch (mKindChangingTransparency) {
+    case KindChangingTransparency::Lower:
         {
-            m_color.a=255+m_value_transparency;
-            m_text->setFillColor(m_color);
+            mColor.a = 255 + mValueTransparency;
+            mText->setFillColor(mColor);
 
-            m_value_transparency+=m_speed_changing_transparency;
+            mValueTransparency += mSpeedChangingTransparency;
 
-            if(m_value_transparency<-255)
-            {
-                m_color.a=0;
-                m_text->setFillColor(m_color);
-                m_kind_changing_transparency=KindChangingTransparency::NONE;
+            if (mValueTransparency < -255) {
+                mColor.a = 0;
+                mText->setFillColor(mColor);
+                mKindChangingTransparency = KindChangingTransparency::None;
             }
 
             break;
         }
 
-    case KindChangingTransparency::TALLER:
+    case KindChangingTransparency::Taller:
         {
-            m_color.a=0+m_value_transparency;
-            m_text->setFillColor(m_color);
+            mColor.a = 0 + mValueTransparency;
+            mText->setFillColor(mColor);
 
-            m_value_transparency+=m_speed_changing_transparency;
+            mValueTransparency += mSpeedChangingTransparency;
 
-            if(m_value_transparency>255)
-            {
-                m_color.a=255;
-                m_text->setFillColor(m_color);
-                m_kind_changing_transparency=KindChangingTransparency::NONE;
+            if (mValueTransparency > 255) {
+                mColor.a = 255;
+                mText->setFillColor(mColor);
+                mKindChangingTransparency = KindChangingTransparency::None;
             }
 
             break;
         }
-
     }
 }

@@ -2,97 +2,93 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "Managers.h"
 #include "Scens/Scen.h"
 #include "EventHandler.h"
 #include "GUIClasses/GUI.h"
 
-using namespace std;
+class MarioGame final {
+    static MarioGame* sInstance;
 
-class CMarioGame final
-{
-    static CMarioGame *s_instance;
+    const std::string mTitle = "MARIO";
+    const bool mIsFullScreen = false;
+    const bool mIsWriteFramerate = false;
 
-    const string m_title = "MARIO";
-    const bool m_full_screan = false;
-    const bool m_write_framerate = false;
+    std::unique_ptr<Scene> mCurrentScene;
+    std::unique_ptr<sf::RenderWindow> mWindow;
 
-    unique_ptr<CScen> m_current_scen;
-    unique_ptr<sf::RenderWindow> m_window;
+    std::unique_ptr<EventHandler> mEventHandler;
+    std::unique_ptr<Gui> mGui;
 
-    unique_ptr<CEventHandler> m_event_hadler;
-    unique_ptr<CGUI> m_gui;
-
-    const vector<string> m_levels_names;
-    const int m_framerate = 110;
-    int m_current_level_index = 0;
-    int m_completed_lvls_number;
+    const std::vector<std::string> mLevelsNames;
+    const int mFramerate = 110;
+    int mCurrentLevelIndex = 0;
+    int mCompletedLevelsNumber;
 
     /// METHODS
 
-    CMarioGame();
-    ~CMarioGame();
+    MarioGame();
+    ~MarioGame();
 
-    vector<string> loadLevelsNames();
-    void loadCompletedLvlsNumber();
-    void initEvents();
-    void creatWindow();
-    void writeFrameRate(int&, float&, float);
+    std::vector<std::string> LoadLevelsNames();
+    void LoadCompletedLevelsNumber();
+    void InitEvents();
+    void CreateWindow();
+    void WriteFrameRate(int& pFrameCounter, float& pSecondTimer, float pFrameTime);
 
-    static void setMenagers();
+    static void SetManagers();
 
 public:
-    static const sf::Vector2u s_size_window;
+    static const sf::Vector2u sSizeWindow;
 
-    static CFontManager s_font_manager;
-    static CTextureManager s_texture_manager;
-    static CMusicManager s_music_manager;
-    static CSoundManager s_sound_manager;
+    static FontManager sFontManager;
+    static TextureManager sTextureManager;
+    static MusicManager sMusicManager;
+    static SoundManager sSoundManager;
 
     /// METHODS
 
-    static CMarioGame &instance();
+    static MarioGame& Instance();
 
     template <class T>
-    bool isThisScen() const
-    {
-        return (bool)(dynamic_cast<T *>(m_current_scen.get()));
+    [[nodiscard]] bool IsThisScene() const {
+        return (bool)(dynamic_cast<T*>(mCurrentScene.get()));
     }
 
-    void run();
-    void changeScen(CScen *new_scen) { m_current_scen.reset(new_scen); }
-    void resetView();
+    void Run();
+    void ChangeScene(Scene* pNewScene) { mCurrentScene.reset(pNewScene); }
+    void ResetView();
 
-    /// SETTER
+    /// SETTERS
 
-    void setIndexLevel(int which_lvl)
-    {
-        assert(which_lvl < m_levels_names.size() && which_lvl >= 0);
-        m_current_level_index = which_lvl;
+    void SetIndexLevel(int pWhichLevel) {
+        assert(pWhichLevel < mLevelsNames.size() && pWhichLevel >= 0);
+        mCurrentLevelIndex = pWhichLevel;
     }
-    void setNextlevel();
-    void increaseCompletedLvlsNumber() { m_completed_lvls_number++; }
+    void SetNextLevel();
+    void IncreaseCompletedLevelsNumber() { mCompletedLevelsNumber++; }
 
-    /// GETTERY
+    /// GETTERS
 
     template <class T>
-    T &getScen() const
-    {
-        assert(m_current_scen);
-        assert(isThisScen<T>());
+    [[nodiscard]] T& GetScene() const {
+        assert(mCurrentScene);
+        assert(IsThisScene<T>());
 
-        return *(dynamic_cast<T *>(m_current_scen.get()));
+        return *(dynamic_cast<T*>(mCurrentScene.get()));
     }
 
-    const unique_ptr<sf::RenderWindow> &getWindow() const { return m_window; }
-    sf::Vector2f getViewPosition() const { return m_window->getView().getCenter(); }
+    [[nodiscard]] const std::unique_ptr<sf::RenderWindow>& GetWindow() const { return mWindow; }
+    [[nodiscard]] sf::Vector2f GetViewPosition() const { return mWindow->getView().getCenter(); }
 
-    string getCurrentLevelName() const { return m_levels_names[m_current_level_index]; }
-    const vector<string> &getLevelsNames() const { return m_levels_names; }
+    [[nodiscard]] std::string GetCurrentLevelName() const { return mLevelsNames[mCurrentLevelIndex]; }
+    [[nodiscard]] const std::vector<std::string>& GetLevelsNames() const { return mLevelsNames; }
 
-    int getCompletedLvlsNumber() const { return m_completed_lvls_number; }
-    int getLvlIndex() const { return m_current_level_index; }
+    [[nodiscard]] int GetCompletedLevelsNumber() const { return mCompletedLevelsNumber; }
+    [[nodiscard]] int GetLevelIndex() const { return mCurrentLevelIndex; }
 
-    bool isItLastLevel() const { return m_current_level_index == m_levels_names.size() - 1; }
+    [[nodiscard]] bool IsLastLevel() const { return mCurrentLevelIndex == mLevelsNames.size() - 1; }
 };

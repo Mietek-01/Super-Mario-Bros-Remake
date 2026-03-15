@@ -2,143 +2,136 @@
 #include <iostream>
 #include "GUIClasses/GUI.h"
 
-void CMusicManager::play(string name)
-{
-    assert(m_resources.find(name)!=m_resources.end());
+using namespace std;
 
-    if(isPlayingMusic())
-        getCurrentMusic().pause();
+/// Play a named music track, pausing any currently playing track
+void MusicManager::Play(string pName) {
+    assert(mResources.find(pName) != mResources.end());
 
-    m_played_musics.push_back(name);
+    if (IsPlayingMusic()) {
+        GetCurrentMusic().pause();
+    }
 
-    getCurrentMusic().play();
-    getCurrentMusic().setVolume(m_volume);
+    mPlayedMusics.push_back(pName);
+
+    GetCurrentMusic().play();
+    GetCurrentMusic().setVolume(mVolume);
 }
 
-///-------
-void CMusicManager::playToDefineVolume()
-{
-    bool findig=true;
+/// Play a random unplayed track to establish volume
+void MusicManager::PlayToDefineVolume() {
+    bool finding = true;
 
-    while(findig)
-    {
+    while (finding) {
+        const int whichMusic = Gui::Rand(mResources.size(), 0);
+        int i = 0;
 
-        const int which_music=CGUI::rand(m_resources.size(),0);
-        int i=0;
-
-        for(auto it=m_resources.begin();;it++,i++)
-            if(i==which_music)
-            {
-                if(m_played_musics.end()==find(m_played_musics.begin(),m_played_musics.end(),(*it).first))
-                {
-                    m_played_musics.push_back((*it).first);
-                    findig=false;
+        for (auto it = mResources.begin(); ; it++, i++) {
+            if (i == whichMusic) {
+                if (mPlayedMusics.end() == find(mPlayedMusics.begin(), mPlayedMusics.end(), (*it).first)) {
+                    mPlayedMusics.push_back((*it).first);
+                    finding = false;
                 }
 
                 break;
             }
+        }
     }
 
-    getCurrentMusic().play();
-    getCurrentMusic().setVolume(m_volume);
+    GetCurrentMusic().play();
+    GetCurrentMusic().setVolume(mVolume);
 }
 
-///--------
-sf::Music& CMusicManager::getCurrentMusic()
-{
-    assert(isPlayingMusic());
+/// Return reference to the currently active music track
+sf::Music& MusicManager::GetCurrentMusic() {
+    assert(IsPlayingMusic());
 
-    return *m_resources[m_played_musics.back()];
+    return *mResources[mPlayedMusics.back()];
 }
 
-///-----------
-void CMusicManager::stop()
-{
-    if(isPlayingMusic())
-    {
-        getCurrentMusic().stop();
-        m_played_musics.pop_back();
+/// Stop and remove the most recent music track from the stack
+void MusicManager::Stop() {
+    if (IsPlayingMusic()) {
+        GetCurrentMusic().stop();
+        mPlayedMusics.pop_back();
     }
 }
 
-///------
-void CMusicManager::pause()
-{
-    if(isPlayingMusic())
-        getCurrentMusic().pause();
-}
-
-///---
-void CMusicManager::resume()
-{
-    if(isPlayingMusic())
-    {
-        getCurrentMusic().play();
-        getCurrentMusic().setVolume(m_volume);
+/// Pause the currently playing music
+void MusicManager::Pause() {
+    if (IsPlayingMusic()) {
+        GetCurrentMusic().pause();
     }
 }
 
-///----------
-void CMusicManager::updateMusicVolume(bool is_louder)
-{
-    if(!isPlayingMusic())
-        return;
-
-    updateVolume(is_louder);
-
-    getCurrentMusic().setVolume(m_volume);
+/// Resume the currently paused music
+void MusicManager::Resume() {
+    if (IsPlayingMusic()) {
+        GetCurrentMusic().play();
+        GetCurrentMusic().setVolume(mVolume);
+    }
 }
 
-///----------
-void CMusicManager::resetAllMusic()
-{
-    for(auto music_name:m_played_musics)
-        m_resources[music_name]->stop();
-
-    m_played_musics.clear();
-}
-
-///------------------------CSoundManager-------------///
-
-void CSoundManager::play(string name)
-{
-  assert(m_resources.find(name)!=m_resources.end());
-
-  for(auto &sound:m_sounds)
-    if(sound.getStatus()==sf::Sound::Stopped)
-    {
-        sound.setBuffer(*m_resources[name]);
-        sound.setVolume(m_volume);
-        sound.play();
+/// Adjust volume up or down and apply to current music
+void MusicManager::UpdateMusicVolume(bool pIsLouder) {
+    if (!IsPlayingMusic()) {
         return;
     }
 
-    cout<<"----------------ZA DUZO DZWIEKOW--------------"<<endl;
+    UpdateVolume(pIsLouder);
+
+    GetCurrentMusic().setVolume(mVolume);
+}
+
+/// Stop all tracked music and clear the played list
+void MusicManager::ResetAllMusic() {
+    for (auto musicName : mPlayedMusics) {
+        mResources[musicName]->stop();
+    }
+
+    mPlayedMusics.clear();
+}
+
+///------------------------SoundManager-------------///
+
+/// Play a named sound effect using the first available sound slot
+void SoundManager::Play(string pName) {
+    assert(mResources.find(pName) != mResources.end());
+
+    for (auto& sound : mSounds) {
+        if (sound.getStatus() == sf::Sound::Stopped) {
+            sound.setBuffer(*mResources[pName]);
+            sound.setVolume(mVolume);
+            sound.play();
+            return;
+        }
+    }
+
+    cout << "----------------TOO MANY SOUNDS--------------" << endl;
     assert(0);
 }
 
-///-----------
-void CSoundManager::stop()
-{
-   for(auto &sound:m_sounds)
-    sound.stop();
+/// Stop all active sounds
+void SoundManager::Stop() {
+    for (auto& sound : mSounds) {
+        sound.stop();
+    }
 }
 
-///------
-void CSoundManager::pause()
-{
-   for(auto &sound:m_sounds)
-    if(sound.getStatus()==sf::Sound::Playing)
-        sound.pause();
+/// Pause all currently playing sounds
+void SoundManager::Pause() {
+    for (auto& sound : mSounds) {
+        if (sound.getStatus() == sf::Sound::Playing) {
+            sound.pause();
+        }
+    }
 }
 
-///---
-void CSoundManager::resume()
-{
-  for(auto &sound:m_sounds)
-    if(sound.getStatus()==sf::Sound::Paused)
-        sound.play();
+/// Resume all paused sounds
+void SoundManager::Resume() {
+    for (auto& sound : mSounds) {
+        if (sound.getStatus() == sf::Sound::Paused) {
+            sound.play();
+        }
+    }
 }
-
-
-

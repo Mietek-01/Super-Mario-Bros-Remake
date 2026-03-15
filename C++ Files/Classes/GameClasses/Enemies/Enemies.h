@@ -3,156 +3,146 @@
 #include "ArmedTurtle.h"
 #include "Bowser.h"
 
-using namespace std;
+#include <memory>
+#include <vector>
 
-class CGoombas:public CPhysicaltObject
-{
-    const int m_damage_value=100;/// POTRZEBNE GDY W POZIOMIE Z BOWSEREM ZADAJE OBRAZENIA MARIU
-    const bool m_created_by_bowser;
+class Goombas : public PhysicalObject {
+    const int mDamageValue = 100;
+    const bool mCreatedByBowser;
 
-    void updateForCollisionWithBlock(KindCollision ,CBlock*)override;
+    void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
 public:
 
-    CGoombas(sf::Vector2f,KindMovement=CPhysicaltObject::KindMovement::LEFT_RUN,bool =false);
-    ~CGoombas(){}
+    Goombas(sf::Vector2f, KindMovement = PhysicalObject::KindMovement::LeftRun, bool = false);
+    ~Goombas() {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
-
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 };
 
 ///----------
-class CTurtle:public CPhysicaltObject
-{
-    const bool m_created_by_flying_turtle;
-    bool m_close_to_fall=false;
-    sf::FloatRect m_future_position;
+class Turtle : public PhysicalObject {
+    const bool mCreatedByFlyingTurtle;
+    bool mCloseToFall = false;
+    sf::FloatRect mFuturePosition;
 
-    inline void dontFall();
+    inline void DontFall();
 
 public:
 
-    CTurtle(sf::Vector2f,bool=false,KindMovement=KindMovement::LEFT_RUN);
-    ~CTurtle(){}
+    Turtle(sf::Vector2f, bool = false, KindMovement = KindMovement::LeftRun);
+    ~Turtle() {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 
-    void update()override;
+    void Update() override;
 };
 
 ///--------
-class CRedTurtle:public CPhysicaltObject
-{
-    const int m_damage_value=150;
-    const bool m_created_by_bowser;
+class RedTurtle : public PhysicalObject {
+    const int mDamageValue = 150;
+    const bool mCreatedByBowser;
 
-    void updateForCollisionWithBlock(KindCollision ,CBlock*)override;
+    void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
 public:
 
-    CRedTurtle(sf::Vector2f,KindMovement=CPhysicaltObject::KindMovement::LEFT_RUN,bool=false);
-    ~CRedTurtle(){}
+    RedTurtle(sf::Vector2f, KindMovement = PhysicalObject::KindMovement::LeftRun, bool = false);
+    ~RedTurtle() {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
-
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 };
 
 ///------
-class CArmoredTurtle:public CPhysicaltObject
-{
+class ArmoredTurtle : public PhysicalObject {
 
 public:
 
-    CArmoredTurtle(sf::Vector2f);
-    ~CArmoredTurtle(){}
+    ArmoredTurtle(sf::Vector2f);
+    ~ArmoredTurtle() {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
-
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 };
 
 ///---------
-class CFlyingTurtle:public CPhysicaltObject
-{
-    static const float s_my_gravitation;
-    void makeJump()override;
+class FlyingTurtle : public PhysicalObject {
+    static const float sMyGravitation;
+    void MakeJump() override;
 
-    void updateForCollisionWithBlock(KindCollision ,CBlock*)override;
+    void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
 public:
 
-    CFlyingTurtle(sf::Vector2f);
-    ~CFlyingTurtle(){}
+    FlyingTurtle(sf::Vector2f);
+    ~FlyingTurtle() {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
-
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 };
 
 ///-----
-class CCreatorRedTurltes:public CGameObject
-{
-    class CRedTurtleShall:public CPhysicaltObject
-    {
-        const float m_basic_y_pos;
-        void updateForCollisionWithBlock(KindCollision,CBlock*)override;
+class CreatorRedTurtles : public GameObject {
+    class RedTurtleShell : public PhysicalObject {
+        const float mBasicYPos;
+        void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
     public:
-        CRedTurtleShall(sf::Vector2f,bool);
-        ~CRedTurtleShall(){}
+        RedTurtleShell(sf::Vector2f, bool);
+        ~RedTurtleShell() {}
 
-        void actOnObject(CGameObject*,KindCollision)override;
-        void actOnMe(KindAction)override{};
+        void ActOnObject(GameObject*, KindCollision) override;
+        void ActOnMe(KindAction) override {}
 
-        bool isVisible()const override {return true;}
+        bool IsVisible() const override { return true; }
     };
 
-    bool m_right_dir=true;
-    bool m_enable=false;
-    bool m_curbing=false;
-    bool m_set_changing_dir_pos=true;
-    bool m_leave_map=false;
-    bool m_loading_shoot=false;
+    bool mRightDir = true;
+    bool mEnable = false;
+    bool mCurbing = false;
+    bool mSetChangingDirPos = true;
+    bool mLeaveMap = false;
+    bool mLoadingShoot = false;
 
-    const float m_leave_position;
-    const sf::Vector2f m_acitivation_position;
+    const float mLeavePosition;
+    const sf::Vector2f mActivationPosition;
 
-    const float m_value_acceleration=0.07f;
-    const float m_max_speed=4.5f;
+    const float mValueAcceleration = 0.07f;
+    const float mMaxSpeed = 4.5f;
 
-    const float m_iterativity_loading_shoot=1.5f;
-    const float m_loading_shoot_time=0.3f;
+    const float mIterativityLoadingShoot = 1.5f;
+    const float mLoadingShootTime = 0.3f;
 
-    const int m_range=350;
-    const int m_when_curbing=150;
+    const int mRange = 350;
+    const int mWhenCurbing = 150;
 
-    float m_change_dir_position;
-    float m_speed=0.0f;
-    float m_double_speed=1.0f;
-    float m_when_load_shoot;
-    float m_when_shoot;
+    float mChangeDirPosition;
+    float mSpeed = 0.0f;
+    float mDoubleSpeed = 1.0f;
+    float mWhenLoadShoot;
+    float mWhenShoot;
 
-    inline void setChangeDirPosition();
-    inline void changeDirection();
-    inline void move();
-    inline void shoot();
+    inline void SetChangeDirPosition();
+    inline void ChangeDirection();
+    inline void Move();
+    inline void Shoot();
 
-    inline void setWhenLoadShoot();
-    inline void setWhenShoot();
+    inline void SetWhenLoadShoot();
+    inline void SetWhenShoot();
 
 public:
 
-    CCreatorRedTurltes(sf::Vector2f);
-    ~CCreatorRedTurltes(){}
+    CreatorRedTurtles(sf::Vector2f);
+    ~CreatorRedTurtles() {}
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&) override;
+    void Update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 
-    bool isVisible()const override {return true;}
+    bool IsVisible() const override { return true; }
 };

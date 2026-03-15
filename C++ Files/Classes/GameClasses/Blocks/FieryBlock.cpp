@@ -1,41 +1,40 @@
 #include "FieryBlock.h"
 
-CFieryBlock::CFieryBlock(sf::Vector2f pos,const bool right_dir)
-:CStaticBlock({0,32,32,32},pos)
+FieryBlock::FieryBlock(sf::Vector2f pPos, const bool pRightDir)
+    : StaticBlock({0, 32, 32, 32}, pPos)
 {
-    CFieryLine::Direction dir;
+    FieryLine::Direction dir;
 
-    if(right_dir)
-        dir=CFieryLine::Direction::RIGHT;
+    if (pRightDir)
+        dir = FieryLine::Direction::Right;
     else
-        dir=CFieryLine::Direction::LEFT;
+        dir = FieryLine::Direction::Left;
 
-    addNewObject(new CFieryLine({pos.x,pos.y-getBounds().height/2.0f},dir));
+    AddNewObject(new FieryLine({pPos.x, pPos.y - GetBounds().height / 2.0f}, dir));
 }
 
-///----------CFieryLine---------///
+///----------FieryLine---------///
 
-CFieryBlock::CFieryLine::CFieryLine(sf::Vector2f pos,Direction dir)
-:CGameObject(new CSprite(CGUI::createSprite("Tiles",{static_cast<int>(dir),667,14,96},pos,m_scale_to_tile,true)),Parentage::ITEM,pos)
-,m_dir(dir)
+FieryBlock::FieryLine::FieryLine(sf::Vector2f pPos, Direction pDir)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("Tiles", {static_cast<int>(pDir), 667, 14, 96}, pPos, kScaleToTile, true)), Parentage::Item, pPos)
+    , mDir(pDir)
 {
 }
 
 ///-------
-void CFieryBlock::CFieryLine::update()
+void FieryBlock::FieryLine::Update()
 {
-    if(m_dir==Direction::RIGHT)
-        m_animator->getSprite().rotate(m_speed);
+    if (mDir == Direction::Right)
+        mAnimator->GetSprite().rotate(mSpeed);
     else
-        m_animator->getSprite().rotate(-m_speed);
+        mAnimator->GetSprite().rotate(-mSpeed);
 
-    m_animator->update(m_current_position);
+    mAnimator->Update(mCurrentPosition);
 }
 
 ///------
-void CFieryBlock::CFieryLine::actOnObject(CGameObject* obj,KindCollision kind_collision)
+void FieryBlock::FieryLine::ActOnObject(GameObject* pObj, KindCollision pKindCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        obj->actOnMe(KindAction::HIT);
+    if (pObj->GetParentage() == Parentage::Mario)
+        pObj->ActOnMe(KindAction::Hit);
 }
-

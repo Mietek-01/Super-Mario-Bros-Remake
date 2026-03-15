@@ -2,161 +2,159 @@
 #include "../Scens/GameScen.h"
 #include "Blocks/MoveableBlock.h"
 
-#include <math.h>
+#include <cmath>
 
-const short CMario::s_basic_number_lives_mario=5;
-short CMario::s_lives_mario=CMario::s_basic_number_lives_mario;
+const short Mario::sBasicNumberLivesMario = 5;
+short Mario::sLivesMario = Mario::sBasicNumberLivesMario;
 
-CMario::LevelMario CMario::s_level_mario=CMario::LevelMario::SMALL_MARIO;
+Mario::LevelMario Mario::sLevelMario = Mario::LevelMario::SmallMario;
 
-CMario::~CMario()
+Mario::~Mario()
 {
-    CMoveableBlock::removeDeadObjOnMoveableBlock(this);
+    MoveableBlock::RemoveDeadObjOnMoveableBlock(this);
 }
 
 ///-----
-CMario::CMario(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::MARIO,pos,KindMovement::STANDING)
-,CShield(1500)
-,m_deactivate_decisions(CEventHandler::getDeactivateDecisions())
-,m_enabled_decisions(CEventHandler::getEnabledDecisions())
+Mario::Mario(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Mario, pPos, KindMovement::Standing)
+    , Shield(1500)
+    , mDeactivateDecisions(EventHandler::GetDeactivateDecisions())
+    , mEnabledDecisions(EventHandler::GetEnabledDecisions())
 {
-    CEventHandler::resetDecisions();
+    EventHandler::ResetDecisions();
 
-    m_jump_force=-1100.0f;
-    m_right_dir_reversal=true;
+    mJumpForce = -1100.0f;
+    mIsRightDirReversal = true;
 
-    if(s_level_mario==LevelMario::SMALL_MARIO)
-        createSmalMarioAnimations();
+    if (sLevelMario == LevelMario::SmallMario)
+        CreateSmallMarioAnimations();
     else
-        createBigMarioAnimations();
+        CreateBigMarioAnimations();
 
-    m_animations->play(CAnimations::R_STANDING,m_current_position);
+    mAnimations->Play(Animations::RightStanding, mCurrentPosition);
 }
 
 ///--------------------
-void CMario::update()
+void Mario::Update()
 {
-    handleMarioControll();
+    HandleMarioControl();
 
-    m_previous_position=m_current_position;
-    
-    if(m_in_bottom_collision)
-        m_previous_position.y-=s_correction_to_bottom_collision;
+    mPreviousPosition = mCurrentPosition;
 
-    this->run();
+    if (mIsInBottomCollision)
+        mPreviousPosition.y -= sCorrectionToBottomCollision;
 
-    if(m_jump)
-        this->makeJump();
+    this->Run();
 
-    if(m_iam_shooting&&m_shooting_iterativity_timer<CScen::getDurationScen())
+    if (mIsJump)
+        this->MakeJump();
+
+    if (mIsShooting && mShootingIterativityTimer < Scene::GetDurationScene())
     {
-        m_iam_shooting=false;
-        animationUpdtate();
+        mIsShooting = false;
+        AnimationUpdate();
     }
 
-    collisionWithBoundsMap();
+    CollisionWithBoundsMap();
 
-    m_animations->update(m_current_position);
+    mAnimations->Update(mCurrentPosition);
 
-    if(m_shield_pointer)
+    if (mShieldPointer)
     {
-        m_shield_pointer->update();
+        mShieldPointer->Update();
 
-        if(m_shield_pointer->isTheEndShield())
-            this->remove();
+        if (mShieldPointer->IsShieldDepleted())
+            this->Remove();
     }
 }
 
 ///---------------------
-void CMario::actOnMe(KindAction which_action)
+void Mario::ActOnMe(KindAction pAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    switch(which_action)
+    switch (pAction)
     {
-    case KindAction::LVL_UP:
+    case KindAction::LevelUp:
     {
-        if(m_flashing_mario||s_level_mario!=LevelMario::SMALL_MARIO)
+        if (mFlashingMario || sLevelMario != LevelMario::SmallMario)
             return;
 
-        if(CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::CHANGING_LVL_MARIO))
+        if (MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::ChangingLevelMario))
         {
-            const sf::FloatRect prev_small_mario_bounds(getPreviousBounds());
+            const sf::FloatRect prevSmallMarioBounds(GetPreviousBounds());
 
-            if(!m_right_dir_reversal)
-                m_animations->play(MyKindsAnimations::L_LVL_UP,m_current_position);
+            if (!mIsRightDirReversal)
+                mAnimations->Play(MyKindsAnimations::LeftLevelUp, mCurrentPosition);
             else
-                m_animations->play(MyKindsAnimations::R_LVL_UP,m_current_position);
+                mAnimations->Play(MyKindsAnimations::RightLevelUp, mCurrentPosition);
 
-            this->corectPositionWhenChangingOnBigMario(prev_small_mario_bounds);
+            this->CorrectPositionWhenChangingOnBigMario(prevSmallMarioBounds);
 
-            m_kind_movement=KindMovement::STANDING;
-            m_curbing=m_stop=false;
-            s_level_mario=LevelMario::BIG_MARIO;
+            mKindMovement = KindMovement::Standing;
+            mCurbing = mStop = false;
+            sLevelMario = LevelMario::BigMario;
 
-            m_horizontal_velocity=0.0f;
-            if(m_jump)m_force=0.0f;
+            mHorizontalVelocity = 0.0f;
+            if (mIsJump) mForce = 0.0f;
 
-            m_changeing_lvl_timer=CScen::getDurationScen()+m_changing_lvl_time;
+            mChangingLevelTimer = Scene::GetDurationScene() + mChangingLevelTime;
 
-            CMarioGame::s_sound_manager.play("powerup");
+            MarioGame::sSoundManager.play("powerup");
         }
 
         break;
     }
 
-    case KindAction::HOP:
+    case KindAction::Hop:
     {
-        hop(-600.0f);
+        Hop(-600.0f);
         break;
     }
 
-    case KindAction::UNDER_MAP:
+    case KindAction::UnderMap:
     {
-        m_current_position.y=CMarioGame::s_size_window.y+CScen::s_tile_size;
-        remove();
+        mCurrentPosition.y = MarioGame::sSizeWindow.y + Scene::sTileSize;
+        Remove();
         break;
     }
 
-    case KindAction::HIT:
+    case KindAction::Hit:
     {
-        //return;
-
-        if(m_flashing_mario)
+        if (mFlashingMario)
             return;
 
-        if(m_shield_pointer)
+        if (mShieldPointer)
         {
-            reduceShield();
+            ReduceShield();
 
-            if(getShieldValue()>0)
-                setFlashing(m_flashing_time*0.5f);
+            if (GetShieldValue() > 0)
+                SetFlashing(mFlashingTime * 0.5f);
 
         }
-        else if(s_level_mario!=LevelMario::SMALL_MARIO)
+        else if (sLevelMario != LevelMario::SmallMario)
         {
-            if(CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::CHANGING_LVL_MARIO))
+            if (MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::ChangingLevelMario))
             {
-                if(!m_right_dir_reversal)
-                    m_animations->play(MyKindsAnimations::L_LVL_DOWN,m_current_position);
+                if (!mIsRightDirReversal)
+                    mAnimations->Play(MyKindsAnimations::LeftLevelDown, mCurrentPosition);
                 else
-                    m_animations->play(MyKindsAnimations::R_LVL_DOWN,m_current_position);
+                    mAnimations->Play(MyKindsAnimations::RightLevelDown, mCurrentPosition);
 
-                m_changeing_lvl_timer=CScen::getDurationScen()+m_changing_lvl_time;
-                s_level_mario=LevelMario::SMALL_MARIO;
+                mChangingLevelTimer = Scene::GetDurationScene() + mChangingLevelTime;
+                sLevelMario = LevelMario::SmallMario;
 
-                m_kind_movement=KindMovement::STANDING;
-                m_curbing=m_stop=false;
+                mKindMovement = KindMovement::Standing;
+                mCurbing = mStop = false;
 
-                m_horizontal_velocity=0.0f;
-                if(m_jump)m_force=0.0f;
+                mHorizontalVelocity = 0.0f;
+                if (mIsJump) mForce = 0.0f;
 
-                CMarioGame::s_sound_manager.play("pipe");
+                MarioGame::sSoundManager.play("pipe");
             }
         }
         else
-            this->remove();
+            this->Remove();
 
         break;
     }
@@ -164,135 +162,133 @@ void CMario::actOnMe(KindAction which_action)
 }
 
 ///------------------
-void CMario::updateForCollisionWithBlock(KindCollision how_collision,CBlock* block)
+void Mario::UpdateForCollisionWithBlock(KindCollision pCollision, Block* pBlock)
 {
-    switch(how_collision)
+    switch (pCollision)
     {
-        case KindCollision::TOP:
+        case KindCollision::Top:
         {
-            if(s_level_mario==LevelMario::SMALL_MARIO)
-                block->actOnMe(KindAction::HIT);
+            if (sLevelMario == LevelMario::SmallMario)
+                pBlock->ActOnMe(KindAction::Hit);
             else
-                block->actOnMe(KindAction::DESTROYED);
+                pBlock->ActOnMe(KindAction::Destroyed);
 
-            m_force=0.0;
+            mForce = 0.0;
             break;
         }
 
-        case KindCollision::BOTTOM:
+        case KindCollision::Bottom:
         {
-            m_jump=false;
-            m_in_bottom_collision=true;
+            mIsJump = false;
+            mIsInBottomCollision = true;
 
-            animationUpdtate();
+            AnimationUpdate();
 
             break;
         }
 
-        case KindCollision::RIGHT_SIDE:
+        case KindCollision::RightSide:
         {
-            if(m_right_dir_reversal)
+            if (mIsRightDirReversal)
             {
-                /// NIE BLOKUJE RUCHU GDY PODCZAS SKOKU CHCE ISC DALEJ
-                if(m_curbing)
+                if (mCurbing)
                 {
-                    m_kind_movement=KindMovement::STANDING;
-                    m_curbing=m_stop=false;
+                    mKindMovement = KindMovement::Standing;
+                    mCurbing = mStop = false;
                 }
 
-                if(!m_jump)
-                    if(m_right_dir_reversal)
-                        m_animations->play(CAnimations::R_STANDING,m_current_position);
+                if (!mIsJump)
+                    if (mIsRightDirReversal)
+                        mAnimations->Play(Animations::RightStanding, mCurrentPosition);
                     else
-                        m_animations->play(CAnimations::L_STANDING,m_current_position);
+                        mAnimations->Play(Animations::LeftStanding, mCurrentPosition);
 
-                /// BY SZYBCIEJ WYSTARTOWAL
-                m_horizontal_velocity=1.0f;
+                mHorizontalVelocity = 1.0f;
 
-            }else
+            } else
             {
-                if(m_curbing)
+                if (mCurbing)
                 {
-                    m_curbing=m_stop=false;
-                    m_horizontal_velocity=0.0f;
+                    mCurbing = mStop = false;
+                    mHorizontalVelocity = 0.0f;
                 }
             }
 
             break;
         }
 
-        case KindCollision::LEFT_SIDE:
+        case KindCollision::LeftSide:
         {
-            if(!m_right_dir_reversal)
+            if (!mIsRightDirReversal)
             {
-                if(m_curbing)
+                if (mCurbing)
                 {
-                    m_kind_movement=KindMovement::STANDING;
-                    m_curbing=m_stop=false;
+                    mKindMovement = KindMovement::Standing;
+                    mCurbing = mStop = false;
                 }
 
-                if(!m_jump)
-                    if(m_right_dir_reversal)
-                        m_animations->play(CAnimations::R_STANDING,m_current_position);
+                if (!mIsJump)
+                    if (mIsRightDirReversal)
+                        mAnimations->Play(Animations::RightStanding, mCurrentPosition);
                     else
-                        m_animations->play(CAnimations::L_STANDING,m_current_position);
+                        mAnimations->Play(Animations::LeftStanding, mCurrentPosition);
 
-                m_horizontal_velocity=-1.0f;
+                mHorizontalVelocity = -1.0f;
 
-            }else
+            } else
             {
-                if(m_curbing)
+                if (mCurbing)
                 {
-                    m_curbing=m_stop=false;
-                    m_horizontal_velocity=0.0f;
+                    mCurbing = mStop = false;
+                    mHorizontalVelocity = 0.0f;
                 }
             }
 
             break;
         }
 
-        case KindCollision::NONE:
+        case KindCollision::None:
         {
             return;
         }
 
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pCollision);
 }
 
 ///------------------------
-void CMario::run()
+void Mario::Run()
 {
-    switch(m_kind_movement)
+    switch (mKindMovement)
     {
-    case KindMovement::RIGHT_RUN:
+    case KindMovement::RightRun:
         {
-            if(!m_curbing)
+            if (!mCurbing)
             {
-                if(m_horizontal_velocity<m_max_speed)
-                    m_horizontal_velocity+=m_value_acceleration;
+                if (mHorizontalVelocity < mMaxSpeed)
+                    mHorizontalVelocity += mValueAcceleration;
                 else
-                    m_horizontal_velocity=m_max_speed;
+                    mHorizontalVelocity = mMaxSpeed;
 
-            }else curbing();
+            } else Curbing();
 
-            m_current_position.x+=m_horizontal_velocity;
+            mCurrentPosition.x += mHorizontalVelocity;
 
             break;
         }
-    case KindMovement::LEFT_RUN:
+    case KindMovement::LeftRun:
         {
-            if(!m_curbing)
+            if (!mCurbing)
             {
-                if(-m_horizontal_velocity<m_max_speed)
-                    m_horizontal_velocity-=m_value_acceleration;
+                if (-mHorizontalVelocity < mMaxSpeed)
+                    mHorizontalVelocity -= mValueAcceleration;
                 else
-                    m_horizontal_velocity=-m_max_speed;
+                    mHorizontalVelocity = -mMaxSpeed;
 
-            }else curbing();
+            } else Curbing();
 
-            m_current_position.x+=m_horizontal_velocity;
+            mCurrentPosition.x += mHorizontalVelocity;
 
             break;
         }
@@ -300,466 +296,463 @@ void CMario::run()
 }
 
 ///-------------------------
-void CMario::curbing()
+void Mario::Curbing()
 {
-    if(fabs(0.3f-fabs(m_horizontal_velocity))<0.3f)
+    if (fabs(0.3f - fabs(mHorizontalVelocity)) < 0.3f)
     {
-        m_curbing=false;
-        m_horizontal_velocity=0.0f;
+        mCurbing = false;
+        mHorizontalVelocity = 0.0f;
 
-        if(m_stop)
+        if (mStop)
         {
-            m_kind_movement=KindMovement::STANDING;
+            mKindMovement = KindMovement::Standing;
 
-            if(!m_jump)
+            if (!mIsJump)
             {
-                if(m_right_dir_reversal)
-                    m_animations->play(CAnimations::R_STANDING,m_current_position);
+                if (mIsRightDirReversal)
+                    mAnimations->Play(Animations::RightStanding, mCurrentPosition);
                 else
-                    m_animations->play(CAnimations::L_STANDING,m_current_position);
+                    mAnimations->Play(Animations::LeftStanding, mCurrentPosition);
             }
 
-            m_stop=false;
+            mStop = false;
         }
     }
     else
-        if(m_horizontal_velocity>0)
-            m_horizontal_velocity-=m_value_acceleration*1.8f;
+        if (mHorizontalVelocity > 0)
+            mHorizontalVelocity -= mValueAcceleration * 1.8f;
         else
-            if(m_horizontal_velocity<0)
-                m_horizontal_velocity+=m_value_acceleration*1.8f;
+            if (mHorizontalVelocity < 0)
+                mHorizontalVelocity += mValueAcceleration * 1.8f;
 }
 
 ///------------------
-inline void CMario::handleMarioControll()
+inline void Mario::HandleMarioControl()
 {
-    if(m_enabled_decisions[CEventHandler::DecisionsPlayer::CLICK_JUMP])
-        jump();
+    if (mEnabledDecisions[EventHandler::DecisionsPlayer::ClickJump])
+        Jump();
 
     ///----
-    if(m_enabled_decisions[CEventHandler::DecisionsPlayer::CLICK_SHOOT])
-        shoot();
+    if (mEnabledDecisions[EventHandler::DecisionsPlayer::ClickShoot])
+        Shoot();
 
     ///------
-    if(m_enabled_decisions[CEventHandler::DecisionsPlayer::CLICK_CROUCH])
-        crouch();
+    if (mEnabledDecisions[EventHandler::DecisionsPlayer::ClickCrouch])
+        Crouch();
 
     ///--------
-    if(m_enabled_decisions[CEventHandler::DecisionsPlayer::CLICK_LEFT_RUN])
+    if (mEnabledDecisions[EventHandler::DecisionsPlayer::ClickLeftRun])
     {
-        if(m_kind_movement==KindMovement::LEFT_RUN)m_curbing=false;
-        if(m_kind_movement==KindMovement::RIGHT_RUN)m_curbing=true;
+        if (mKindMovement == KindMovement::LeftRun) mCurbing = false;
+        if (mKindMovement == KindMovement::RightRun) mCurbing = true;
 
-        m_kind_movement=KindMovement::LEFT_RUN;
-        m_right_dir_reversal=false;
-        m_stop=false;
+        mKindMovement = KindMovement::LeftRun;
+        mIsRightDirReversal = false;
+        mStop = false;
 
-        animationUpdtate();
+        AnimationUpdate();
     }
 
     ///-------
-    if(m_enabled_decisions[CEventHandler::DecisionsPlayer::CLICK_RIGHT_RUN])
+    if (mEnabledDecisions[EventHandler::DecisionsPlayer::ClickRightRun])
     {
-        if(m_kind_movement==KindMovement::RIGHT_RUN)m_curbing=false;
-        if(m_kind_movement==KindMovement::LEFT_RUN)m_curbing=true;
+        if (mKindMovement == KindMovement::RightRun) mCurbing = false;
+        if (mKindMovement == KindMovement::LeftRun) mCurbing = true;
 
-        m_kind_movement=KindMovement::RIGHT_RUN;
-        m_right_dir_reversal=true;
-        m_stop=false;
+        mKindMovement = KindMovement::RightRun;
+        mIsRightDirReversal = true;
+        mStop = false;
 
-        animationUpdtate();
+        AnimationUpdate();
     }
 
-    ///----------------- DLA PUSZCZONYCH KLAWISZY-----------------///
+    ///----------------- FOR RELEASED KEYS -----------------///
 
-    if(m_deactivate_decisions[CEventHandler::DecisionsPlayer::CLICK_LEFT_RUN]&&m_kind_movement==KindMovement::LEFT_RUN)
-        m_stop=m_curbing=true;
-
-    ///----
-    if(m_deactivate_decisions[CEventHandler::DecisionsPlayer::CLICK_RIGHT_RUN]&&m_kind_movement==KindMovement::RIGHT_RUN)
-        m_stop=m_curbing=true;
+    if (mDeactivateDecisions[EventHandler::DecisionsPlayer::ClickLeftRun] && mKindMovement == KindMovement::LeftRun)
+        mStop = mCurbing = true;
 
     ///----
-    if(m_deactivate_decisions[CEventHandler::DecisionsPlayer::CLICK_CROUCH])
+    if (mDeactivateDecisions[EventHandler::DecisionsPlayer::ClickRightRun] && mKindMovement == KindMovement::RightRun)
+        mStop = mCurbing = true;
+
+    ///----
+    if (mDeactivateDecisions[EventHandler::DecisionsPlayer::ClickCrouch])
     {
-        m_iam_crouching=false;
+        mIsCrouching = false;
 
-        if(s_level_mario==LevelMario::BIG_MARIO)
-            animationUpdtate();
+        if (sLevelMario == LevelMario::BigMario)
+            AnimationUpdate();
     }
 
-    ///RESETUJE
-    CEventHandler::resetDecisions();
+    /// RESET
+    EventHandler::ResetDecisions();
 }
 
 ///---
-void CMario::corectPositionWhenChangingOnBigMario(const sf::FloatRect& prev_small_mario_bounds)
+void Mario::CorrectPositionWhenChangingOnBigMario(const sf::FloatRect& pPrevSmallMarioBounds)
 {
-    /// ZMIENIAM NA TA KLATKE KTORA BD ODPOWIADAC NOWEMU POZIOMOWI MARIA
-    m_animations->setIndexFrame(1,m_current_position);
+    mAnimations->SetIndexFrame(1, mCurrentPosition);
 
-    const auto blocks=CMarioGame::instance().getScen<CGameScen>().getBlocks();
+    const auto blocks = MarioGame::Instance().GetScene<GameScene>().GetBlocks();
 
-    for(const auto &block:*blocks)
+    for (const auto& block : *blocks)
     {
-        if(!block->isVisible())continue;
+        if (!block->IsVisible()) continue;
 
-        if(getBounds().intersects(block->getBounds()))
+        if (GetBounds().intersects(block->GetBounds()))
         {
-            KindCollision how_collision;
+            KindCollision howCollision;
 
-            if(block->getCurrentPosition().y<prev_small_mario_bounds.top)
+            if (block->GetCurrentPosition().y < pPrevSmallMarioBounds.top)
             {
-                how_collision=KindCollision::TOP;
-                block->corectObjectPositionOnMe(*this,how_collision);
-                m_current_position.y+=5;
+                howCollision = KindCollision::Top;
+                block->CorrectObjectPositionOnMe(*this, howCollision);
+                mCurrentPosition.y += 5;
                 continue;
-            }else
-                if(block->getBounds().top>prev_small_mario_bounds.top+prev_small_mario_bounds.height)
-                    how_collision=KindCollision::BOTTOM;
+            } else
+                if (block->GetBounds().top > pPrevSmallMarioBounds.top + pPrevSmallMarioBounds.height)
+                    howCollision = KindCollision::Bottom;
             else
-                if(block->getCurrentPosition().x<getPreviousBounds().left+getPreviousBounds().width/2.0f)
-                    how_collision=KindCollision::LEFT_SIDE;
+                if (block->GetCurrentPosition().x < GetPreviousBounds().left + GetPreviousBounds().width / 2.0f)
+                    howCollision = KindCollision::LeftSide;
             else
-                    how_collision=KindCollision::RIGHT_SIDE;
+                    howCollision = KindCollision::RightSide;
 
-            block->corectObjectPositionOnMe(*this,how_collision);
+            block->CorrectObjectPositionOnMe(*this, howCollision);
         }
     }
 
-    m_animations->setIndexFrame(0,m_current_position);
+    mAnimations->SetIndexFrame(0, mCurrentPosition);
 }
 
 ///---
-void CMario::shoot()
+void Mario::Shoot()
 {
-    if(s_level_mario==LevelMario::BIG_MARIO&&!m_iam_shooting)
+    if (sLevelMario == LevelMario::BigMario && !mIsShooting)
     {
-        if(m_right_dir_reversal)
-            m_animations->play(MyKindsAnimations::R_SHOOT,m_current_position);
+        if (mIsRightDirReversal)
+            mAnimations->Play(MyKindsAnimations::RightShoot, mCurrentPosition);
         else
-            m_animations->play(MyKindsAnimations::L_SHOOT,m_current_position);
+            mAnimations->Play(MyKindsAnimations::LeftShoot, mCurrentPosition);
 
-        m_shooting_iterativity_timer=CScen::getDurationScen()+m_shooting_iterativity;
-        m_iam_shooting=true;
-        CMarioGame::s_sound_manager.play("fireball");
+        mShootingIterativityTimer = Scene::GetDurationScene() + mShootingIterativity;
+        mIsShooting = true;
+        MarioGame::sSoundManager.play("fireball");
 
-        /// TWORZE POCISK
-        sf::Vector2f pos_bullet;
+        /// CREATE BULLET
+        sf::Vector2f posBullet;
 
-        if(m_right_dir_reversal)
-            pos_bullet.x=m_current_position.x+getSize().x/2.0f;
+        if (mIsRightDirReversal)
+            posBullet.x = mCurrentPosition.x + GetSize().x / 2.0f;
         else
-            pos_bullet.x=m_current_position.x-getSize().x/2.0f;
+            posBullet.x = mCurrentPosition.x - GetSize().x / 2.0f;
 
-        pos_bullet.y=m_current_position.y-getSize().y/2.0f;
+        posBullet.y = mCurrentPosition.y - GetSize().y / 2.0f;
 
-        if(fabs(m_horizontal_velocity)>3.5f)
+        if (fabs(mHorizontalVelocity) > 3.5f)
         {
-            pos_bullet.x+=3.5f;
-            addNewObject(new CBullet(pos_bullet,m_right_dir_reversal,true));
+            posBullet.x += 3.5f;
+            AddNewObject(new Bullet(posBullet, mIsRightDirReversal, true));
         }
         else
-            addNewObject(new CBullet(pos_bullet,m_right_dir_reversal));
+            AddNewObject(new Bullet(posBullet, mIsRightDirReversal));
     }
 }
 
 ///-----------------
-void CMario::changingLvl()
+void Mario::ChangingLevel()
 {
-    m_animations->update(m_current_position);
+    mAnimations->Update(mCurrentPosition);
 
-    if(m_changeing_lvl_timer<CScen::getDurationScen()&&!m_animations->islastFrame())
+    if (mChangingLevelTimer < Scene::GetDurationScene() && !mAnimations->IsLastFrame())
     {
-        switch(s_level_mario)
+        switch (sLevelMario)
         {
-            case LevelMario::BIG_MARIO:
+            case LevelMario::BigMario:
             {
-                createBigMarioAnimations();
+                CreateBigMarioAnimations();
                 break;
             }
 
-            case LevelMario::SMALL_MARIO:
+            case LevelMario::SmallMario:
             {
-                createSmalMarioAnimations();
-                setFlashing(m_flashing_time);
+                CreateSmallMarioAnimations();
+                SetFlashing(mFlashingTime);
                 break;
             }
         }
 
-        animationUpdtate();
+        AnimationUpdate();
 
-        CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::MAIN_GAME);
+        MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::MainGame);
 
-        /// RESET KLAWISZY
-        CEventHandler::resetDecisions();
+        /// RESET KEYS
+        EventHandler::ResetDecisions();
     }
 }
 
 ///-----
-void CMario::draw(const unique_ptr<sf::RenderWindow>& window)
+void Mario::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    if(m_shield_pointer)
-        m_shield_pointer->draw(window,{CMarioGame::instance().getViewPosition().x-CMarioGame::s_size_window.x/2.0f+70,20});
+    if (mShieldPointer)
+        mShieldPointer->Draw(pWindow, {MarioGame::Instance().GetViewPosition().x - MarioGame::sSizeWindow.x / 2.0f + 70, 20});
 
-    if(m_flashing_mario&&flashing())
+    if (mFlashingMario && Flashing())
         return;
 
-    m_animations->draw(window);
+    mAnimations->Draw(pWindow);
 }
 
 ///------------
-inline void CMario::remove()
+inline void Mario::Remove()
 {
-    if(CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::MARIO_DEAD))
+    if (MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::MarioDead))
     {
-        removeObject(this);
-        s_lives_mario--;
+        RemoveObject(this);
+        sLivesMario--;
     }
 }
 
 ///------
-void CMario::setShield()
+void Mario::SetShield()
 {
-    if(m_shield_pointer||m_dead)
+    if (mShieldPointer || mIsDead)
         return;
 
-    CGUI::setVisibleMainLables(false);
+    Gui::SetVisibleMainLabels(false);
 
-    createShieldPointer(CGUI::createRectangleShape({0,0,500,30},sf::Color::Black,false,true)
-            ,sf::Color::Blue,CShieldPointer::KindsOrigin::LEFT,CGUI::createSprite("Mario_right",{0,96,32,32},{0,0},1.1f,true));
-    
-    // ZWIEKSZAM SILE SKOKU
-    m_jump_force *= 1.2f;
+    CreateShieldPointer(Gui::CreateRectangleShape({0, 0, 500, 30}, sf::Color::Black, false, true)
+            , sf::Color::Blue, ShieldPointer::KindsOrigin::Left, Gui::CreateSprite("Mario_right", {0, 96, 32, 32}, {0, 0}, 1.1f, true));
+
+    // INCREASE JUMP FORCE
+    mJumpForce *= 1.2f;
 }
 
 ///-------
-inline void CMario::setFlashing(float how_long)
+inline void Mario::SetFlashing(float pHowLong)
 {
-    m_flashing_timer=CScen::getDurationScen()+how_long;
-    m_flashing_iterativity_timer=0.0f;
-    m_flashing_mario=true;
+    mFlashingTimer = Scene::GetDurationScene() + pHowLong;
+    mFlashingIterativityTimer = 0.0f;
+    mFlashingMario = true;
 }
 
 ///-----------
-inline bool CMario::flashing()
+inline bool Mario::Flashing()
 {
-    if(m_flashing_timer<CGameScen::getDurationScen())
+    if (mFlashingTimer < GameScene::GetDurationScene())
     {
-        m_flashing_mario=false;
+        mFlashingMario = false;
         return true;
-    }else
+    } else
     {
-        if(m_flashing_iterativity_timer<CScen::getDurationScen())
+        if (mFlashingIterativityTimer < Scene::GetDurationScene())
         {
-            m_visible_while_flashing=!m_visible_while_flashing;
-            m_flashing_iterativity_timer=CScen::getDurationScen()+m_flashing_iterativity;
+            mVisibleWhileFlashing = !mVisibleWhileFlashing;
+            mFlashingIterativityTimer = Scene::GetDurationScene() + mFlashingIterativity;
         }
 
-        return m_visible_while_flashing;
+        return mVisibleWhileFlashing;
     }
 }
 
 ///----------
-inline void CMario::crouch()
+inline void Mario::Crouch()
 {
-    if(!m_jump&&m_kind_movement==KindMovement::STANDING)
+    if (!mIsJump && mKindMovement == KindMovement::Standing)
     {
-        if(s_level_mario==LevelMario::BIG_MARIO)
-            if(m_right_dir_reversal)
-                m_animations->play(MyKindsAnimations::R_CROUCH,m_current_position);
+        if (sLevelMario == LevelMario::BigMario)
+            if (mIsRightDirReversal)
+                mAnimations->Play(MyKindsAnimations::RightCrouch, mCurrentPosition);
             else
-                m_animations->play(MyKindsAnimations::L_CROUCH,m_current_position);
+                mAnimations->Play(MyKindsAnimations::LeftCrouch, mCurrentPosition);
 
-        m_iam_crouching=true;
+        mIsCrouching = true;
     }
 }
 
 ///---------
-inline void CMario::collisionWithBoundsMap()
+inline void Mario::CollisionWithBoundsMap()
 {
-    if(getBounds().left<=0&&m_horizontal_velocity<0)
+    if (GetBounds().left <= 0 && mHorizontalVelocity < 0)
     {
-        m_stop=m_curbing=false;
-        m_horizontal_velocity=0.0f;
+        mStop = mCurbing = false;
+        mHorizontalVelocity = 0.0f;
 
-        if(m_kind_movement!=KindMovement::RIGHT_RUN)
+        if (mKindMovement != KindMovement::RightRun)
         {
-            m_kind_movement=KindMovement::STANDING;
-            animationUpdtate();
+            mKindMovement = KindMovement::Standing;
+            AnimationUpdate();
         }
 
-        m_current_position={getBounds().width/2.0f,m_current_position.y};
+        mCurrentPosition = {GetBounds().width / 2.0f, mCurrentPosition.y};
     }
 }
 
 ///-------
-void CMario::falling()
+void Mario::Falling()
 {
-    CPhysicaltObject::falling();
+    PhysicalObject::Falling();
 
-    const float previous_width=m_animations->getGlobalBounds().width;
+    const float previousWidth = mAnimations->GetGlobalBounds().width;
 
-    animationUpdtate();
+    AnimationUpdate();
 
-    /// GDY KLATKA DLA SKOKSU JEST WIEKSZA OD POPRZEDNIEJ MUSZE SKORYGOWAC POZYCJE
-    /// BY MOC SPASC
-    if(getBounds().width>previous_width)
+    if (GetBounds().width > previousWidth)
     {
-        if(m_horizontal_velocity>0)
-            m_current_position.x+=getBounds().width-previous_width;
+        if (mHorizontalVelocity > 0)
+            mCurrentPosition.x += GetBounds().width - previousWidth;
         else
-            m_current_position.x-=getBounds().width-previous_width;
+            mCurrentPosition.x -= GetBounds().width - previousWidth;
 
-        m_animations->setPosition(m_current_position);
+        mAnimations->SetPosition(mCurrentPosition);
     }
 }
 
 ///-----------------------------
-void CMario::jump()
+void Mario::Jump()
 {
-    if(!m_jump)
+    if (!mIsJump)
     {
-        CPhysicaltObject::jump();
+        PhysicalObject::Jump();
 
-        animationUpdtate();
-        CMarioGame::s_sound_manager.play("jump_super");
+        AnimationUpdate();
+        MarioGame::sSoundManager.play("jump_super");
     }
 }
 
 ///--------------------
-void CMario::hop(float force)
+void Mario::Hop(float pForce)
 {
-    CPhysicaltObject::hop(force);
-    animationUpdtate();
+    PhysicalObject::Hop(pForce);
+    AnimationUpdate();
 }
 
 ///-------
-inline void CMario::animationUpdtate()
+inline void Mario::AnimationUpdate()
 {
-    if(m_jump)
-        if(m_right_dir_reversal)
-            m_animations->play(CAnimations::R_JUMP,m_current_position);
+    if (mIsJump)
+        if (mIsRightDirReversal)
+            mAnimations->Play(Animations::RightJump, mCurrentPosition);
         else
-            m_animations->play(CAnimations::L_JUMP,m_current_position);
+            mAnimations->Play(Animations::LeftJump, mCurrentPosition);
     else
     {
-        if(m_kind_movement==KindMovement::STANDING)
-            if(m_right_dir_reversal)
-                m_animations->play(CAnimations::R_STANDING,m_current_position);
+        if (mKindMovement == KindMovement::Standing)
+            if (mIsRightDirReversal)
+                mAnimations->Play(Animations::RightStanding, mCurrentPosition);
             else
-                m_animations->play(CAnimations::L_STANDING,m_current_position);
+                mAnimations->Play(Animations::LeftStanding, mCurrentPosition);
         else
-            if(m_right_dir_reversal)
-                m_animations->play(CAnimations::R_MOVE,m_current_position);
+            if (mIsRightDirReversal)
+                mAnimations->Play(Animations::RightMove, mCurrentPosition);
             else
-                m_animations->play(CAnimations::L_MOVE,m_current_position);
+                mAnimations->Play(Animations::LeftMove, mCurrentPosition);
     }
 }
 
 ///-------
-void CMario::createDeathAnimation(const sf::Vector2f &pos)
+void Mario::CreateDeathAnimation(const sf::Vector2f& pPos)
 {
-    sf::Sprite * dead_mario=CGUI::createSprite("Mario_right",{192,96,32,32},pos,m_scale_to_tile,true);
+    sf::Sprite* deadMario = Gui::CreateSprite("Mario_right", {192, 96, 32, 32}, pPos, kScaleToTile, true);
 
-    sf::Vector2f force_jump_death_mario;
+    sf::Vector2f forceJumpDeathMario;
 
-    if(pos.y>CMarioGame::s_size_window.y)
-        force_jump_death_mario={0,-1400.0f};
+    if (pPos.y > MarioGame::sSizeWindow.y)
+        forceJumpDeathMario = {0, -1400.0f};
     else
-        force_jump_death_mario={0,-1000.0f};
+        forceJumpDeathMario = {0, -1000.0f};
 
-    CGuiObject* obj=new CSpecialEffects(new CSprite(dead_mario),CSpecialEffects::KindUpdate::JUMP,CMarioGame::s_size_window.y+CScen::s_tile_size,force_jump_death_mario);
-    CGUI::addGuiObject(obj);
+    GuiObject* obj = new SpecialEffects(new SpriteAnimator(deadMario), SpecialEffects::KindUpdate::Jump, MarioGame::sSizeWindow.y + Scene::sTileSize, forceJumpDeathMario);
+    Gui::AddGuiObject(obj);
 
-    resetLvlMario();
+    ResetLevelMario();
 }
 
 ///----------------------
-inline void CMario::createBigMarioAnimations()
+inline void Mario::CreateBigMarioAnimations()
 {
-    m_animations->reset();
+    mAnimations->Reset();
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({32,36,32,60});
-    m_frame_animation.push_back({65,36,30,60});
-    m_frame_animation.push_back({96,38,32,58});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({32, 36, 32, 60});
+    frameAnimation.push_back({65, 36, 30, 60});
+    frameAnimation.push_back({96, 38, 32, 58});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,m_movement_animation_speed,m_scale_to_tile);
-
-    ///----------
-    m_frame_animation.clear();
-    m_frame_animation.push_back({448,36,32,60});
-    m_frame_animation.push_back({418,36,30,60});
-    m_frame_animation.push_back({384,38,32,58});
-
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Mario_left"],m_frame_animation,m_movement_animation_speed,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Mario_right"], frameAnimation, mMovementAnimationSpeed, kScaleToTile);
 
     ///----------
-    m_frame_animation.clear();
-    m_frame_animation.push_back({0,38,32,58});
-    m_frame_animation.push_back({4,96,24,32});
+    frameAnimation.clear();
+    frameAnimation.push_back({448, 36, 32, 60});
+    frameAnimation.push_back({418, 36, 30, 60});
+    frameAnimation.push_back({384, 38, 32, 58});
 
-    m_animations->create(MyKindsAnimations::R_LVL_DOWN,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Mario_left"], frameAnimation, mMovementAnimationSpeed, kScaleToTile);
 
     ///----------
-    m_frame_animation.clear();
-    m_frame_animation.push_back({480,38,32,58});
-    m_frame_animation.push_back({484,96,24,32});
+    frameAnimation.clear();
+    frameAnimation.push_back({0, 38, 32, 58});
+    frameAnimation.push_back({4, 96, 24, 32});
 
-    m_animations->create(MyKindsAnimations::L_LVL_DOWN,CMarioGame::s_texture_manager["Mario_left"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::RightLevelDown, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.5f, kScaleToTile);
 
-    ///---------------- ANIMACJE JEDNO KLATKOWE------------////////////
-    m_animations->create(CAnimations::L_STANDING,CMarioGame::s_texture_manager["Mario_left"],{480,38,32,58},m_scale_to_tile);
-    m_animations->create(CAnimations::R_STANDING,CMarioGame::s_texture_manager["Mario_right"],{0,38,32,58},m_scale_to_tile);
-    m_animations->create(CAnimations::R_JUMP,CMarioGame::s_texture_manager["Mario_right"],{160,35,32,60},m_scale_to_tile);
-    m_animations->create(CAnimations::L_JUMP,CMarioGame::s_texture_manager["Mario_left"],{320,35,32,60},m_scale_to_tile);
+    ///----------
+    frameAnimation.clear();
+    frameAnimation.push_back({480, 38, 32, 58});
+    frameAnimation.push_back({484, 96, 24, 32});
 
-    m_animations->create(MyKindsAnimations::L_SHOOT,CMarioGame::s_texture_manager["Mario_left"],{258,36,29,60},m_scale_to_tile);
-    m_animations->create(MyKindsAnimations::R_SHOOT,CMarioGame::s_texture_manager["Mario_right"],{225,36,29,60},m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::LeftLevelDown, MarioGame::sTextureManager["Mario_left"], frameAnimation, 1.5f, kScaleToTile);
 
-    m_animations->create(MyKindsAnimations::L_CROUCH,CMarioGame::s_texture_manager["Mario_left"],{287,50,32,46},m_scale_to_tile);
-    m_animations->create(MyKindsAnimations::R_CROUCH,CMarioGame::s_texture_manager["Mario_right"],{192,50,32,46},m_scale_to_tile);
+    ///---------------- SINGLE FRAME ANIMATIONS ------------////////////
+    mAnimations->Create(Animations::LeftStanding, MarioGame::sTextureManager["Mario_left"], {480, 38, 32, 58}, kScaleToTile);
+    mAnimations->Create(Animations::RightStanding, MarioGame::sTextureManager["Mario_right"], {0, 38, 32, 58}, kScaleToTile);
+    mAnimations->Create(Animations::RightJump, MarioGame::sTextureManager["Mario_right"], {160, 35, 32, 60}, kScaleToTile);
+    mAnimations->Create(Animations::LeftJump, MarioGame::sTextureManager["Mario_left"], {320, 35, 32, 60}, kScaleToTile);
+
+    mAnimations->Create(MyKindsAnimations::LeftShoot, MarioGame::sTextureManager["Mario_left"], {258, 36, 29, 60}, kScaleToTile);
+    mAnimations->Create(MyKindsAnimations::RightShoot, MarioGame::sTextureManager["Mario_right"], {225, 36, 29, 60}, kScaleToTile);
+
+    mAnimations->Create(MyKindsAnimations::LeftCrouch, MarioGame::sTextureManager["Mario_left"], {287, 50, 32, 46}, kScaleToTile);
+    mAnimations->Create(MyKindsAnimations::RightCrouch, MarioGame::sTextureManager["Mario_right"], {192, 50, 32, 46}, kScaleToTile);
 
 }
 
 ///--------------
-inline void CMario::createSmalMarioAnimations()
+inline void Mario::CreateSmallMarioAnimations()
 {
-    m_animations->reset();
+    mAnimations->Reset();
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({36,96,24,32});
-    m_frame_animation.push_back({68,96,24,32});
-    m_frame_animation.push_back({97,96,30,32});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({36, 96, 24, 32});
+    frameAnimation.push_back({68, 96, 24, 32});
+    frameAnimation.push_back({97, 96, 30, 32});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,m_movement_animation_speed,m_scale_to_tile);
-
-    ///---------
-    m_frame_animation.clear();
-    m_frame_animation.push_back(sf::IntRect(452,96,24,32));
-    m_frame_animation.push_back(sf::IntRect(420,96,24,32));
-    m_frame_animation.push_back(sf::IntRect(385,96,30,32));
-
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Mario_left"],m_frame_animation,m_movement_animation_speed,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Mario_right"], frameAnimation, mMovementAnimationSpeed, kScaleToTile);
 
     ///---------
-    m_frame_animation.clear();
-    m_frame_animation.push_back({4,96,24,32});
-    m_frame_animation.push_back({0,38,32,58});
+    frameAnimation.clear();
+    frameAnimation.push_back(sf::IntRect(452, 96, 24, 32));
+    frameAnimation.push_back(sf::IntRect(420, 96, 24, 32));
+    frameAnimation.push_back(sf::IntRect(385, 96, 30, 32));
 
-    m_animations->create(MyKindsAnimations::R_LVL_UP,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Mario_left"], frameAnimation, mMovementAnimationSpeed, kScaleToTile);
 
     ///---------
-    m_frame_animation.clear();
-    m_frame_animation.push_back({484,96,24,32});
-    m_frame_animation.push_back({480,38,32,58});
+    frameAnimation.clear();
+    frameAnimation.push_back({4, 96, 24, 32});
+    frameAnimation.push_back({0, 38, 32, 58});
 
-    m_animations->create(MyKindsAnimations::L_LVL_UP,CMarioGame::s_texture_manager["Mario_left"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::RightLevelUp, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.5f, kScaleToTile);
 
-    ///---------------- ANIMACJE JEDNO KLATKOWE------------////////////
-    m_animations->create(CAnimations::L_STANDING,CMarioGame::s_texture_manager["Mario_left"],{484,96,24,32},m_scale_to_tile);
-    m_animations->create(CAnimations::R_STANDING,CMarioGame::s_texture_manager["Mario_right"],{4,96,24,32},m_scale_to_tile);
-    m_animations->create(CAnimations::R_JUMP,CMarioGame::s_texture_manager["Mario_right"],{160,96,32,32},m_scale_to_tile-0.1f);
-    m_animations->create(CAnimations::L_JUMP,CMarioGame::s_texture_manager["Mario_left"],{320,96,32,32},m_scale_to_tile-0.1f);
+    ///---------
+    frameAnimation.clear();
+    frameAnimation.push_back({484, 96, 24, 32});
+    frameAnimation.push_back({480, 38, 32, 58});
+
+    mAnimations->Create(MyKindsAnimations::LeftLevelUp, MarioGame::sTextureManager["Mario_left"], frameAnimation, 1.5f, kScaleToTile);
+
+    ///---------------- SINGLE FRAME ANIMATIONS ------------////////////
+    mAnimations->Create(Animations::LeftStanding, MarioGame::sTextureManager["Mario_left"], {484, 96, 24, 32}, kScaleToTile);
+    mAnimations->Create(Animations::RightStanding, MarioGame::sTextureManager["Mario_right"], {4, 96, 24, 32}, kScaleToTile);
+    mAnimations->Create(Animations::RightJump, MarioGame::sTextureManager["Mario_right"], {160, 96, 32, 32}, kScaleToTile - 0.1f);
+    mAnimations->Create(Animations::LeftJump, MarioGame::sTextureManager["Mario_left"], {320, 96, 32, 32}, kScaleToTile - 0.1f);
 }

@@ -4,192 +4,169 @@
 
 #include <math.h>
 
-vector<CGameObject* > CGameObject::s_removed_objects;
-vector<CGameObject* > CGameObject::s_new_objects;
+using namespace std;
 
-const float CGameObject::m_scale_to_tile=48.0f/32.0f;
+vector<GameObject*> GameObject::sRemovedObjects;
+vector<GameObject*> GameObject::sNewObjects;
 
-void CGameObject::addNewObject(CGameObject* obj)
-{
-    s_new_objects.push_back(obj);
+const float GameObject::kScaleToTile = 48.0f / 32.0f;
+
+void GameObject::AddNewObject(GameObject* pObject) {
+    sNewObjects.push_back(pObject);
 }
 
 ///------
-void CGameObject::removeObject(CGameObject* obj_to_remove)
-{
-    /// ZAPOBIEGA WIELOKROTNEMU DODAWANIU
-   for(auto obj:s_removed_objects)
-    if(obj==obj_to_remove)
-        return;
+void GameObject::RemoveObject(GameObject* pObjectToRemove) {
+    /// Prevents adding duplicates
+    for (auto obj : sRemovedObjects)
+        if (obj == pObjectToRemove)
+            return;
 
-    obj_to_remove->m_dead=true;
-    s_removed_objects.push_back(obj_to_remove);
+    pObjectToRemove->mIsDead = true;
+    sRemovedObjects.push_back(pObjectToRemove);
 }
 
-///------------------CGameObject------------------///
-CGameObject::CGameObject(CAnimator* animator,Parentage parantage,const sf::Vector2f &pos,int points)
+///------------------GameObject------------------///
+GameObject::GameObject(Animator* pAnimator, Parentage pParentage, const sf::Vector2f& pPosition, int pPoints)
 :
-m_animator(animator)
-,m_my_value_points(points)
-,m_parentage(parantage)
-,m_animations(dynamic_cast<CAnimations*>(animator))
+mAnimator(pAnimator)
+, mValuePoints(pPoints)
+, mParentage(pParentage)
+, mAnimations(dynamic_cast<Animations*>(pAnimator))
 {
-    m_previous_position=m_current_position=pos;
+    mPreviousPosition = mCurrentPosition = pPosition;
 }
 
 ///---
-void CGameObject::corectObjectPositionOnMe(CGameObject& obj,KindCollision how_collision)const
-{
-    switch(how_collision)
-    {
-        case KindCollision::BOTTOM:
-        {
-            obj.setPosition({obj.getCurrentPosition().x,m_current_position.y-getSize().y+0.1f});
+void GameObject::CorrectObjectPositionOnMe(GameObject& pObject, KindCollision pCollision) const {
+    switch (pCollision) {
+        case KindCollision::Bottom: {
+            pObject.SetPosition({pObject.GetCurrentPosition().x, mCurrentPosition.y - GetSize().y + 0.1f});
             break;
         }
 
-        case KindCollision::TOP:
-        {
-            obj.setPosition({obj.getCurrentPosition().x,m_current_position.y+obj.getBounds().height+0.5f});
+        case KindCollision::Top: {
+            pObject.SetPosition({pObject.GetCurrentPosition().x, mCurrentPosition.y + pObject.GetBounds().height + 0.5f});
             break;
         }
 
-        case KindCollision::RIGHT_SIDE:
-        {
-            obj.setPosition({((m_current_position.x-getSize().x/2.0f)-obj.getBounds().width/2.0f)-0.2f,obj.getCurrentPosition().y});
+        case KindCollision::RightSide: {
+            pObject.SetPosition({((mCurrentPosition.x - GetSize().x / 2.0f) - pObject.GetBounds().width / 2.0f) - 0.2f, pObject.GetCurrentPosition().y});
             break;
         }
 
-        case KindCollision::LEFT_SIDE:
-        {
-            obj.setPosition({(m_current_position.x+getSize().x/2.0f+obj.getBounds().width/2.0f)+0.2f,obj.getCurrentPosition().y});
+        case KindCollision::LeftSide: {
+            pObject.SetPosition({(mCurrentPosition.x + GetSize().x / 2.0f + pObject.GetBounds().width / 2.0f) + 0.2f, pObject.GetCurrentPosition().y});
             break;
         }
     }
 }
 
 ///------
-CGameObject::KindCollision CGameObject::specialCheckingHowCollision(const CGameObject& obj)const
-{
-    const sf::FloatRect &obj_prev_bounds=obj.getPreviousBounds();
+GameObject::KindCollision GameObject::SpecialCheckingHowCollision(const GameObject& pObject) const {
+    const sf::FloatRect& objPrevBounds = pObject.GetPreviousBounds();
 
-    /// GDY POPRZEDNIA POZYCJA OBJ NAKLADA SIE Z MOJA OBECNA POZ
-    if(this->getBounds().intersects(obj_prev_bounds))
-    {
-        if(this->m_previous_position.y<obj_prev_bounds.top)
-            return KindCollision::BOTTOM;
+    /// When previous position of object overlaps with my current position
+    if (this->GetBounds().intersects(objPrevBounds)) {
+        if (this->mPreviousPosition.y < objPrevBounds.top)
+            return KindCollision::Bottom;
         else
-        if((this->m_previous_position.y-this->getSize().y)>obj_prev_bounds.top+obj_prev_bounds.height)
-            return KindCollision::TOP;
-        else
-        {
-            if(this->m_previous_position.x<obj_prev_bounds.left)
-                return KindCollision::RIGHT_SIDE;
+        if ((this->mPreviousPosition.y - this->GetSize().y) > objPrevBounds.top + objPrevBounds.height)
+            return KindCollision::Top;
+        else {
+            if (this->mPreviousPosition.x < objPrevBounds.left)
+                return KindCollision::RightSide;
             else
-                return KindCollision::LEFT_SIDE;
+                return KindCollision::LeftSide;
         }
 
-    }else
-    {
-        const KindCollision how_collision=obj.howCollision(*this);
+    } else {
+        const KindCollision howCollision = pObject.HowCollision(*this);
 
-        switch(how_collision)
-        {
-            case KindCollision::BOTTOM:return KindCollision::TOP;
-            case KindCollision::TOP:return KindCollision::BOTTOM;
-            case KindCollision::LEFT_SIDE:return KindCollision::RIGHT_SIDE;
-            case KindCollision::RIGHT_SIDE:return KindCollision::LEFT_SIDE;
+        switch (howCollision) {
+            case KindCollision::Bottom: return KindCollision::Top;
+            case KindCollision::Top: return KindCollision::Bottom;
+            case KindCollision::LeftSide: return KindCollision::RightSide;
+            case KindCollision::RightSide: return KindCollision::LeftSide;
         }
     }
 }
 
 ///-----
-CGameObject::KindCollision CGameObject::howCollision(const CGameObject& obj)const
-{
-    /// ZWRACAM JAKA KOLIZJE MAM Z PRZEKAZANYM OBIEKTEM
+GameObject::KindCollision GameObject::HowCollision(const GameObject& pObject) const {
+    /// Returns what collision I have with the passed object
 
-    const sf::FloatRect &obj_bounds=obj.getBounds();
+    const sf::FloatRect& objBounds = pObject.GetBounds();
 
-    if(this->getBounds().intersects(obj_bounds))
-    {
-        /// JEST TO PRZYPADEK PESYMISTYCZNY
-        /// BO POPRZEDNIA POZYCJA NAKLADA SIE Z OBECNA POZ OBJ
-        if(this->getPreviousBounds().intersects(obj_bounds))
-            return specialCheckingHowCollision(obj);
+    if (this->GetBounds().intersects(objBounds)) {
+        /// This is the pessimistic case
+        /// because previous position overlaps with current position of object
+        if (this->GetPreviousBounds().intersects(objBounds))
+            return SpecialCheckingHowCollision(pObject);
         else
-        if(this->m_previous_position.y<obj_bounds.top)
-            return KindCollision::BOTTOM;
+        if (this->mPreviousPosition.y < objBounds.top)
+            return KindCollision::Bottom;
         else
-        if((this->m_previous_position.y-this->getSize().y)>obj_bounds.top+obj_bounds.height)
-            return KindCollision::TOP;
-        else
-        {
-            if(m_previous_position.x<obj_bounds.left)
-                return KindCollision::RIGHT_SIDE;
+        if ((this->mPreviousPosition.y - this->GetSize().y) > objBounds.top + objBounds.height)
+            return KindCollision::Top;
+        else {
+            if (mPreviousPosition.x < objBounds.left)
+                return KindCollision::RightSide;
             else
-                return KindCollision::LEFT_SIDE;
+                return KindCollision::LeftSide;
         }
 
-    }else return KindCollision::NONE;
+    } else return KindCollision::None;
 }
 
 ///---
-void CGameObject::createPoints()const
-{
-    sf::Text *text=CGUI::createText(CGUI::toString(m_my_value_points),{0,0},sf::Color::Red);
-    text->setPosition(m_current_position.x,m_current_position.y-this->getBounds().height/2.0f);
+void GameObject::CreatePoints() const {
+    sf::Text* text = Gui::CreateText(Gui::ToString(mValuePoints), {0, 0}, sf::Color::Red);
+    text->setPosition(mCurrentPosition.x, mCurrentPosition.y - this->GetBounds().height / 2.0f);
 
-    CGUI::addGuiObject(new CFlowText(text,m_current_position.y-getBounds().height/2.0f-CScen::s_tile_size*3));
+    Gui::AddGuiObject(new FlowText(text, mCurrentPosition.y - GetBounds().height / 2.0f - Scene::sTileSize * 3));
 
-    CGameScen::addPoints(m_my_value_points);
+    GameScene::AddPoints(mValuePoints);
 }
 
 ///------
-void CGameObject::createBeatsObjSpecialEfect(float m_hop_force)
-{
-    sf::Sprite * hit_obj=new sf::Sprite(m_animator->getSprite());
+void GameObject::CreateBeatObjectEffect(float pHopForce) {
+    sf::Sprite* hitObj = new sf::Sprite(mAnimator->getSprite());
 
-    hit_obj->setRotation(180);
-    hit_obj->setPosition(hit_obj->getPosition().x,hit_obj->getPosition().y-hit_obj->getGlobalBounds().height);
+    hitObj->setRotation(180);
+    hitObj->setPosition(hitObj->getPosition().x, hitObj->getPosition().y - hitObj->getGlobalBounds().height);
 
-    CGuiObject* obj=new CSpecialEffects(new CSprite(hit_obj),CSpecialEffects::KindUpdate::JUMP,CMarioGame::s_size_window.y+CScen::s_tile_size,{0,m_hop_force});
-    CGUI::addGuiObject(obj);
+    GuiObject* obj = new SpecialEffects(new SpriteAnimator(hitObj), SpecialEffects::Jump, MarioGame::sSizeWindow.y + Scene::sTileSize, {0, pHopForce});
+    Gui::AddGuiObject(obj);
 
-    createPoints();
-    CMarioGame::s_sound_manager.play("stomp");
+    CreatePoints();
+    MarioGame::sSoundManager.play("stomp");
 
-    removeObject(this);
+    RemoveObject(this);
 }
 
 ///------------
-void CGameObject::isUnderMap()
-{
-    if(m_current_position.y>CMarioGame::s_size_window.y+CScen::s_tile_size*3)
-    {
-        this->actOnMe(KindAction::UNDER_MAP);
-        removeObject(this);
+void GameObject::CheckUnderMap() {
+    if (mCurrentPosition.y > MarioGame::sSizeWindow.y + Scene::sTileSize * 3) {
+        this->ActOnMe(KindAction::UnderMap);
+        RemoveObject(this);
     }
 }
 
 ///------
-void CGameObject::movePosition(sf::Vector2f value)
-{
-    m_current_position.x+=value.x;
-    m_current_position.y+=value.y;
-    m_animator->setPosition(m_current_position);
+void GameObject::MovePosition(sf::Vector2f pValue) {
+    mCurrentPosition.x += pValue.x;
+    mCurrentPosition.y += pValue.y;
+    mAnimator->setPosition(mCurrentPosition);
 }
 
 ///------
-sf::FloatRect  CGameObject::getPreviousBounds()const
-{
-    return {m_previous_position.x-getBounds().width/2.0f,
-    m_previous_position.y-getBounds().height,getBounds().width,getBounds().height};
+sf::FloatRect GameObject::GetPreviousBounds() const {
+    return {mPreviousPosition.x - GetBounds().width / 2.0f,
+    mPreviousPosition.y - GetBounds().height, GetBounds().width, GetBounds().height};
 }
 
 ///------------------
-void CGameObject::draw(const unique_ptr<sf::RenderWindow>& window)
-{
-    m_animator->draw(window);
+void GameObject::Draw(const unique_ptr<sf::RenderWindow>& pWindow) {
+    mAnimator->draw(pWindow);
 }
-
-

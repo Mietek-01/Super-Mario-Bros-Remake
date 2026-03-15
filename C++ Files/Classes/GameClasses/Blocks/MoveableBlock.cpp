@@ -1,74 +1,76 @@
 #include "MoveableBlock.h"
 
-vector<CMoveableBlock*> CMoveableBlock::s_all_moveable_blocks;
+#include <algorithm>
 
-CMoveableBlock::~CMoveableBlock()
+std::vector<MoveableBlock*> MoveableBlock::sAllMoveableBlocks;
+
+MoveableBlock::~MoveableBlock()
 {
-    s_all_moveable_blocks.erase(std::find(s_all_moveable_blocks.begin(),s_all_moveable_blocks.end(),this));
+    sAllMoveableBlocks.erase(std::find(sAllMoveableBlocks.begin(), sAllMoveableBlocks.end(), this));
 }
 
 ///-----
-CMoveableBlock::CMoveableBlock(sf::Vector2f pos,Direction dir)
-:CStaticBlock({13,659,90,16},pos)
-,m_dir(dir)
-,m_basic_position(pos)
+MoveableBlock::MoveableBlock(sf::Vector2f pPos, Direction pDir)
+    : StaticBlock({13, 659, 90, 16}, pPos)
+    , mDir(pDir)
+    , mBasicPosition(pPos)
 {
-    s_all_moveable_blocks.push_back(this);
+    sAllMoveableBlocks.push_back(this);
 }
 
 ///------
-void CMoveableBlock::update()
+void MoveableBlock::Update()
 {
-    m_previous_position=m_current_position;
+    mPreviousPosition = mCurrentPosition;
 
-    switch(m_dir)
+    switch (mDir)
     {
-    case Direction::UP:
+    case Direction::Up:
     {
-        m_current_position.y-=m_speed;
+        mCurrentPosition.y -= mSpeed;
 
-        if(m_current_position.y<=m_basic_position.y-m_range)
+        if (mCurrentPosition.y <= mBasicPosition.y - mRange)
         {
-            m_current_position.y=m_basic_position.y-m_range;
-            m_dir=Direction::DOWN;
+            mCurrentPosition.y = mBasicPosition.y - mRange;
+            mDir = Direction::Down;
         }
 
         break;
     }
 
-    case Direction::DOWN:
+    case Direction::Down:
     {
-        m_current_position.y+=m_speed;
+        mCurrentPosition.y += mSpeed;
 
-        if(m_current_position.y>=m_basic_position.y+m_range)
+        if (mCurrentPosition.y >= mBasicPosition.y + mRange)
         {
-            m_current_position.y=m_basic_position.y+m_range;
-            m_dir=Direction::UP;
+            mCurrentPosition.y = mBasicPosition.y + mRange;
+            mDir = Direction::Up;
         }
 
         break;
     }
 
-    case Direction::LEFT:
+    case Direction::Left:
     {
-        m_current_position.x-=m_speed;
+        mCurrentPosition.x -= mSpeed;
 
-        if(m_current_position.x<=m_basic_position.x-m_range)
+        if (mCurrentPosition.x <= mBasicPosition.x - mRange)
         {
-            m_current_position.x=m_basic_position.x-m_range;
-            m_dir=Direction::RIGHT;
+            mCurrentPosition.x = mBasicPosition.x - mRange;
+            mDir = Direction::Right;
         }
         break;
     }
 
-    case Direction::RIGHT:
+    case Direction::Right:
     {
-        m_current_position.x+=m_speed;
+        mCurrentPosition.x += mSpeed;
 
-        if(m_current_position.x>=m_basic_position.x+m_range)
+        if (mCurrentPosition.x >= mBasicPosition.x + mRange)
         {
-            m_current_position.x=m_basic_position.x+m_range;
-            m_dir=Direction::LEFT;
+            mCurrentPosition.x = mBasicPosition.x + mRange;
+            mDir = Direction::Left;
         }
 
         break;
@@ -76,20 +78,20 @@ void CMoveableBlock::update()
 
     }
 
-    m_animator->setPosition(m_current_position);
+    mAnimator->SetPosition(mCurrentPosition);
 
-    if(m_objects_on_me.size()!=0)
+    if (mObjectsOnMe.size() != 0)
     {
-        for(auto it=m_objects_on_me.begin();it!=m_objects_on_me.end();)
+        for (auto it = mObjectsOnMe.begin(); it != mObjectsOnMe.end();)
         {
-            if((*it)->isJumping())
-                it=m_objects_on_me.erase(it);
+            if ((*it)->IsJumping())
+                it = mObjectsOnMe.erase(it);
             else
             {
-                const sf::Vector2f diference_movement(m_current_position.x-m_previous_position.x,
-                                m_current_position.y-m_previous_position.y);
+                const sf::Vector2f differenceMovement(mCurrentPosition.x - mPreviousPosition.x,
+                                mCurrentPosition.y - mPreviousPosition.y);
 
-                (*it)->movePosition(diference_movement);
+                (*it)->MovePosition(differenceMovement);
 
                 it++;
             }
@@ -100,42 +102,43 @@ void CMoveableBlock::update()
 }
 
 ///---------
-void CMoveableBlock::actOnObject(CGameObject* obj,KindCollision kind_collision)
+void MoveableBlock::ActOnObject(GameObject* pObj, KindCollision pKindCollision)
 {
-    CPhysicaltObject *phy_obj=dynamic_cast<CPhysicaltObject*>(obj);
+    PhysicalObject* pPhyObj = dynamic_cast<PhysicalObject*>(pObj);
 
-    if(!phy_obj)
+    if (!pPhyObj)
         return;
 
-    for(const auto obj_on_me:m_objects_on_me)
-        if(obj_on_me==obj)
+    for (const auto pObjOnMe : mObjectsOnMe)
+        if (pObjOnMe == pObj)
             return;
 
-    if(kind_collision==KindCollision::TOP&&phy_obj->isInBottomCollision())
+    if (pKindCollision == KindCollision::Top && pPhyObj->IsInBottomCollision())
     {
         /// CZYLI GDY PRZYGNIOTE
-        if(obj->getParentage()==Parentage::MARIO)
-            obj->actOnMe(KindAction::HIT);
+        if (pObj->GetParentage() == Parentage::Mario)
+            pObj->ActOnMe(KindAction::Hit);
         else
-            removeObject(obj);
-    }else
+            RemoveObject(pObj);
+    }
+    else
     {
-       this->corectObjectPositionOnMe(*obj,kind_collision);
+        this->CorrectObjectPositionOnMe(*pObj, pKindCollision);
 
-       if(kind_collision==KindCollision::BOTTOM)
-             m_objects_on_me.push_back(phy_obj);
+        if (pKindCollision == KindCollision::Bottom)
+            mObjectsOnMe.push_back(pPhyObj);
     }
 }
 
 ///-------
-void CMoveableBlock::removeDeadObjOnMoveableBlock(const CPhysicaltObject *obj)
+void MoveableBlock::RemoveDeadObjOnMoveableBlock(const PhysicalObject* pObj)
 {
-    for(auto moveable_block:s_all_moveable_blocks)
+    for (auto pMoveableBlock : sAllMoveableBlocks)
     {
-        auto &objs_on_moveable_block=moveable_block->m_objects_on_me;
-        auto it=std::find(objs_on_moveable_block.begin(),objs_on_moveable_block.end(),obj);
+        auto& objsOnMoveableBlock = pMoveableBlock->mObjectsOnMe;
+        auto it = std::find(objsOnMoveableBlock.begin(), objsOnMoveableBlock.end(), pObj);
 
-        if(it!=objs_on_moveable_block.end())
-            objs_on_moveable_block.erase(it);
+        if (it != objsOnMoveableBlock.end())
+            objsOnMoveableBlock.erase(it);
     }
 }

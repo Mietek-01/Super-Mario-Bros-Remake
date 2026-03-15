@@ -3,88 +3,88 @@
 #include "../../Scens/GameScen.h"
 #include "../Items/Coin.h"
 
-CAnimations CMysterBox::s_private_animator;
+Animations MysteryBox::sPrivateAnimator;
 
-CMysterBox::CMysterBox(sf::Vector2f pos,MyItem my_item)
-:CDynamicBlock({0,32,32,32},pos)
-,m_rand_item(my_item)
+MysteryBox::MysteryBox(sf::Vector2f pPos, MyItem pMyItem)
+    : DynamicBlock({0, 32, 32, 32}, pPos)
+    , mRandItem(pMyItem)
 {
 }
 
 ///---------
-void CMysterBox::update()
+void MysteryBox::Update()
 {
-    if(m_hit)
+    if (mIsHit)
     {
-        this->makeJump();
+        this->MakeJump();
 
-        if(m_force>0)
-            m_draw_question_mark=false;
+        if (mForce > 0)
+            mDrawQuestionMark = false;
     }
 
-    if(m_createing_item)
+    if (mCreatingItem)
     {
-        if(m_rand_item==MyItem::COIN)
+        if (mRandItem == MyItem::Coin)
         {
-            m_to_rand=m_createing_item=false;
+            mToRand = mCreatingItem = false;
 
-            CAnimations * coin_animation=CCoin::creatFlashingCoinAnimation();
+            Animations* coinAnimation = Coin::CreateFlashingCoinAnimation();
 
-            coin_animation->setPosition({m_current_position.x,m_current_position.y-getSize().y});
+            coinAnimation->SetPosition({mCurrentPosition.x, mCurrentPosition.y - GetSize().y});
 
-            CSpecialEffects * obj=new CSpecialEffects(coin_animation,CSpecialEffects::KindUpdate::JUMP,m_current_position.y-getSize().y,{0,-600});
+            SpecialEffects* obj = new SpecialEffects(coinAnimation, SpecialEffects::KindUpdate::Jump, mCurrentPosition.y - GetSize().y, {0, -600});
 
             ///-----------------------
 
-            CAnimations * falling_apart_coin_animation=CCoin::creatFallingApartCoinAnimation();
+            Animations* fallingApartCoinAnimation = Coin::CreateFallingApartCoinAnimation();
 
-            falling_apart_coin_animation->setPosition({m_current_position.x,m_current_position.y-10.0f-getSize().y});
+            fallingApartCoinAnimation->SetPosition({mCurrentPosition.x, mCurrentPosition.y - 10.0f - GetSize().y});
 
-            obj->setDeathAnimation(new CSpecialEffects(falling_apart_coin_animation,CSpecialEffects::KindUpdate::ONE_LOOP_ANIMATION,0));
+            obj->SetDeathAnimation(new SpecialEffects(fallingApartCoinAnimation, SpecialEffects::KindUpdate::OneLoopAnimation, 0));
 
-            CGUI::addGuiObject(obj);
+            Gui::AddGuiObject(obj);
 
             ///------------------------------
 
-            sf::Text *text=CGUI::createText(CGUI::toString(CCoin({0,0}).getValuePoints()), {m_current_position.x,m_current_position.y-getSize().y-CScen::s_tile_size},sf::Color::Red);
-            CGUI::addGuiObject(new CFlowText(text,m_current_position.y-getSize().y-CScen::s_tile_size*3));
+            sf::Text* text = Gui::CreateText(Gui::ToString(Coin({0, 0}).GetValuePoints()), {mCurrentPosition.x, mCurrentPosition.y - GetSize().y - static_cast<float>(Scene::sTileSize)}, sf::Color::Red);
+            Gui::AddGuiObject(new FlowText(text, mCurrentPosition.y - GetSize().y - Scene::sTileSize * 3));
 
-            CMarioGame::instance().getScen<CGameScen>().addPoints(CCoin({0,0}).getValuePoints());
+            MarioGame::Instance().GetScene<GameScene>().AddPoints(Coin({0, 0}).GetValuePoints());
 
-            CMarioGame::s_sound_manager.play("coin");
+            MarioGame::sSoundManager.Play("coin");
 
         }
         else
         {
-            if(!m_hit)
+            if (!mIsHit)
             {
-                if(!m_my_obj)
+                if (!mMyObj)
                 {
-                    switch(m_rand_item)
+                    switch (mRandItem)
                     {
-                    case MyItem::MUSHROOM:
-                        m_my_obj=new CMushroom(m_current_position);
+                    case MyItem::Mushroom:
+                        mMyObj = new MysteryBox::Mushroom(mCurrentPosition);
                         break;
-                    case MyItem::FLOWER:
-                        m_my_obj=new CSpecialFlower(m_current_position);
+                    case MyItem::Flower:
+                        mMyObj = new MysteryBox::SpecialFlower(mCurrentPosition);
                         break;
                     }
 
-                    CMarioGame::s_sound_manager.play("powerup_appears");
+                    MarioGame::sSoundManager.Play("powerup_appears");
                 }
                 else
                 {
-                    if(m_my_obj->getCurrentPosition().y>this->m_current_position.y-getSize().y)
-                         m_my_obj->movePosition({0,m_leaving_speed});
+                    if (mMyObj->GetCurrentPosition().y > this->mCurrentPosition.y - GetSize().y)
+                        mMyObj->MovePosition({0, mLeavingSpeed});
                     else
                     {
-                        m_my_obj->setPosition({m_my_obj->getCurrentPosition().x,this->m_current_position.y-getSize().y+0.1f});
-                        m_my_obj->setPreviousPosition({m_my_obj->getCurrentPosition().x,this->m_current_position.y-getSize().y-0.2f});
+                        mMyObj->SetPosition({mMyObj->GetCurrentPosition().x, this->mCurrentPosition.y - GetSize().y + 0.1f});
+                        mMyObj->SetPreviousPosition({mMyObj->GetCurrentPosition().x, this->mCurrentPosition.y - GetSize().y - 0.2f});
 
-                        addNewObject(m_my_obj);
+                        AddNewObject(mMyObj);
 
-                        m_to_rand=m_createing_item=false;
-                        m_my_obj=nullptr;
+                        mToRand = mCreatingItem = false;
+                        mMyObj = nullptr;
                     }
                 }
             }
@@ -93,43 +93,44 @@ void CMysterBox::update()
 }
 
 ///----------
-void CMysterBox::actOnMe(KindAction which_action)
+void MysteryBox::ActOnMe(KindAction pWhichAction)
 {
-    /// ZAPOBIEGA UDERZANIU GDY GRZYB WYCHODZI
-    if(m_my_obj)
+    /// PREVENTS HITTING WHEN THE MUSHROOM IS COMING OUT
+    if (mMyObj)
         return;
 
-    if(m_to_rand)
-        m_createing_item=true;
+    if (mToRand)
+        mCreatingItem = true;
 
-    m_hit=true;
+    mIsHit = true;
 }
 
 ///----------
-void CMysterBox::draw(const unique_ptr<sf::RenderWindow>& window)
+void MysteryBox::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    if(m_draw_question_mark)
+    if (mDrawQuestionMark)
     {
-        s_private_animator.setPosition(m_current_position);
-        s_private_animator.draw(window);
+        sPrivateAnimator.SetPosition(mCurrentPosition);
+        sPrivateAnimator.Draw(pWindow);
 
-    }else
+    }
+    else
     {
-        if(m_my_obj)
-            m_my_obj->draw(window);
+        if (mMyObj)
+            mMyObj->Draw(pWindow);
 
-        m_animator->setPosition(m_current_position);
-        m_animator->draw(window);
+        mAnimator->SetPosition(mCurrentPosition);
+        mAnimator->Draw(pWindow);
     }
 }
 
 ///----------
-void CMysterBox::setStaticAnimation()
+void MysteryBox::SetStaticAnimation()
 {
-    vector<sf::IntRect> m_frames_animation;
+    std::vector<sf::IntRect> framesAnimation;
 
-    for(int i=0;i<4;i++)
-    m_frames_animation.push_back({32*i,0,32,32});
+    for (int i = 0; i < 4; i++)
+        framesAnimation.push_back({32 * i, 0, 32, 32});
 
-    s_private_animator.create(CAnimations::STANDARD,CMarioGame::s_texture_manager["AnimTiles"],m_frames_animation,3.0f,m_scale_to_tile,true);
+    sPrivateAnimator.Create(Animations::Standard, MarioGame::sTextureManager["AnimTiles"], framesAnimation, 3.0f, kScaleToTile, true);
 }

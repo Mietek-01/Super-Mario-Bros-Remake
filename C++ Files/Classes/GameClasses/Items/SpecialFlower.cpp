@@ -1,32 +1,32 @@
 #include "../Blocks/MysterBox.h"
 #include "../Mario.h"
 
-CMysterBox::CSpecialFlower::CSpecialFlower(sf::Vector2f pos)
-:CGameObject(new CSprite(CGUI::createSprite("Items",{32,212,32,32},pos,1.3f,true)),Parentage::ITEM,pos,1000)
+MysteryBox::SpecialFlower::SpecialFlower(sf::Vector2f pPos)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("Items", {32, 212, 32, 32}, pPos, 1.3f, true)), Parentage::Item, pPos, 1000)
 {
 }
 
 ///----
-void CMysterBox::CSpecialFlower::actOnObject(CGameObject* obj,KindCollision kind_collision)
+void MysteryBox::SpecialFlower::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
+    if (pObject->GetParentage() == Parentage::Mario)
     {
-        m_current_position=obj->getCurrentPosition();
-        actOnMe(KindAction::HIT);
+        mCurrentPosition = pObject->GetCurrentPosition();
+        ActOnMe(KindAction::Hit);
 
-        CMario * mario=dynamic_cast<CMario*>(obj);
+        Mario* mario = dynamic_cast<Mario*>(pObject);
 
-        mario->actOnMe(KindAction::LVL_UP);
-        mario->setShield();
+        mario->ActOnMe(KindAction::LevelUp);
+        mario->SetShield();
     }
 }
 
 ///----
-void CMysterBox::CSpecialFlower::actOnMe(KindAction which_action)
+void MysteryBox::SpecialFlower::ActOnMe(KindAction pAction)
 {
-    if(which_action == KindAction::HIT)
+    if (pAction == KindAction::Hit)
     {
-        this->createPoints();
-        removeObject(this);
+        this->CreatePoints();
+        RemoveObject(this);
     }
 }

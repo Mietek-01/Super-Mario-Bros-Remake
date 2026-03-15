@@ -2,34 +2,34 @@
 #include "Block.h"
 #include "../PhysicalObject.h"
 
-class CMoveableBlock :public CStaticBlock
+#include <vector>
+
+class MoveableBlock : public StaticBlock
 {
-    const sf::Vector2f m_basic_position;
+    const sf::Vector2f mBasicPosition;
 
-    const float m_speed=1;
-    const int m_range=CScen::s_tile_size*4;
+    const float mSpeed = 1;
+    const int mRange = Scene::sTileSize * 4;
 
-    vector<CPhysicaltObject*> m_objects_on_me;
+    std::vector<PhysicalObject*> mObjectsOnMe;
 
-    static vector<CMoveableBlock*> s_all_moveable_blocks;
+    static std::vector<MoveableBlock*> sAllMoveableBlocks;
 
 public:
 
     enum class Direction
     {
-        LEFT,
-        RIGHT,
-        UP,
-        DOWN
-    }m_dir;
+        Left,
+        Right,
+        Up,
+        Down
+    } mDir;
 
-    CMoveableBlock(sf::Vector2f,Direction);
-    ~CMoveableBlock();
+    MoveableBlock(sf::Vector2f, Direction);
+    ~MoveableBlock();
 
-    void update()override;
-    void actOnObject(CGameObject*,KindCollision)override;
+    void Update() override;
+    void ActOnObject(GameObject*, KindCollision) override;
 
-    static void removeDeadObjOnMoveableBlock(const CPhysicaltObject*);
+    static void RemoveDeadObjOnMoveableBlock(const PhysicalObject*);
 };
-
-

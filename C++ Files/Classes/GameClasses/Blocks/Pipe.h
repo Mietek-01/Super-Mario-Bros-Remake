@@ -1,70 +1,70 @@
 #pragma once
 #include "Block.h"
 
-class CPipe :public CStaticBlock
+#include <memory>
+
+class Pipe : public StaticBlock
 {
-    class CFlower:public CGameObject
+    class Flower : public GameObject
     {
-        CPipe * m_my_pipe;
+        Pipe* mMyPipe;
 
-        const float m_pos_gnawing;
-        const float m_how_long_hiding;
-        float m_when_move_upper;
-        float m_time_gnawing;
+        const float mPosGnawing;
+        const float mHowLongHiding;
+        float mWhenMoveUpper;
+        float mTimeGnawing;
 
-        bool m_enabled=false;
+        bool mEnabled = false;
 
-        static const float s_how_long_gnawing;
-        static const float s_speed;
+        static const float sHowLongGnawing;
+        static const float sSpeed;
 
         enum MyKindsAnimations
         {
-            GNAWING,
-            MOVE_UP,
-            MOVE_DOWN,
+            Gnawing,
+            MoveUp,
+            MoveDown,
 
         };
 
         enum class State
         {
-            MOVE_UP,
-            MOVE_DOWN,
-            HIDING,
-            GNAWING
-        }m_state=State::HIDING;
+            MoveUp,
+            MoveDown,
+            Hiding,
+            Gnawing
+        } mState = State::Hiding;
 
-        inline void setWhenMoveUpper();
+        inline void SetWhenMoveUpper();
 
     public:
 
-        CFlower(CPipe*,sf::Vector2f);
-        ~CFlower(){m_my_pipe->m_my_flower=nullptr;}
+        Flower(Pipe*, sf::Vector2f);
+        ~Flower() { mMyPipe->mMyFlower = nullptr; }
 
-        void update()override;
-        void draw(const unique_ptr<sf::RenderWindow>&) override;
+        void Update() override;
+        void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
-        void actOnMe(KindAction)override;
-        void actOnObject(CGameObject*,KindCollision)override;
+        void ActOnMe(KindAction) override;
+        void ActOnObject(GameObject*, KindCollision) override;
 
-        void reset();
+        void Reset();
     };
 
-    friend class CFlower;
+    friend class Flower;
 
-    CFlower *m_my_flower=nullptr;
+    Flower* mMyFlower = nullptr;
 
 public:
 
     enum class KindPipe
     {
-        BIG=128,
-        SMALL=64,
+        Big = 128,
+        Small = 64,
     };
 
-    CPipe(sf::Vector2f,KindPipe);
-    virtual ~CPipe(){;}
+    Pipe(sf::Vector2f, KindPipe);
+    virtual ~Pipe() { ; }
 
-    void resetFlower();
+    void ResetFlower();
 };
-
-

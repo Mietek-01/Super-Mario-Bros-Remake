@@ -1,107 +1,109 @@
 #include "Enemies.h"
 
-const float CFlyingTurtle::s_my_gravitation = 1000.0f;
+#include <vector>
 
-CFlyingTurtle::CFlyingTurtle(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::ENEMY,pos,CPhysicaltObject::KindMovement::LEFT_RUN,300)
+const float FlyingTurtle::sMyGravitation = 1000.0f;
+
+FlyingTurtle::FlyingTurtle(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Enemy, pPos, PhysicalObject::KindMovement::LeftRun, 300)
 {
-    m_value_acceleration=0.8f;
-    m_jump_force=-550;
+    mValueAcceleration = 0.8f;
+    mJumpForce = -550;
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({224,34,32,46});
-    m_frame_animation.push_back({257,32,31,48});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({224, 34, 32, 46});
+    frameAnimation.push_back({257, 32, 31, 48});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 1.5f, kScaleToTile);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({224,32,31,48});
-    m_frame_animation.push_back({256,34,32,46});
+    frameAnimation.clear();
+    frameAnimation.push_back({224, 32, 31, 48});
+    frameAnimation.push_back({256, 34, 32, 46});
 
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 1.5f, kScaleToTile);
 
-    m_animations->play(CAnimations::L_MOVE,m_current_position);
+    mAnimations->Play(Animations::LeftMove, mCurrentPosition);
 }
 
 ///------
-void CFlyingTurtle::makeJump()
+void FlyingTurtle::MakeJump()
 {
-    m_force+= s_my_gravitation *CScen::getFrameTime();
-    m_current_position.y+=m_force*CScen::getFrameTime();
+    mForce += sMyGravitation * Scene::GetFrameTime();
+    mCurrentPosition.y += mForce * Scene::GetFrameTime();
 
-    isUnderMap();
+    CheckUnderMap();
 }
 
 ///----------
-void CFlyingTurtle::updateForCollisionWithBlock(KindCollision how_collision ,CBlock* block)
+void FlyingTurtle::UpdateForCollisionWithBlock(KindCollision pHowCollision, Block* pBlock)
 {
-    switch(how_collision)
+    switch (pHowCollision)
     {
-        case KindCollision::TOP:
+    case KindCollision::Top:
         {
-            m_force=0.0f;
+            mForce = 0.0f;
             break;
         }
 
-        case KindCollision::BOTTOM:
+    case KindCollision::Bottom:
         {
-            if(block->isHit()||block->iamDead())
-                actOnMe(KindAction::HIT);
+            if (pBlock->IsHit() || pBlock->IsDead())
+                ActOnMe(KindAction::Hit);
             else
-                jump();
+                Jump();
 
             break;
         }
 
-        case KindCollision::RIGHT_SIDE:
+    case KindCollision::RightSide:
         {
-            m_kind_movement=KindMovement::LEFT_RUN;
-            m_right_dir_reversal=false;
-            m_animations->play(CAnimations::L_MOVE,m_current_position);
+            mKindMovement = KindMovement::LeftRun;
+            mIsRightDirReversal = false;
+            mAnimations->Play(Animations::LeftMove, mCurrentPosition);
             break;
         }
 
-        case KindCollision::LEFT_SIDE:
+    case KindCollision::LeftSide:
         {
-            m_kind_movement=KindMovement::RIGHT_RUN;
-            m_right_dir_reversal=true;
-            m_animations->play(CAnimations::R_MOVE,m_current_position);
+            mKindMovement = KindMovement::RightRun;
+            mIsRightDirReversal = true;
+            mAnimations->Play(Animations::RightMove, mCurrentPosition);
             break;
         }
 
-        case KindCollision::NONE:
-            {
-                return;
-            }
+    case KindCollision::None:
+        {
+            return;
+        }
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pHowCollision);
 }
 
 ///-----
-void CFlyingTurtle::actOnObject(CGameObject* obj,KindCollision how_collision)
+void FlyingTurtle::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        if(how_collision==KindCollision::BOTTOM)
+    if (pObj->GetParentage() == Parentage::Mario)
+        if (pHowCollision == KindCollision::Bottom)
         {
-            removeObject(this);
+            RemoveObject(this);
 
-            CTurtle *new_turtle=new CTurtle(m_current_position,true,m_kind_movement);
-            addNewObject(new_turtle);
+            Turtle* newTurtle = new Turtle(mCurrentPosition, true, mKindMovement);
+            AddNewObject(newTurtle);
 
-            this->corectObjectPositionOnMe(*obj,how_collision);
-            obj->actOnMe(KindAction::HOP);
+            this->CorrectObjectPositionOnMe(*pObj, pHowCollision);
+            pObj->ActOnMe(KindAction::Hop);
         }
         else
-            obj->actOnMe(KindAction::HIT);
+            pObj->ActOnMe(KindAction::Hit);
 }
 
 ///-----
-void CFlyingTurtle::actOnMe(KindAction which_action)
+void FlyingTurtle::ActOnMe(KindAction pWhichAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    if(which_action==KindAction::HIT)
-        createBeatsObjSpecialEfect();
+    if (pWhichAction == KindAction::Hit)
+        CreateBeatObjectEffect();
 }

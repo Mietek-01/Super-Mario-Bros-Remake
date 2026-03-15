@@ -2,123 +2,120 @@
 #include "../../Scens/GameScen.h"
 #include "../Items/Shell.h"
 
-CTurtle::CTurtle(sf::Vector2f pos,bool create_by_flying_turtle,KindMovement direction)
-:CPhysicaltObject(new CAnimations,Parentage::ENEMY,pos,direction,200)
-,m_created_by_flying_turtle(create_by_flying_turtle)
+#include <vector>
+
+Turtle::Turtle(sf::Vector2f pPos, bool pCreateByFlyingTurtle, KindMovement pDirection)
+    : PhysicalObject(new Animations, Parentage::Enemy, pPos, pDirection, 200)
+    , mCreatedByFlyingTurtle(pCreateByFlyingTurtle)
 {
-    m_value_acceleration=0.5f;
+    mValueAcceleration = 0.5f;
 
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    m_frame_animation.push_back({480,35,32,45});
-    m_frame_animation.push_back({450,33,30,47});
+    frameAnimation.push_back({480, 35, 32, 45});
+    frameAnimation.push_back({450, 33, 30, 47});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,2.0f,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 2.0f, kScaleToTile);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back(sf::IntRect(0,35,32,45));
-    m_frame_animation.push_back(sf::IntRect(32,33,30,47));
+    frameAnimation.clear();
+    frameAnimation.push_back(sf::IntRect(0, 35, 32, 45));
+    frameAnimation.push_back(sf::IntRect(32, 33, 30, 47));
 
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.0f,m_scale_to_tile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.0f, kScaleToTile);
 
-    if(m_right_dir_reversal)
-        m_animations->play(CAnimations::R_MOVE,m_current_position);
+    if (mIsRightDirReversal)
+        mAnimations->Play(Animations::RightMove, mCurrentPosition);
     else
-        m_animations->play(CAnimations::L_MOVE,m_current_position);
+        mAnimations->Play(Animations::LeftMove, mCurrentPosition);
 }
 
 ///----
-void CTurtle::update()
+void Turtle::Update()
 {
-    if(!m_created_by_flying_turtle)
-        dontFall();
+    if (!mCreatedByFlyingTurtle)
+        DontFall();
 
-    CPhysicaltObject::update();
+    PhysicalObject::Update();
 }
 
 ///----
-inline void CTurtle::dontFall()
+inline void Turtle::DontFall()
 {
-    m_future_position=getBounds();
+    mFuturePosition = GetBounds();
 
-    /// OKRESLAM PRZYSZLA POZYCJE
-    if(m_kind_movement==KindMovement::LEFT_RUN)
-       m_future_position.left-=getBounds().width;
+    if (mKindMovement == KindMovement::LeftRun)
+        mFuturePosition.left -= GetBounds().width;
     else
-       m_future_position.left+=getBounds().width;
+        mFuturePosition.left += GetBounds().width;
 
-    /// SPRAWDZAM CZY DLA PRZYSZLEJ POZYCJI NIE BEDZIE RZADNEJ KOLIZJI
+    const auto gameSceneBlocks = MarioGame::Instance().GetScene<GameScene>().GetBlocks();
 
-    const auto game_scen_blocks=CMarioGame::instance().getScen<CGameScen>().getBlocks();
-
-    for(const auto &block:*game_scen_blocks)
+    for (const auto& block : *gameSceneBlocks)
     {
-        if(!block->isVisible())continue;
+        if (!block->IsVisible()) continue;
 
-        if(m_future_position.intersects(block->getBounds()))
+        if (mFuturePosition.intersects(block->GetBounds()))
         {
-            m_close_to_fall=false;
+            mCloseToFall = false;
             break;
         }
     }
 
-    /// ZMIENIAM KIERUNEK BO WIEM ZE ZARAZ SPADNE
-    if(m_close_to_fall&&!m_jump)
+    if (mCloseToFall && !mIsJump)
     {
-        if(m_right_dir_reversal)
+        if (mIsRightDirReversal)
         {
-            m_right_dir_reversal=false;
-            m_kind_movement=KindMovement::LEFT_RUN;
-            m_animations->play(CAnimations::L_MOVE,m_current_position);
-        }else
+            mIsRightDirReversal = false;
+            mKindMovement = KindMovement::LeftRun;
+            mAnimations->Play(Animations::LeftMove, mCurrentPosition);
+        } else
         {
-            m_right_dir_reversal=true;
-            m_kind_movement=KindMovement::RIGHT_RUN;
-            m_animations->play(CAnimations::R_MOVE,m_current_position);
+            mIsRightDirReversal = true;
+            mKindMovement = KindMovement::RightRun;
+            mAnimations->Play(Animations::RightMove, mCurrentPosition);
         }
-
-    }else m_close_to_fall=true;
-
+    } else
+        mCloseToFall = true;
 }
 
 ///-----
-void CTurtle::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Turtle::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        if(how_collision==KindCollision::BOTTOM)
+    if (pObj->GetParentage() == Parentage::Mario)
+        if (pHowCollision == KindCollision::Bottom)
         {
-            this->actOnMe(KindAction::CRUMPLED);
-            this->corectObjectPositionOnMe(*obj,how_collision);
+            this->ActOnMe(KindAction::Crumpled);
+            this->CorrectObjectPositionOnMe(*pObj, pHowCollision);
 
-            obj->actOnMe(KindAction::HOP);
+            pObj->ActOnMe(KindAction::Hop);
         }
         else
-            obj->actOnMe(KindAction::HIT);
+            pObj->ActOnMe(KindAction::Hit);
 }
 
 ///-----
-void CTurtle::actOnMe(KindAction which_action)
+void Turtle::ActOnMe(KindAction pWhichAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    switch(which_action)
+    switch (pWhichAction)
     {
-    case KindAction::CRUMPLED:
+    case KindAction::Crumpled:
         {
-            addNewObject(new CShell(m_current_position));
+            AddNewObject(new Shell(mCurrentPosition));
 
-            createPoints();
+            CreatePoints();
 
-            CMarioGame::s_sound_manager.play("stomp");
+            MarioGame::sSoundManager.play("stomp");
 
-            removeObject(this);
+            RemoveObject(this);
 
             break;
         }
-    case KindAction::HIT:
+    case KindAction::Hit:
         {
-            createBeatsObjSpecialEfect();
+            CreateBeatObjectEffect();
             break;
         }
     }

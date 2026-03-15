@@ -1,84 +1,74 @@
 #pragma once
 #include "../GameObject.h"
 
-using namespace std;
+#include <vector>
 
-class CBullet: public CGameObject
-{
+class Bullet : public GameObject {
 protected:
 
-    const sf::Vector2f m_basic_position;
+    const sf::Vector2f mBasicPosition;
 
-    const bool m_right_dir;
+    const bool mRightDir;
 
-    const float m_speed;
-    const float m_my_scal;
-    const float m_range=1500;
-    const int m_damage_value=100;
+    const float mSpeed;
+    const float mMyScale;
+    const float mRange = 1500;
+    const int mDamageValue = 100;
 
-    virtual void corectPosition()=0;
+    virtual void CorrectPosition() = 0;
 
 public:
 
-    CBullet(sf::Vector2f,bool,float,float);
-    virtual ~CBullet(){}
+    Bullet(sf::Vector2f pPos, bool pRightDir, float pSpeed, float pScale);
+    virtual ~Bullet() {}
 
-    virtual void update()override;
+    virtual void Update() override;
 
-    void actOnMe(KindAction)override;
-    void actOnObject(CGameObject*,KindCollision)override;
+    void ActOnMe(KindAction pAction) override;
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
 
-    bool isVisible()const override {return true;}
+    bool IsVisible() const override { return true; }
 };
 
 ///--------
-class CBasicBullet: public CBullet
-{
-    void corectPosition()override{}
+class BasicBullet : public Bullet {
+    void CorrectPosition() override {}
 
 public:
 
-    CBasicBullet(sf::Vector2f,bool);
-    virtual ~CBasicBullet(){}
-
-};
-
-
-///---------
-class CSinBullet: public CBullet
-{
-    const float m_sin_function_speed=3.14159265/80.0f;
-    float m_my_speed=0.0f;
-
-    void corectPosition()override;
-
-public:
-
-    CSinBullet(sf::Vector2f,bool);
-    virtual ~CSinBullet(){}
+    BasicBullet(sf::Vector2f pPos, bool pRightDir);
+    virtual ~BasicBullet() {}
 };
 
 ///---------
-class CCircleBullet: public CBullet
-{
-    const float m_radius=18.0f;/// ZASIEK KOLA
-    const float m_spin_speed=0.05f;/// PREDKOSC ROBIENIA KOLEK
-    const float m_rotate_speed=4;/// OBROT POCISKU
+class SinBullet : public Bullet {
+    const float mSinFunctionSpeed = 3.14159265f / 80.0f;
+    float mMySpeed = 0.0f;
 
-    float m_center_circle_x_pos;
-    float m_angle=0;
-    float m_rotate=0;
-
-    void corectPosition()override;
+    void CorrectPosition() override;
 
 public:
 
-    CCircleBullet(sf::Vector2f,bool);
-    virtual ~CCircleBullet(){}
-
-    void update()override;
-
+    SinBullet(sf::Vector2f pPos, bool pRightDir);
+    virtual ~SinBullet() {}
 };
 
+///---------
+class CircleBullet : public Bullet {
+    const float mRadius = 18.0f;
+    const float mSpinSpeed = 0.05f;
+    const float mRotateSpeed = 4;
 
+    float mCenterCircleXPos;
+    float mAngle = 0;
+    float mRotate = 0;
 
+    void CorrectPosition() override;
+
+public:
+
+    CircleBullet(sf::Vector2f pPos, bool pRightDir);
+    virtual ~CircleBullet() {}
+
+    void Update() override;
+};

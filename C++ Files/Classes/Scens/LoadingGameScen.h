@@ -2,6 +2,9 @@
 
 #include <fstream>
 #include <list>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "../GameClasses/Landscape.h"
 #include "../GameClasses/Blocks/Block.h"
@@ -10,136 +13,126 @@
 
 #include "Scen.h"
 
-using namespace std;
-
-class CLoadingGameScen:public CScen
-{
-    enum class KindsObject
-    {
+class LoadingGameScene : public Scene {
+    enum class KindsObject {
         BLOCKS,
         ENEMIES,
         ITEMS,
         LANDSCAPES,
-    }m_current_kind_object;
+    } mCurrentKindObject;
 
-    /// !!! WAZNE MUSI ZACZYNAC SIE OD 2
-    enum BLOCKS
-    {
-       Ground=2,
-       Dark_ground,
+    /// !!! IMPORTANT: MUST START FROM 2
+    enum BLOCKS {
+       Ground = 2,
+       DarkGround,
        Brick,
-       Dark_brick,
-       Static_brick,
-       Dark_static_brick,
-       Myster_box_coin,
-       Myster_box_mushroom,
+       DarkBrick,
+       StaticBrick,
+       DarkStaticBrick,
+       MysterBoxCoin,
+       MysterBoxMushroom,
        Bridge,
-       Metal_block,
-       Left_moveable_block,
-       Right_moveable_block,
-       Up_moveable_block,
-       Down_moveable_block,
-       Left_fiery_block,
-       Right_fiery_block,
-       Small_pipe,
-       Big_pipe,
-       Return_pipe,
-       Entering_big_pipe,
+       MetalBlock,
+       LeftMoveableBlock,
+       RightMoveableBlock,
+       UpMoveableBlock,
+       DownMoveableBlock,
+       LeftFieryBlock,
+       RightFieryBlock,
+       SmallPipe,
+       BigPipe,
+       ReturnPipeBlock,
+       EnteringBigPipe,
 
-       Entering_small_pipe
+       EnteringSmallPipe
     };
 
-    enum ENEMIES
-    {
-        Goombas=2,
-        Turtle,
-        Red_turtle,
-        Armored_turtle,
-        Flying_turtle,
-        Armed_turtle,
-        Creator_red_turtles,
+    enum ENEMIES {
+        EnemyGoombas = 2,
+        EnemyTurtle,
+        EnemyRedTurtle,
+        EnemyArmoredTurtle,
+        EnemyFlyingTurtle,
+        EnemyArmedTurtle,
+        EnemyCreatorRedTurtles,
 
-        Bowser
+        EnemyBowser
     };
 
-    enum ITEMS
-    {
-       Coin=2,
-       Small_gun,
-       Big_gun,
-       Trampoline,
-       Water_waves,
-       Lava_waves,
-       Lava_bullet,
+    enum ITEMS {
+       ItemCoin = 2,
+       SmallGun,
+       BigGun,
+       ItemTrampoline,
+       ItemWaterWaves,
+       ItemLavaWaves,
+       ItemLavaBullet,
 
-       Line_with_flag
+       ItemLineWithFlag
 
     };
 
-    enum LANDSCAPES
-    {
-        Cloud=2,
-        Pink_flower,
-        Blue_flower,
-        First_small_bush,
-        Second_small_bush,
-        First_big_bush,
-        Second_big_bush,
-        First_hurdle,
-        Second_hurdle,
-        Small_tree,
-        Big_Tree,
-        Water,
+    enum LANDSCAPES {
+        LandscapeCloud = 2,
+        PinkFlower,
+        BlueFlower,
+        FirstSmallBush,
+        SecondSmallBush,
+        FirstBigBush,
+        SecondBigBush,
+        FirstHurdle,
+        SecondHurdle,
+        SmallTree,
+        BigTree,
+        LandscapeWater,
 
-        Lava
+        LandscapeLava
     };
 
-    const static float s_loading_duration;
+    const static float sLoadingDuration;
 
-    unique_ptr<sf::Sprite> m_mario_image;
+    std::unique_ptr<sf::Sprite> mMarioImage;
 
-    unique_ptr<sf::Text> m_lvl_text_name;
-    unique_ptr<sf::Text> m_number_lives;
-    unique_ptr<sf::Text> m_information_about_activate_menu;
+    std::unique_ptr<sf::Text> mLevelTextName;
+    std::unique_ptr<sf::Text> mNumberLives;
+    std::unique_ptr<sf::Text> mInformationAboutActivateMenu;
 
-    const string m_level_name;
-    const string m_information_how_activate_menu="PRESS \"ESC\" TO ACTIVATE MENU IN DURRING GAME";
-    const string m_kinds_objects_files_names[4]={"Blocks","Enemies","Items","Landscape"};
+    const std::string mLevelName;
+    const std::string mInformationHowActivateMenu = "PRESS \"ESC\" TO ACTIVATE MENU IN DURING GAME";
+    const std::string mKindsObjectsFilesNames[4] = {"Blocks", "Enemies", "Items", "Landscape"};
 
-    const string m_music_file_name="Music name";
-    const string m_background_file_name="Background name";
-    const string m_lvl_time_file_name="Lvl time";
-    const string m_seting_switching_pipes_file_name="Underground levels names";
+    const std::string mMusicFileName = "Music name";
+    const std::string mBackgroundFileName = "Background name";
+    const std::string mLevelTimeFileName = "Lvl time";
+    const std::string mSettingSwitchingPipesFileName = "Underground levels names";
 
-    fstream m_file;
+    std::fstream mFile;
 
-    /// DANE KTORE WCZYTUJE
-    string m_background_name;
-    string m_music_name;
-    int m_lvl_time;
+    /// DATA TO LOAD
+    std::string mBackgroundName;
+    std::string mMusicName;
+    int mLevelTime;
 
-    shared_ptr<vector<CLandScape>> m_landscapes;
-    shared_ptr<list<unique_ptr<CBlock>>> m_blocks;
-    shared_ptr<list<unique_ptr<CGameObject>>> m_not_physical_objs;
-    shared_ptr<list<unique_ptr<CPhysicaltObject>>> m_physical_objs;
+    std::shared_ptr<std::vector<Landscape>> mLandscapes;
+    std::shared_ptr<std::list<std::unique_ptr<Block>>> mBlocks;
+    std::shared_ptr<std::list<std::unique_ptr<GameObject>>> mNotPhysicalObjs;
+    std::shared_ptr<std::list<std::unique_ptr<PhysicalObject>>> mPhysicalObjs;
 
-    vector<pair<sf::Vector2f,CPipe::KindPipe>> m_potentials_entering_pipes;
-    vector<CPipe*> m_all_pipes;/// POTRZEBUJE TEN KONTENER DLA STWORZENIA WCHODZACYCH RUR
+    std::vector<std::pair<sf::Vector2f, Pipe::KindPipe>> mPotentialsEnteringPipes;
+    std::vector<Pipe*> mAllPipes;
 
     ///-- METHODS
-    void startLoadingLevel();
-    void defineLoadingObject(int&,int&);
-    void loadObjects();
-    void createObject(int,sf::Vector2f);
-    void setAllPipes();
+    void StartLoadingLevel();
+    void DefineLoadingObject(int& pId, int& pHowMany);
+    void LoadObjects();
+    void CreateObject(int pId, sf::Vector2f pPos);
+    void SetAllPipes();
 
 public:
 
-    CLoadingGameScen(string,const CEnteringPipe* =nullptr);
-    ~CLoadingGameScen(){}
+    LoadingGameScene(std::string pLevelName, const EnteringPipe* pEnteringPipe = nullptr);
+    ~LoadingGameScene() {}
 
-    void draw(const unique_ptr<sf::RenderWindow>&) override;
-    void update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) override;
+    void Update() override;
 };
-
-

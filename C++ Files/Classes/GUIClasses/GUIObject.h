@@ -2,24 +2,19 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
-using namespace std;
-
-
-class CGuiObject
-{
+/// Base class for all GUI objects that can be drawn and updated.
+class GuiObject {
 protected:
-    bool m_remove=false;
-    const float m_when_remove;/// ALBO PO JAKIM CZASIE ALBO GDZIE
+    bool mIsRemove = false;
+    const float mWhenRemove; /// Removal threshold: time or position
 
 public:
+    virtual ~GuiObject() {}
+    GuiObject() : mWhenRemove(0.0f) {}
+    explicit GuiObject(float pWhenRemove) : mWhenRemove(pWhenRemove) {}
 
-    virtual ~CGuiObject(){}
-    CGuiObject():m_when_remove(0.0f){}
-    CGuiObject(float when_remove):m_when_remove(when_remove){}
+    virtual void Draw(std::unique_ptr<sf::RenderWindow>& pWindow) = 0;
+    virtual void Update() = 0;
 
-    virtual void draw(unique_ptr<sf::RenderWindow>&)=0;
-    virtual void update()=0;
-
-    bool isRemove()const{return m_remove;}
-
+    [[nodiscard]] bool IsRemove() const { return mIsRemove; }
 };

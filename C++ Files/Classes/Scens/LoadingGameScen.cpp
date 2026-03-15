@@ -9,128 +9,131 @@
 #include "../GameClasses/Items/Items.h"
 #include "../GameClasses/Mario.h"
 
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <string>
 #include <windows.h>
 
-const float CLoadingGameScen::s_loading_duration=1.5f;
+const float LoadingGameScene::sLoadingDuration = 1.5f;
 
-CLoadingGameScen::CLoadingGameScen(string lvl_name,const CEnteringPipe* entering_pipe)
-:
-CScen("LoadingScen")
-,m_level_name(lvl_name)
-,m_landscapes(new std::vector<CLandScape>)
-,m_blocks(new std::list<unique_ptr<CBlock>>)
-,m_physical_objs(new std::list<unique_ptr<CPhysicaltObject>>)
-,m_not_physical_objs(new std::list<unique_ptr<CGameObject>>)
+LoadingGameScene::LoadingGameScene(std::string pLevelName, const EnteringPipe* pEnteringPipe)
+    : Scene("LoadingScen")
+    , mLevelName(pLevelName)
+    , mLandscapes(new std::vector<Landscape>)
+    , mBlocks(new std::list<std::unique_ptr<Block>>)
+    , mPhysicalObjs(new std::list<std::unique_ptr<PhysicalObject>>)
+    , mNotPhysicalObjs(new std::list<std::unique_ptr<GameObject>>)
 {
-    startLoadingLevel();
+    StartLoadingLevel();
 
-    if(entering_pipe)
-        CMarioGame::instance().changeScen(new CGameScen(m_lvl_time,m_music_name,m_background_name,m_landscapes,m_blocks,m_physical_objs,m_not_physical_objs));
+    if (pEnteringPipe)
+        MarioGame::Instance().ChangeScene(new GameScene(mLevelTime, mMusicName, mBackgroundName, mLandscapes, mBlocks, mPhysicalObjs, mNotPhysicalObjs));
     else
     {
-        CGUI::setWorldName(lvl_name);
+        Gui::SetWorldName(pLevelName);
 
-        m_mario_image.reset(CGUI::createSprite("LoadingMarioImage",{0,0,50,90},{0,0},1.2f,true));
-        m_mario_image->setPosition({CMarioGame::s_size_window.x/2.0f,CMarioGame::s_size_window.y/2.0f+m_mario_image->getGlobalBounds().height/2.0f});
+        mMarioImage.reset(Gui::CreateSprite("LoadingMarioImage", {0, 0, 50, 90}, {0, 0}, 1.2f, true));
+        mMarioImage->setPosition({MarioGame::sSizeWindow.x / 2.0f, MarioGame::sSizeWindow.y / 2.0f + mMarioImage->getGlobalBounds().height / 2.0f});
 
         ///--- TEXTS
 
-        const sf::Vector2f pos_texts={m_mario_image->getPosition().x,m_mario_image->getPosition().y-m_mario_image->getGlobalBounds().height*1.5f};
+        const sf::Vector2f posTexts = {mMarioImage->getPosition().x, mMarioImage->getPosition().y - mMarioImage->getGlobalBounds().height * 1.5f};
 
-        m_information_about_activate_menu.reset(CGUI::createText(m_information_how_activate_menu,{pos_texts.x,pos_texts.y+CMarioGame::s_size_window.y-400},sf::Color::White,"menu_font",true,30));
+        mInformationAboutActivateMenu.reset(Gui::CreateText(mInformationHowActivateMenu, {posTexts.x, posTexts.y + MarioGame::sSizeWindow.y - 400}, sf::Color::White, "menu_font", true, 30));
 
-        m_lvl_text_name.reset(CGUI::createText(lvl_name,pos_texts,sf::Color::White,"menu_font",true,30));
+        mLevelTextName.reset(Gui::CreateText(pLevelName, posTexts, sf::Color::White, "menu_font", true, 30));
 
-        m_number_lives.reset(CGUI::createText("x"+CGUI::toString(CMario::getLivesMario()),{pos_texts.x+60,pos_texts.y+m_mario_image->getGlobalBounds().height+35},sf::Color::White,"menu_font",true));
+        mNumberLives.reset(Gui::CreateText("x" + Gui::ToString(Mario::GetLivesMario()), {posTexts.x + 60, posTexts.y + mMarioImage->getGlobalBounds().height + 35}, sf::Color::White, "menu_font", true));
     }
 }
 
-void CLoadingGameScen::startLoadingLevel()
+void LoadingGameScene::StartLoadingLevel()
 {
-    /// WCZYTUJE NAZWE TLA
-    m_file.open("Maps/"+m_level_name+"/"+m_background_file_name+".txt",ios::in);
-    assert(m_file.good());
-    m_file>>m_background_name;
+    /// LOAD BACKGROUND NAME
+    mFile.open("Maps/" + mLevelName + "/" + mBackgroundFileName + ".txt", std::ios::in);
+    assert(mFile.good());
+    mFile >> mBackgroundName;
 
-    m_file.close();
+    mFile.close();
 
-    /// WCZYTUJE NAZWE MUZYKI
-    m_file.open("Maps/"+m_level_name+"/"+m_music_file_name+".txt",ios::in);
-    assert(m_file.good());
-    m_file>>m_music_name;
+    /// LOAD MUSIC NAME
+    mFile.open("Maps/" + mLevelName + "/" + mMusicFileName + ".txt", std::ios::in);
+    assert(mFile.good());
+    mFile >> mMusicName;
 
-    m_file.close();
+    mFile.close();
 
-    /// WCZYTUJE CZAS POZIOMU
+    /// LOAD LEVEL TIME
 
-    m_file.open("Maps/"+CMarioGame::instance().getCurrentLevelName()+"/"+m_lvl_time_file_name+".txt",ios::in);
-    assert(m_file.good());
-    m_file>>m_lvl_time;
+    mFile.open("Maps/" + MarioGame::Instance().GetCurrentLevelName() + "/" + mLevelTimeFileName + ".txt", std::ios::in);
+    assert(mFile.good());
+    mFile >> mLevelTime;
 
-    assert(m_lvl_time>=60&&m_lvl_time<=240);
+    assert(mLevelTime >= 60 && mLevelTime <= 240);
 
-    m_file.close();
+    mFile.close();
 
-    /// WCZYTUJE OBIEKTY GRY
-    for(int i=0;i<4;i++)
+    /// LOAD GAME OBJECTS
+    for (int i = 0; i < 4; i++)
     {
-        string name_file="Maps/"+m_level_name+"/"+m_kinds_objects_files_names[i]+".txt";
+        std::string nameFile = "Maps/" + mLevelName + "/" + mKindsObjectsFilesNames[i] + ".txt";
 
-        m_file.open(name_file,ios::in);
-        assert(m_file.good());
+        mFile.open(nameFile, std::ios::in);
+        assert(mFile.good());
 
-        m_current_kind_object=static_cast<KindsObject>(i);
+        mCurrentKindObject = static_cast<KindsObject>(i);
 
-        loadObjects();
+        LoadObjects();
 
-        m_file.close();
+        mFile.close();
 
     }
 
-    setAllPipes();
+    SetAllPipes();
 }
 
 ///------
-void CLoadingGameScen::defineLoadingObject(int& id,int& how_many)
+void LoadingGameScene::DefineLoadingObject(int& pId, int& pHowMany)
 {
-    m_file>>id;
-    if(id==0)return;
+    mFile >> pId;
+    if (pId == 0) return;
 
-    assert(id>=0&&id<=50000);
+    assert(pId >= 0 && pId <= 50000);
 
-    if(id>100)
+    if (pId > 100)
     {
-        for(int i=2000;i<100000;i+=1000)
-        if(id<i)
+        for (int i = 2000; i < 100000; i += 1000)
+        if (pId < i)
         {
-            how_many=id-(i-1000);/// NAWIAS BARDZO WAZNY
-            id=i/1000;
-            id--;
+            pHowMany = pId - (i - 1000);
+            pId = i / 1000;
+            pId--;
             break;
         }
     }
 }
 
 ///----------
-void CLoadingGameScen::loadObjects()
+void LoadingGameScene::LoadObjects()
 {
-    for(int y=0;y<15;++y)
+    for (int y = 0; y < 15; ++y)
     {
 
-    int id=0,x=0;
+    int id = 0, x = 0;
 
-    while(true)
+    while (true)
     {
-        int m_how_many=1;
-        defineLoadingObject(id,m_how_many);
+        int howMany = 1;
+        DefineLoadingObject(id, howMany);
 
-        if(id==0)break;
+        if (id == 0) break;
 
-        switch(id)
+        switch (id)
         {
             case 1:
             {
-                for(int i=0;i<m_how_many;++i)
+                for (int i = 0; i < howMany; ++i)
                     x++;
 
                 break;
@@ -138,8 +141,8 @@ void CLoadingGameScen::loadObjects()
 
             default:
             {
-                for(int i=0;i<m_how_many;++i,++x)
-                    createObject(id,sf::Vector2f(x*s_tile_size,y*s_tile_size));
+                for (int i = 0; i < howMany; ++i, ++x)
+                    CreateObject(id, sf::Vector2f(x * sTileSize, y * sTileSize));
 
                 break;
             }
@@ -150,145 +153,144 @@ void CLoadingGameScen::loadObjects()
 }
 
 ///--------
-void CLoadingGameScen::setAllPipes()
+void LoadingGameScene::SetAllPipes()
 {
-    for(auto pipe:m_all_pipes)
-        m_blocks->push_back(unique_ptr<CPipe>(pipe));
+    for (auto pipe : mAllPipes)
+        mBlocks->push_back(std::unique_ptr<Pipe>(pipe));
 
-    if(m_potentials_entering_pipes.size()==0)
+    if (mPotentialsEnteringPipes.size() == 0)
         return;
 
-    m_file.open("Maps/"+m_level_name+"/"+m_seting_switching_pipes_file_name+".txt",ios::in);
+    mFile.open("Maps/" + mLevelName + "/" + mSettingSwitchingPipesFileName + ".txt", std::ios::in);
 
-    if(m_file.good())
+    if (mFile.good())
     {
-        /// POZWALA ZACHOWAC ODPOWIEDNIA KOLEJNOS PRZY OKRESLANIU Z KTOREJ RURY WYJSC
-        if(m_all_pipes.size()>=2)
-            std::sort(m_all_pipes.begin(),m_all_pipes.end(),[](const CPipe * l_pipe,const CPipe* r_pipe)
-                {return l_pipe->getCurrentPosition().x<r_pipe->getCurrentPosition().x;});
+        if (mAllPipes.size() >= 2)
+            std::sort(mAllPipes.begin(), mAllPipes.end(), [](const Pipe* pLeftPipe, const Pipe* pRightPipe)
+                {return pLeftPipe->GetCurrentPosition().x < pRightPipe->GetCurrentPosition().x; });
 
-        auto which_entering_pipe=m_potentials_entering_pipes.begin();
+        auto whichEnteringPipe = mPotentialsEnteringPipes.begin();
 
-        while(!m_file.eof()&&which_entering_pipe!=m_potentials_entering_pipes.end())
+        while (!mFile.eof() && whichEnteringPipe != mPotentialsEnteringPipes.end())
         {
-            string underground_lvl_name;
-            int return_pipe;
+            std::string undergroundLevelName;
+            int returnPipe;
 
-            m_file>>underground_lvl_name;
-            m_file>>return_pipe;
+            mFile >> undergroundLevelName;
+            mFile >> returnPipe;
 
-            if(return_pipe==-1)/// CZYLI WCHODZACA RURA BD TEZ POWROTNA
-                m_blocks->push_back(unique_ptr<CBlock>(new CEnteringPipe(*which_entering_pipe,underground_lvl_name)));
+            if (returnPipe == -1)
+                mBlocks->push_back(std::unique_ptr<Block>(new EnteringPipe(*whichEnteringPipe, undergroundLevelName)));
             else
-            if(return_pipe<0||return_pipe>=m_all_pipes.size())
+            if (returnPipe < 0 || returnPipe >= mAllPipes.size())
             {
-                cout<<" ---- BLEDNE DANE OKRESLAJACE RURY"<<endl;
+                std::cout << " ---- INVALID DATA DEFINING PIPES" << std::endl;
                 assert(0);
-            }else
-                m_blocks->push_back(unique_ptr<CBlock>(new CEnteringPipe(*which_entering_pipe,underground_lvl_name,m_all_pipes[return_pipe])));
+            } else
+                mBlocks->push_back(std::unique_ptr<Block>(new EnteringPipe(*whichEnteringPipe, undergroundLevelName, mAllPipes[returnPipe])));
 
-            which_entering_pipe++;
+            whichEnteringPipe++;
         }
-    }else
+    } else
     {
-        cout<<"--- NIE MA PLIKU OKRESLAJACEGO PRZENOSZACE RURY-------"<<endl;
+        std::cout << "--- MISSING FILE DEFINING TRANSPORT PIPES -------" << std::endl;
         assert(0);
     }
 
-    m_file.close();
+    mFile.close();
 }
 
 ///------
-void CLoadingGameScen::update()
+void LoadingGameScene::Update()
 {
-    if(s_duration_scen>=s_loading_duration)
-        CMarioGame::instance().changeScen(new CGameScen(m_lvl_time,m_music_name,m_background_name,m_landscapes,m_blocks,m_physical_objs,m_not_physical_objs));
+    if (sDurationScene >= sLoadingDuration)
+        MarioGame::Instance().ChangeScene(new GameScene(mLevelTime, mMusicName, mBackgroundName, mLandscapes, mBlocks, mPhysicalObjs, mNotPhysicalObjs));
 }
 
 ///-----
-void CLoadingGameScen::draw(const unique_ptr<sf::RenderWindow>& window)
+void LoadingGameScene::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    window->draw(m_background);
-    window->draw(*m_lvl_text_name);
-    window->draw(*m_number_lives);
-    window->draw(*m_information_about_activate_menu);
-    window->draw(*m_mario_image);
+    pWindow->draw(mBackground);
+    pWindow->draw(*mLevelTextName);
+    pWindow->draw(*mNumberLives);
+    pWindow->draw(*mInformationAboutActivateMenu);
+    pWindow->draw(*mMarioImage);
 }
 
 ///-------
-void CLoadingGameScen::createObject(int id,sf::Vector2f pos)
+void LoadingGameScene::CreateObject(int pId, sf::Vector2f pPos)
 {
-    pos={pos.x+CScen::s_tile_size/2.0f,pos.y+CScen::s_tile_size};
+    pPos = {pPos.x + Scene::sTileSize / 2.0f, pPos.y + Scene::sTileSize};
 
-    switch(m_current_kind_object)
+    switch (mCurrentKindObject)
     {
     case KindsObject::BLOCKS:
         {
-            switch(id)
+            switch (pId)
             {
 
             case BLOCKS::Ground:
-            m_blocks->push_back(unique_ptr<CBlock>(new CStaticBlock({0,0,32,32},pos)));break;
+            mBlocks->push_back(std::unique_ptr<Block>(new StaticBlock({0, 0, 32, 32}, pPos))); break;
 
-            case BLOCKS::Dark_ground:
-            m_blocks->push_back(unique_ptr<CBlock>(new CStaticBlock({58,477,32,32},pos)));break;
+            case BLOCKS::DarkGround:
+            mBlocks->push_back(std::unique_ptr<Block>(new StaticBlock({58, 477, 32, 32}, pPos))); break;
 
             case BLOCKS::Brick:
-            m_blocks->push_back(unique_ptr<CBlock>(new CDynamicBlock({32,0,32,32},pos)));break;
+            mBlocks->push_back(std::unique_ptr<Block>(new DynamicBlock({32, 0, 32, 32}, pPos))); break;
 
-            case BLOCKS::Dark_brick:
-            m_blocks->push_back(unique_ptr<CBlock>(new CDynamicBlock({15,521,32,32},pos)));break;
+            case BLOCKS::DarkBrick:
+            mBlocks->push_back(std::unique_ptr<Block>(new DynamicBlock({15, 521, 32, 32}, pPos))); break;
 
-            case BLOCKS::Static_brick:
-            m_blocks->push_back(unique_ptr<CBlock>(new CStaticBlock({96,0,32,32},pos)));break;
+            case BLOCKS::StaticBrick:
+            mBlocks->push_back(std::unique_ptr<Block>(new StaticBlock({96, 0, 32, 32}, pPos))); break;
 
-            case BLOCKS::Dark_static_brick:
-            m_blocks->push_back(unique_ptr<CBlock>(new CStaticBlock({13,477,32,32},pos)));break;
+            case BLOCKS::DarkStaticBrick:
+            mBlocks->push_back(std::unique_ptr<Block>(new StaticBlock({13, 477, 32, 32}, pPos))); break;
 
             case BLOCKS::Bridge:
-            m_blocks->push_back(unique_ptr<CBlock>(new CStaticBlock({224,0,32,32},pos)));break;
+            mBlocks->push_back(std::unique_ptr<Block>(new StaticBlock({224, 0, 32, 32}, pPos))); break;
 
-            case BLOCKS::Metal_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CStaticBlock({32,32,32,32},pos)));break;
+            case BLOCKS::MetalBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new StaticBlock({32, 32, 32, 32}, pPos))); break;
 
-            case BLOCKS::Myster_box_coin:
-            m_blocks->push_back(unique_ptr<CBlock>(new CMysterBox(pos,CMysterBox::MyItem::COIN)));break;
+            case BLOCKS::MysterBoxCoin:
+            mBlocks->push_back(std::unique_ptr<Block>(new MysteryBox(pPos, MysteryBox::MyItem::COIN))); break;
 
-            case BLOCKS::Myster_box_mushroom:
-            m_blocks->push_back(unique_ptr<CBlock>(new CMysterBox(pos,CMysterBox::MyItem::MUSHROOM)));break;
+            case BLOCKS::MysterBoxMushroom:
+            mBlocks->push_back(std::unique_ptr<Block>(new MysteryBox(pPos, MysteryBox::MyItem::MUSHROOM))); break;
 
-            case BLOCKS::Big_pipe:
-            m_all_pipes.push_back(new CPipe(pos,CPipe::KindPipe::BIG));break;
+            case BLOCKS::BigPipe:
+            mAllPipes.push_back(new Pipe(pPos, Pipe::KindPipe::BIG)); break;
 
-            case BLOCKS::Small_pipe:
-            m_all_pipes.push_back(new CPipe(pos,CPipe::KindPipe::SMALL));break;
+            case BLOCKS::SmallPipe:
+            mAllPipes.push_back(new Pipe(pPos, Pipe::KindPipe::SMALL)); break;
 
-            case BLOCKS::Entering_big_pipe:
-            m_potentials_entering_pipes.push_back({pos,CPipe::KindPipe::BIG});break;
+            case BLOCKS::EnteringBigPipe:
+            mPotentialsEnteringPipes.push_back({pPos, Pipe::KindPipe::BIG}); break;
 
-            case BLOCKS::Entering_small_pipe:
-            m_potentials_entering_pipes.push_back({pos,CPipe::KindPipe::SMALL});break;
+            case BLOCKS::EnteringSmallPipe:
+            mPotentialsEnteringPipes.push_back({pPos, Pipe::KindPipe::SMALL}); break;
 
-            case BLOCKS::Return_pipe:/// CHODZI O KOLEJNOSC RYSOWANIA
-            m_blocks->push_front(unique_ptr<CBlock>(new CReturnPipe(pos)));break;
+            case BLOCKS::ReturnPipeBlock:
+            mBlocks->push_front(std::unique_ptr<Block>(new ReturnPipe(pPos))); break;
 
-            case BLOCKS::Left_fiery_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CFieryBlock(pos,false)));break;
+            case BLOCKS::LeftFieryBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new FieryBlock(pPos, false))); break;
 
-            case BLOCKS::Right_fiery_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CFieryBlock(pos,true)));break;
+            case BLOCKS::RightFieryBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new FieryBlock(pPos, true))); break;
 
-            case BLOCKS::Left_moveable_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CMoveableBlock(pos,CMoveableBlock::Direction::LEFT)));break;
+            case BLOCKS::LeftMoveableBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new MoveableBlock(pPos, MoveableBlock::Direction::LEFT))); break;
 
-            case BLOCKS::Right_moveable_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CMoveableBlock(pos,CMoveableBlock::Direction::RIGHT)));break;
+            case BLOCKS::RightMoveableBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new MoveableBlock(pPos, MoveableBlock::Direction::RIGHT))); break;
 
-            case BLOCKS::Up_moveable_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CMoveableBlock(pos,CMoveableBlock::Direction::UP)));break;
+            case BLOCKS::UpMoveableBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new MoveableBlock(pPos, MoveableBlock::Direction::UP))); break;
 
-            case BLOCKS::Down_moveable_block:
-            m_blocks->push_back(unique_ptr<CBlock>(new CMoveableBlock(pos,CMoveableBlock::Direction::DOWN)));break;
+            case BLOCKS::DownMoveableBlock:
+            mBlocks->push_back(std::unique_ptr<Block>(new MoveableBlock(pPos, MoveableBlock::Direction::DOWN))); break;
 
             }
 
@@ -297,32 +299,32 @@ void CLoadingGameScen::createObject(int id,sf::Vector2f pos)
 
     case KindsObject::ENEMIES:
         {
-            switch(id)
+            switch (pId)
             {
 
-            case ENEMIES::Goombas:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CGoombas(pos)));break;
+            case ENEMIES::EnemyGoombas:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new Goombas(pPos))); break;
 
-            case ENEMIES::Turtle:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CTurtle(pos)));break;
+            case ENEMIES::EnemyTurtle:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new Turtle(pPos))); break;
 
-            case ENEMIES::Red_turtle:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CRedTurtle(pos)));break;
+            case ENEMIES::EnemyRedTurtle:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new RedTurtle(pPos))); break;
 
-            case ENEMIES::Armored_turtle:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CArmoredTurtle(pos)));break;
+            case ENEMIES::EnemyArmoredTurtle:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new ArmoredTurtle(pPos))); break;
 
-            case ENEMIES::Flying_turtle:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CFlyingTurtle(pos)));break;
+            case ENEMIES::EnemyFlyingTurtle:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new FlyingTurtle(pPos))); break;
 
-            case ENEMIES::Armed_turtle:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CArmedTurtle(pos)));break;
+            case ENEMIES::EnemyArmedTurtle:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new ArmedTurtle(pPos))); break;
 
-            case ENEMIES::Bowser:
-            m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new CBowser(pos)));break;
+            case ENEMIES::EnemyBowser:
+            mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(new Bowser(pPos))); break;
 
-            case ENEMIES::Creator_red_turtles:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CCreatorRedTurltes(pos)));break;
+            case ENEMIES::EnemyCreatorRedTurtles:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new CreatorRedTurtles(pPos))); break;
 
             }
 
@@ -330,31 +332,31 @@ void CLoadingGameScen::createObject(int id,sf::Vector2f pos)
         }
     case KindsObject::ITEMS:
         {
-            switch(id)
+            switch (pId)
             {
-            case ITEMS::Coin:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CCoin(pos)));break;
+            case ITEMS::ItemCoin:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new Coin(pPos))); break;
 
-            case ITEMS::Line_with_flag:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CLineWithFlag(pos)));break;
+            case ITEMS::ItemLineWithFlag:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new LineWithFlag(pPos))); break;
 
-            case ITEMS::Small_gun:
-            m_blocks->push_back(unique_ptr<CBlock>(new CGun(pos,CGun::KindGun::SMALL)));break;
+            case ITEMS::SmallGun:
+            mBlocks->push_back(std::unique_ptr<Block>(new Gun(pPos, Gun::KindGun::SMALL))); break;
 
-            case ITEMS::Big_gun:
-            m_blocks->push_back(unique_ptr<CBlock>(new CGun(pos,CGun::KindGun::BIG)));break;
+            case ITEMS::BigGun:
+            mBlocks->push_back(std::unique_ptr<Block>(new Gun(pPos, Gun::KindGun::BIG))); break;
 
-            case ITEMS::Trampoline:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CTrampoline(pos)));break;
+            case ITEMS::ItemTrampoline:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new Trampoline(pPos))); break;
 
-            case ITEMS::Water_waves:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CWaterWaves(pos)));break;
+            case ITEMS::ItemWaterWaves:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new WaterWaves(pPos))); break;
 
-            case ITEMS::Lava_waves:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CLavaWaves(pos)));break;
+            case ITEMS::ItemLavaWaves:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new LavaWaves(pPos))); break;
 
-            case ITEMS::Lava_bullet:
-            m_not_physical_objs->push_back(unique_ptr<CGameObject>(new CLavaBullet(pos)));break;
+            case ITEMS::ItemLavaBullet:
+            mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(new LavaBullet(pPos))); break;
 
             }
 
@@ -363,47 +365,47 @@ void CLoadingGameScen::createObject(int id,sf::Vector2f pos)
 
     case KindsObject::LANDSCAPES:
         {
-            switch(id)
+            switch (pId)
             {
 
-            case LANDSCAPES::Cloud:
-            m_landscapes->push_back(CLandScape(pos,{82,160,65,42}));break;
+            case LANDSCAPES::LandscapeCloud:
+            mLandscapes->push_back(Landscape(pPos, {82, 160, 65, 42})); break;
 
-            case LANDSCAPES::Big_Tree:
-            m_landscapes->push_back(CLandScape(pos,{0,160,32,96},2));break;
+            case LANDSCAPES::BigTree:
+            mLandscapes->push_back(Landscape(pPos, {0, 160, 32, 96}, 2)); break;
 
-            case LANDSCAPES::Small_tree:
-            m_landscapes->push_back(CLandScape(pos,{32,160,32,32}));break;
+            case LANDSCAPES::SmallTree:
+            mLandscapes->push_back(Landscape(pPos, {32, 160, 32, 32})); break;
 
-            case LANDSCAPES::Pink_flower:
-            m_landscapes->push_back(CLandScape(pos,{160,225,30,30}));break;
+            case LANDSCAPES::PinkFlower:
+            mLandscapes->push_back(Landscape(pPos, {160, 225, 30, 30})); break;
 
-            case LANDSCAPES::Blue_flower:
-            m_landscapes->push_back(CLandScape(pos,{225,225,30,30}));break;
+            case LANDSCAPES::BlueFlower:
+            mLandscapes->push_back(Landscape(pPos, {225, 225, 30, 30})); break;
 
-            case LANDSCAPES::First_hurdle:
-            m_landscapes->push_back(CLandScape(pos,{224,160,32,32}));break;
+            case LANDSCAPES::FirstHurdle:
+            mLandscapes->push_back(Landscape(pPos, {224, 160, 32, 32})); break;
 
-            case LANDSCAPES::Second_hurdle:
-            m_landscapes->push_back(CLandScape(pos,{160,175,32,16}));break;
+            case LANDSCAPES::SecondHurdle:
+            mLandscapes->push_back(Landscape(pPos, {160, 175, 32, 16})); break;
 
-            case LANDSCAPES::First_big_bush:
-            m_landscapes->push_back(CLandScape(pos,{1,362,97,42}));break;
+            case LANDSCAPES::FirstBigBush:
+            mLandscapes->push_back(Landscape(pPos, {1, 362, 97, 42})); break;
 
-            case LANDSCAPES::Second_big_bush:
-            m_landscapes->push_back(CLandScape(pos,{7,414,89,45}));break;
+            case LANDSCAPES::SecondBigBush:
+            mLandscapes->push_back(Landscape(pPos, {7, 414, 89, 45})); break;
 
-            case LANDSCAPES::First_small_bush:
-            m_landscapes->push_back(CLandScape(pos,{82,225,61,30}));break;
+            case LANDSCAPES::FirstSmallBush:
+            mLandscapes->push_back(Landscape(pPos, {82, 225, 61, 30})); break;
 
-            case LANDSCAPES::Second_small_bush:
-            m_landscapes->push_back(CLandScape(pos,{192,262,32,26}));break;
+            case LANDSCAPES::SecondSmallBush:
+            mLandscapes->push_back(Landscape(pPos, {192, 262, 32, 26})); break;
 
-            case LANDSCAPES::Water:
-            m_landscapes->push_back(CLandScape(pos,{32,220,32,32}));break;
+            case LANDSCAPES::LandscapeWater:
+            mLandscapes->push_back(Landscape(pPos, {32, 220, 32, 32})); break;
 
-            case LANDSCAPES::Lava:
-            m_landscapes->push_back(CLandScape(pos,{64,320,32,32}));break;
+            case LANDSCAPES::LandscapeLava:
+            mLandscapes->push_back(Landscape(pPos, {64, 320, 32, 32})); break;
 
             }
 

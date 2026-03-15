@@ -1,56 +1,56 @@
 #include "Menu.h"
 #include "../MarioGame.h"
 
-const sf::Vector2f CMenu::CPointerToLabel::s_sprite_offset_poz(-50,-7);
+using namespace std;
 
-CMenu::CPointerToLabel::CPointerToLabel(REF_TO_LABELS ptr,const string &texture_name)
-:m_pointer_to_labels(ptr)
+const sf::Vector2f Menu::PointerToLabel::sSpriteOffsetPos(-50, -7);
+
+Menu::PointerToLabel::PointerToLabel(REF_TO_LABELS pPtr, const string& pTextureName)
+    : mPointerToLabels(pPtr)
 {
-    if(texture_name!="none")
-      m_sprite.reset(new sf::Sprite(CMarioGame::s_texture_manager[texture_name]));
+    if (pTextureName != "none")
+        mSprite.reset(new sf::Sprite(MarioGame::sTextureManager[pTextureName]));
 
-    update();
+    Update();
 }
 
 ///------
-void CMenu::CPointerToLabel::switchPointer(bool up_or_left)
+void Menu::PointerToLabel::SwitchPointer(bool pUpOrLeft)
 {
-    if(!m_sprite)
-        getCurrentLabel()->setOnBasicColor();
+    if (!mSprite)
+        GetCurrentLabel()->SetOnBasicColor();
 
-    if(up_or_left)
-    {
-        if(m_current_label>0)
-           m_current_label--;
-    }else
-        if(m_current_label<m_pointer_to_labels.size()-1)
-           m_current_label++;
+    if (pUpOrLeft) {
+        if (mCurrentLabel > 0)
+            mCurrentLabel--;
+    } else
+        if (mCurrentLabel < mPointerToLabels.size() - 1)
+            mCurrentLabel++;
 
-    update();
+    Update();
 }
 
 ///------
-const unique_ptr<CLabel>& CMenu::CPointerToLabel::getCurrentLabel()
+const unique_ptr<Label>& Menu::PointerToLabel::GetCurrentLabel()
 {
-    assert(m_pointer_to_labels.size()!=0);
-    return m_pointer_to_labels[m_current_label];
+    assert(mPointerToLabels.size() != 0);
+    return mPointerToLabels[mCurrentLabel];
 }
 
 ///------
-void CMenu::CPointerToLabel::update()
+void Menu::PointerToLabel::Update()
 {
-    if(m_sprite)
-    {
-        m_sprite->setPosition(getCurrentLabel()->getPosition());
-        m_sprite->move(s_sprite_offset_poz);
+    if (mSprite) {
+        mSprite->setPosition(GetCurrentLabel()->GetPosition());
+        mSprite->move(sSpriteOffsetPos);
 
-    }else
-        getCurrentLabel()->setColor(sf::Color::White);
+    } else
+        GetCurrentLabel()->SetColor(sf::Color::White);
 }
 
 ///-----
-void CMenu::CPointerToLabel::draw(const unique_ptr<sf::RenderWindow>&window)
+void Menu::PointerToLabel::Draw(const unique_ptr<sf::RenderWindow>& pWindow)
 {
-  if(m_sprite)
-    window->draw(*m_sprite);
+    if (mSprite)
+        pWindow->draw(*mSprite);
 }

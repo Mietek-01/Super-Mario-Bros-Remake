@@ -1,74 +1,74 @@
 #include "Trampoline.h"
 
-CTrampoline::CTrampoline(sf::Vector2f pos)
-:CGameObject(new CAnimations,Parentage::ITEM,pos)
+#include <vector>
+
+Trampoline::Trampoline(sf::Vector2f pPos)
+    : GameObject(new Animations, Parentage::Item, pPos)
 {
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    m_frame_animation.push_back(sf::IntRect(32,36,32,48));
-    m_frame_animation.push_back(sf::IntRect(64,52,32,32));
-    m_frame_animation.push_back(sf::IntRect(32,36,32,48));
+    frameAnimation.push_back(sf::IntRect(32, 36, 32, 48));
+    frameAnimation.push_back(sf::IntRect(64, 52, 32, 32));
+    frameAnimation.push_back(sf::IntRect(32, 36, 32, 48));
 
-    m_animations->create(MyAnimations::TRAMPOLINE_ACTIVATION,CMarioGame::s_texture_manager["Items"],m_frame_animation,m_speed,m_scale_to_tile);
-    m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Items"],{0,20,32,64},m_scale_to_tile);
+    mAnimations->Create(MyAnimations::TrampolineActivation, MarioGame::sTextureManager["Items"], frameAnimation, mSpeed, kScaleToTile);
+    mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Items"], {0, 20, 32, 64}, kScaleToTile);
 
-    m_animations->play(CAnimations::STANDARD,m_current_position);
+    mAnimations->Play(Animations::Standard, mCurrentPosition);
 }
 
 ///------
-void CTrampoline::update()
+void Trampoline::Update()
 {
-    if(m_enable)
+    if (mEnabled)
     {
-        if(m_animations->islastFrame())
+        if (mAnimations->IsLastFrame())
         {
-            m_animations->play(CAnimations::STANDARD,m_current_position);
-            m_enable=false;
+            mAnimations->Play(Animations::Standard, mCurrentPosition);
+            mEnabled = false;
         }
         else
-            m_animations->update(m_current_position);
+            mAnimations->Update(mCurrentPosition);
     }
 }
 
 ///------
-void CTrampoline::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Trampoline::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(how_collision==KindCollision::BOTTOM)
+    if (pCollision == KindCollision::Bottom)
     {
-        CPhysicaltObject* obj_on_me=dynamic_cast<CPhysicaltObject*>(obj);
+        PhysicalObject* objOnMe = dynamic_cast<PhysicalObject*>(pObject);
 
-        if(obj_on_me)
+        if (objOnMe)
         {
-            this->corectObjectPositionOnMe(*obj,how_collision);
-            activate(obj_on_me);
+            this->CorrectObjectPositionOnMe(*pObject, pCollision);
+            Activate(objOnMe);
         }
     }
 }
 
 ///--------
-inline void CTrampoline::activate(CPhysicaltObject* obj_on_me)
+inline void Trampoline::Activate(PhysicalObject* pObjectOnMe)
 {
-    if(!m_enable)
+    if (!mEnabled)
     {
-        m_enable=true;
-        obj_on_me->hop(m_jump_force);
-        m_animations->play(MyAnimations::TRAMPOLINE_ACTIVATION,m_current_position);
+        mEnabled = true;
+        pObjectOnMe->Hop(mJumpForce);
+        mAnimations->Play(MyAnimations::TrampolineActivation, mCurrentPosition);
 
-    }else
-    switch(m_animations->getIndexFrame())
+    } else
+    switch (mAnimations->GetIndexFrame())
     {
         case 0:
-        obj_on_me->hop(m_jump_force*0.7);
+        pObjectOnMe->Hop(mJumpForce * 0.7);
         break;
 
         case 1:
-        obj_on_me->hop(m_jump_force*0.5);
+        pObjectOnMe->Hop(mJumpForce * 0.5);
         break;
 
         case 2:
-        obj_on_me->hop(m_jump_force*0.7);
+        pObjectOnMe->Hop(mJumpForce * 0.7);
         break;
     }
 }
-
-

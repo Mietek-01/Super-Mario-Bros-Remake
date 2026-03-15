@@ -1,45 +1,45 @@
 #include "Enemies.h"
 
-CArmoredTurtle::CArmoredTurtle(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::ENEMY,pos)
+#include <vector>
+
+ArmoredTurtle::ArmoredTurtle(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Enemy, pPos)
 {
-    m_value_acceleration=0.3f;
+    mValueAcceleration = 0.3f;
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({352,0,30,32});
-    m_frame_animation.push_back({384,2,32,30});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({352, 0, 30, 32});
+    frameAnimation.push_back({384, 2, 32, 30});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,2.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 2.5f, kScaleToTile);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({96,2,32,30});
-    m_frame_animation.push_back({130,0,30,32});
+    frameAnimation.clear();
+    frameAnimation.push_back({96, 2, 32, 30});
+    frameAnimation.push_back({130, 0, 30, 32});
 
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.5f, kScaleToTile);
 
-    m_animations->play(CAnimations::L_MOVE,m_current_position);
+    mAnimations->Play(Animations::LeftMove, mCurrentPosition);
 }
 
 ///-----
-void CArmoredTurtle::actOnObject(CGameObject* obj,KindCollision how_collision)
+void ArmoredTurtle::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        if(how_collision==KindCollision::BOTTOM)
+    if (pObj->GetParentage() == Parentage::Mario)
+        if (pHowCollision == KindCollision::Bottom)
         {
-            this->corectObjectPositionOnMe(*obj,how_collision);
-            obj->actOnMe(KindAction::HOP);
-
-        }else
-            obj->actOnMe(KindAction::HIT);
+            this->CorrectObjectPositionOnMe(*pObj, pHowCollision);
+            pObj->ActOnMe(KindAction::Hop);
+        } else
+            pObj->ActOnMe(KindAction::Hit);
 }
 
 ///-----
-void CArmoredTurtle::actOnMe(KindAction which_action)
+void ArmoredTurtle::ActOnMe(KindAction pWhichAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    if(which_action==KindAction::HIT)
-        createBeatsObjSpecialEfect();
+    if (pWhichAction == KindAction::Hit)
+        CreateBeatObjectEffect();
 }
-

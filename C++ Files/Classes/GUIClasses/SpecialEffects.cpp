@@ -2,92 +2,99 @@
 #include "../Scens/Scen.h"
 #include "GUI.h"
 
-bool CSpecialEffects::s_deactivation_death_animation=false;
+using namespace std;
 
-CSpecialEffects::~CSpecialEffects()
+bool SpecialEffects::sIsDeactivationDeathAnimation = false;
+
+SpecialEffects::~SpecialEffects()
 {
-    if(m_death_animation)
-    {
-        if(s_deactivation_death_animation)
-            m_death_animation.reset();
-        else
-            CGUI::addGuiObject(m_death_animation.release());
+    if (mDeathAnimation) {
+        if (sIsDeactivationDeathAnimation) {
+            mDeathAnimation.reset();
+        } else {
+            Gui::AddGuiObject(mDeathAnimation.release());
+        }
     }
 }
 
 ///-----------
-CSpecialEffects::CSpecialEffects(CAnimator* animator,KindUpdate kind_update,float when_remove,sf::Vector2f force)
-:CGuiObject(when_remove)
-,m_animator(animator)
-,m_kind_update(kind_update)
+SpecialEffects::SpecialEffects(Animator* pAnimator, KindUpdate pKindUpdate, float pWhenRemove, sf::Vector2f pForce)
+    : GuiObject(pWhenRemove)
+    , mAnimator(pAnimator)
+    , mKindUpdate(pKindUpdate)
 {
-    m_current_pos=m_animator->getPosition();
-    m_force=force;
+    mCurrentPos = mAnimator->GetPosition();
+    mForce = pForce;
 }
 
 ///--------
-CSpecialEffects::CSpecialEffects(CAnimator* animator,std::function<bool(unique_ptr<CAnimator>&)> special_update)
-:m_animator(animator)
-,m_kind_update(static_cast<KindUpdate>(-1))
+SpecialEffects::SpecialEffects(Animator* pAnimator, std::function<bool(unique_ptr<Animator>&)> pSpecialUpdate)
+    : mAnimator(pAnimator)
+    , mKindUpdate(static_cast<KindUpdate>(-1))
 {
-   m_special_update=special_update;
-   m_current_pos=m_animator->getPosition();
+    mSpecialUpdate = pSpecialUpdate;
+    mCurrentPos = mAnimator->GetPosition();
 }
 
 ///--------------------------
-void CSpecialEffects::update()
+void SpecialEffects::Update()
 {
-    if(m_rotate)
-        m_animator->getSprite().rotate(7);
+    if (mIsRotate) {
+        mAnimator->GetSprite().rotate(7);
+    }
 
-    m_animator->update(m_current_pos);
+    mAnimator->Update(mCurrentPos);
 
-    if(m_special_update)
-        m_remove=m_special_update(m_animator);
-    else
-        switch(m_kind_update)
+    if (mSpecialUpdate) {
+        mIsRemove = mSpecialUpdate(mAnimator);
+    } else {
+        switch (mKindUpdate) {
+        case KindUpdate::Jump:
         {
-        case KindUpdate::JUMP:
-        {
-            m_current_pos.x+=m_force.x;
+            mCurrentPos.x += mForce.x;
 
-            m_force.y+=2200.0f*CScen::getFrameTime();
-            m_current_pos.y+=m_force.y*CScen::getFrameTime();
+            mForce.y += 2200.0f * Scene::GetFrameTime();
+            mCurrentPos.y += mForce.y * Scene::GetFrameTime();
 
-            if(m_current_pos.y>=m_when_remove)
-                m_remove=true;
+            if (mCurrentPos.y >= mWhenRemove) {
+                mIsRemove = true;
+            }
 
             break;
         }
 
-        case KindUpdate::ONE_LOOP_ANIMATION:
+        case KindUpdate::OneLoopAnimation:
         {
-            CAnimations * animations=dynamic_cast<CAnimations*>(m_animator.get());
+            Animations* animations = dynamic_cast<Animations*>(mAnimator.get());
 
             assert(animations);
 
-            if(animations->islastFrame())
-                m_remove=true;
+            if (animations->IsLastFrame()) {
+                mIsRemove = true;
+            }
 
             break;
         }
 
-        case KindUpdate::STANDIG:
+        case KindUpdate::Standing:
         {
-            if(m_when_remove<=CScen::getDurationScen())
-                m_remove=true;
+            if (mWhenRemove <= Scene::GetDurationScene()) {
+                mIsRemove = true;
+            }
 
             break;
         }
 
-        case KindUpdate::CONST_MOVE:
+        case KindUpdate::ConstMove:
         {
-            m_current_pos.y+=m_force.y;
+            mCurrentPos.y += mForce.y;
 
-            if(m_current_pos.y<=m_when_remove)
-                m_remove=true;
+            if (mCurrentPos.y <= mWhenRemove) {
+                mIsRemove = true;
+            }
 
             break;
         }
         }
+    }
 }

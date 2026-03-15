@@ -1,129 +1,129 @@
 #include "../Blocks/Pipe.h"
-#include <time.h>
 
-const float CPipe::CFlower::s_how_long_gnawing=3.5f;
-const float CPipe::CFlower::s_speed=0.9;
+#include <ctime>
+#include <vector>
 
-CPipe::CFlower::CFlower(CPipe *pipe,sf::Vector2f pos)
-:CGameObject(new CAnimations,Parentage::ENEMY,pos)
-,m_how_long_hiding(rand()%4+3)
-,m_my_pipe(pipe)
-,m_pos_gnawing(pipe->getBounds().top)
+const float Pipe::Flower::sHowLongGnawing = 3.5f;
+const float Pipe::Flower::sSpeed = 0.9;
+
+Pipe::Flower::CFlower(Pipe* pPipe, sf::Vector2f pPos)
+    : GameObject(new Animations, Parentage::Enemy, pPos)
+    , mHowLongHiding(rand() % 4 + 3)
+    , mMyPipe(pPipe)
+    , mPosGnawing(pPipe->GetBounds().top)
 {
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({0,80,32,48});
-    m_frame_animation.push_back({32,80,32,48});
-    
-    m_animations->create(MyKindsAnimations::GNAWING,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,1.1f,m_scale_to_tile);
-    m_animations->create(MyKindsAnimations::MOVE_DOWN,CMarioGame::s_texture_manager["Enemies_left"],{0,80,32,48},m_scale_to_tile);
-    m_animations->create(MyKindsAnimations::MOVE_UP,CMarioGame::s_texture_manager["Enemies_left"],{32,80,32,48},m_scale_to_tile);
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({0, 80, 32, 48});
+    frameAnimation.push_back({32, 80, 32, 48});
 
-    m_current_position.y += getBounds().height;
-    m_animations->play(MyKindsAnimations::MOVE_UP, m_current_position);
+    mAnimations->Create(MyKindsAnimations::Gnawing, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 1.1f, kScaleToTile);
+    mAnimations->Create(MyKindsAnimations::MoveDown, MarioGame::sTextureManager["Enemies_left"], {0, 80, 32, 48}, kScaleToTile);
+    mAnimations->Create(MyKindsAnimations::MoveUp, MarioGame::sTextureManager["Enemies_left"], {32, 80, 32, 48}, kScaleToTile);
 
-    m_when_move_upper=rand()%3+1;
+    mCurrentPosition.y += GetBounds().height;
+    mAnimations->Play(MyKindsAnimations::MoveUp, mCurrentPosition);
+
+    mWhenMoveUpper = rand() % 3 + 1;
 }
 
 ///-------------
-void CPipe::CFlower::update()
+void Pipe::Flower::Update()
 {
-    switch(m_state)
+    switch (mState)
     {
-        case State::GNAWING:
+    case State::Gnawing:
+        {
+            if (mTimeGnawing < Scene::GetDurationScene() && mAnimations->IsLastFrame())
             {
-                if(m_time_gnawing<CScen::getDurationScen()&&m_animations->islastFrame())
-                {
-                    m_state=State::MOVE_DOWN;
-                    m_animations->play(MyKindsAnimations::MOVE_DOWN,m_current_position);
-                }
-
-                break;
-            }
-        case State::HIDING:
-            {
-                if(m_when_move_upper<CScen::getDurationScen())
-                {
-                    m_state=State::MOVE_UP;
-                    m_enabled=true;
-                }
-
-                break;
+                mState = State::MoveDown;
+                mAnimations->Play(MyKindsAnimations::MoveDown, mCurrentPosition);
             }
 
-        case State::MOVE_DOWN:
+            break;
+        }
+    case State::Hiding:
+        {
+            if (mWhenMoveUpper < Scene::GetDurationScene())
             {
-                m_current_position.y+=s_speed;
-
-                if (getBounds().top > m_pos_gnawing)
-                    reset();
-
-                break;
+                mState = State::MoveUp;
+                mEnabled = true;
             }
 
-        case State::MOVE_UP:
+            break;
+        }
+
+    case State::MoveDown:
+        {
+            mCurrentPosition.y += sSpeed;
+
+            if (GetBounds().top > mPosGnawing)
+                Reset();
+
+            break;
+        }
+
+    case State::MoveUp:
+        {
+            mCurrentPosition.y -= sSpeed;
+
+            if (mCurrentPosition.y < mPosGnawing)
             {
-                m_current_position.y-=s_speed;
-
-                if(m_current_position.y<m_pos_gnawing)
-                {
-                    m_current_position.y = m_pos_gnawing;
-                    m_state=State::GNAWING;
-                    m_time_gnawing=CScen::getDurationScen()+s_how_long_gnawing;
-                    m_animations->play(MyKindsAnimations::GNAWING,m_current_position);
-
-                }
-
-                break;
+                mCurrentPosition.y = mPosGnawing;
+                mState = State::Gnawing;
+                mTimeGnawing = Scene::GetDurationScene() + sHowLongGnawing;
+                mAnimations->Play(MyKindsAnimations::Gnawing, mCurrentPosition);
             }
+
+            break;
+        }
     }
 
-    m_animations->update(m_current_position);
+    mAnimations->Update(mCurrentPosition);
 }
 
 ///-------------
-void CPipe::CFlower::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Pipe::Flower::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(!m_enabled)
+    if (!mEnabled)
         return;
 
-    if(obj->getParentage()==Parentage::MARIO)
-      obj->actOnMe(KindAction::HIT);
+    if (pObj->GetParentage() == Parentage::Mario)
+        pObj->ActOnMe(KindAction::Hit);
 }
 
 ///-----
-void CPipe::CFlower::actOnMe(KindAction how_action)
+void Pipe::Flower::ActOnMe(KindAction pHowAction)
 {
-    if(!m_enabled)
+    if (!mEnabled)
         return;
 
-    if(how_action==KindAction::HIT)
+    if (pHowAction == KindAction::Hit)
     {
-        createPoints();
-        removeObject(this);
+        CreatePoints();
+        RemoveObject(this);
     }
 }
 
 ///--------
-void CPipe::CFlower::reset()
+void Pipe::Flower::Reset()
 {
-    m_current_position.y=m_pos_gnawing+getBounds().height;
-    m_animations->play(MyKindsAnimations::MOVE_UP, m_current_position);
-    m_state=State::HIDING;
-    m_enabled=false;
+    mCurrentPosition.y = mPosGnawing + GetBounds().height;
+    mAnimations->Play(MyKindsAnimations::MoveUp, mCurrentPosition);
+    mState = State::Hiding;
+    mEnabled = false;
 
-    setWhenMoveUpper();
+    SetWhenMoveUpper();
 }
 
 ///---------
-inline void CPipe::CFlower::setWhenMoveUpper()
+inline void Pipe::Flower::SetWhenMoveUpper()
 {
-    m_when_move_upper=CScen::getDurationScen()+m_how_long_hiding;
+    mWhenMoveUpper = Scene::GetDurationScene() + mHowLongHiding;
 }
 
 ///-----------
-void CPipe::CFlower::draw(const unique_ptr<sf::RenderWindow>&window)
+void Pipe::Flower::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    m_animator->draw(window);
-    m_my_pipe->draw(window);
+    mAnimator->Draw(pWindow);
+    mMyPipe->Draw(pWindow);
 }
-

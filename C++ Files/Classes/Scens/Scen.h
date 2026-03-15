@@ -2,33 +2,31 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include <iostream>
+#include <string>
 
-using namespace std;
-
-class CScen
-{
+/// Base class for all game scenes (levels, menus, etc.).
+/// Owns the background sprite and tracks per-frame timing.
+class Scene {
 protected:
 
-    static float s_duration_scen;
-    static float s_frame_time;
+    static float sDurationScene;
+    static float sFrameTime;
 
-    sf::Sprite m_background;
+    sf::Sprite mBackground;
 
 public:
 
-    static const size_t s_tile_size;
+    static const size_t sTileSize;
 
-    ///METHODS
-    virtual ~CScen(){}
-    CScen(std::string);
+    /// Methods
+    virtual ~Scene() {}
+    explicit Scene(std::string pNameBackground);
 
-    virtual void draw(const unique_ptr<sf::RenderWindow>&)=0;
-    virtual void update() =0;
+    virtual void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) = 0;
+    virtual void Update() = 0;
 
-    static void updateFrameTime(float time){s_duration_scen+=time;s_frame_time=time;}
+    static void UpdateFrameTime(float pTime) { sDurationScene += pTime; sFrameTime = pTime; }
 
-    static float getFrameTime(){return s_frame_time;}
-    static float getDurationScen(){return s_duration_scen;}
+    [[nodiscard]] static float GetFrameTime() { return sFrameTime; }
+    [[nodiscard]] static float GetDurationScene() { return sDurationScene; }
 };
-

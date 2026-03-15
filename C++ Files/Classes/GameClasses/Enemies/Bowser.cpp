@@ -3,274 +3,266 @@
 #include "../Blocks/MysterBox.h"
 #include "../Items/FireballBullets.h"
 #include "../Mario.h"
-#include <time.h>
-#include <math.h>
 #include "Enemies.h"
 #include "../../Scens/LoadingGameScen.h"
 
-///------------CCreatorEnemies------------------///
+#include <ctime>
+#include <cmath>
+#include <vector>
 
-CBowser::CCreatorEnemies::CCreatorEnemies(int begin_tiles,int end_tiles)
-:m_number_tiles(abs(end_tiles-begin_tiles)/(int)CScen::s_tile_size)
-,m_first_tile_position(begin_tiles+CScen::s_tile_size)
+///------------CreatorEnemies------------------///
+
+Bowser::CreatorEnemies::CreatorEnemies(int pBeginTiles, int pEndTiles)
+    : mNumberTiles(abs(pEndTiles - pBeginTiles) / (int)Scene::sTileSize)
+    , mFirstTilePosition(pBeginTiles + Scene::sTileSize)
 {
-    setWhenNextEnemy();
+    SetWhenNextEnemy();
 }
 
 ///-----
-CPhysicaltObject * CBowser::CCreatorEnemies::getCreatedEnemy()
+PhysicalObject* Bowser::CreatorEnemies::GetCreatedEnemy()
 {
-    if(m_when_create_enemie<CScen::getDurationScen())
+    if (mWhenCreateEnemy < Scene::GetDurationScene())
     {
-        setWhenNextEnemy();
+        SetWhenNextEnemy();
 
-        int which_tile;
+        int whichTile;
 
         do
         {
-            which_tile=CGUI::rand(m_number_tiles,0);
+            whichTile = Gui::Rand(mNumberTiles, 0);
 
-        }while(which_tile==m_last_rand_tile);
+        } while (whichTile == mLastRandTile);
 
-        m_last_rand_tile=which_tile;
+        mLastRandTile = whichTile;
 
-        const sf::Vector2f position(which_tile*CScen::s_tile_size+m_first_tile_position,-10);
+        const sf::Vector2f position(whichTile * Scene::sTileSize + mFirstTilePosition, -10);
 
-        if(CGUI::rand(4,0)==2)
-            return new CRedTurtle(position,static_cast<CPhysicaltObject::KindMovement>(CGUI::rand(2,0)),true);
+        if (Gui::Rand(4, 0) == 2)
+            return new RedTurtle(position, static_cast<PhysicalObject::KindMovement>(Gui::Rand(2, 0)), true);
         else
-            return new CGoombas(position,static_cast<CPhysicaltObject::KindMovement>(CGUI::rand(2,0)),true);
+            return new Goombas(position, static_cast<PhysicalObject::KindMovement>(Gui::Rand(2, 0)), true);
     }
 
     return nullptr;
 }
 
 ///--------
-inline void CBowser::CCreatorEnemies::setWhenNextEnemy()
+inline void Bowser::CreatorEnemies::SetWhenNextEnemy()
 {
-    m_when_create_enemie=CScen::getDurationScen()+m_creating_speed;
+    mWhenCreateEnemy = Scene::GetDurationScene() + mCreatingSpeed;
 }
 
-///--------------CBowser--------------///
+///--------------Bowser--------------///
 
-bool CBowser::s_instance=false;
+bool Bowser::sInstance = false;
 
-CBowser::~CBowser()
+Bowser::~Bowser()
 {
-    s_instance=false;
+    sInstance = false;
 
-    if(!CMarioGame::instance().isThisScen<CGameScen>())return;
+    if (!MarioGame::Instance().IsThisScene<GameScene>()) return;
 
-    sf::Sprite * hit_obj=new sf::Sprite(m_animator->getSprite());
+    sf::Sprite* hitObj = new sf::Sprite(mAnimator->GetSprite());
 
-    hit_obj->setRotation(180);
-    hit_obj->setPosition(hit_obj->getPosition().x,hit_obj->getPosition().y-hit_obj->getGlobalBounds().height);
+    hitObj->setRotation(180);
+    hitObj->setPosition(hitObj->getPosition().x, hitObj->getPosition().y - hitObj->getGlobalBounds().height);
 
-    CGuiObject* obj=new CSpecialEffects(new CSprite(hit_obj),CSpecialEffects::KindUpdate::JUMP,CMarioGame::s_size_window.y+CScen::s_tile_size,{0,-1000});
-    CGUI::addGuiObject(obj);
+    GuiObject* obj = new SpecialEffects(new SpriteAnimator(hitObj), SpecialEffects::KindUpdate::JUMP, MarioGame::sSizeWindow.y + Scene::sTileSize, {0, -1000});
+    Gui::AddGuiObject(obj);
 
-    m_barse_to_princes->active();
+    mBarseToPrincess->Activate();
 
-    addNewObject(new CPrincess(m_princess_position));
+    AddNewObject(new Princess(mPrincessPosition));
 }
 
 ///--------
-CBowser::CBowser(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::ENEMY,pos,KindMovement::LEFT_RUN,1000)
-,CShield(4500)
-,m_where_barse(400)
-,m_left_barse_pos(m_current_position.x-(m_where_barse+CMarioGame::s_size_window.x/2.0f+200))
-,m_right_barse_pos(m_current_position.x+m_where_barse)
-,m_princess_position({ pos.x + m_where_barse + CMarioGame::s_size_window.x / 2.0f+100, (float)(CMarioGame::s_size_window.y - CScen::s_tile_size * 2 )})
+Bowser::Bowser(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Enemy, pPos, KindMovement::LeftRun, 1000)
+    , Shield(4500)
+    , mWhereBarse(400)
+    , mLeftBarsePos(mCurrentPosition.x - (mWhereBarse + MarioGame::sSizeWindow.x / 2.0f + 200))
+    , mRightBarsePos(mCurrentPosition.x + mWhereBarse)
+    , mPrincessPosition({pPos.x + mWhereBarse + MarioGame::sSizeWindow.x / 2.0f + 100, (float)(MarioGame::sSizeWindow.y - Scene::sTileSize * 2)})
 {
-    if(s_instance&&CMarioGame::instance().isThisScen<CLoadingGameScen>())
+    if (sInstance && MarioGame::Instance().IsThisScene<LoadingGameScene>())
     {
-        cout<<" WIECEJ NIZ JEDEN BOWSER !!!!!!!!!!!!!!!"<<endl;
+        std::cout << " MORE THAN ONE BOWSER !!!!!!!!!!!!!!!" << std::endl;
         assert(0);
     }
 
-    s_instance=true;
+    sInstance = true;
 
-    this->createAnimations();
-    m_animations->play(CAnimations::L_MOVE,m_current_position);
+    this->CreateAnimations();
+    mAnimations->Play(Animations::LeftMove, mCurrentPosition);
 
-    m_value_acceleration=m_basic_speed;
+    mValueAcceleration = mBasicSpeed;
 
-    addNewObject(new CMysterBox({ m_left_barse_pos - (CScen::s_tile_size / 2.0f + CScen::s_tile_size * 5) , (float)(CMarioGame::s_size_window.y - (5 * CScen::s_tile_size))}, CMysterBox::MyItem::FLOWER));
+    AddNewObject(new MysteryBox({mLeftBarsePos - (Scene::sTileSize / 2.0f + Scene::sTileSize * 5), (float)(MarioGame::sSizeWindow.y - (5 * Scene::sTileSize))}, MysteryBox::MyItem::Flower));
 }
 
 ///-------------
-void CBowser::update()
+void Bowser::Update()
 {
-    if (!m_enable)
+    if (!mEnable)
     {
-        this->setTrapForMario();
-        CPhysicaltObject::update();
+        this->SetTrapForMario();
+        PhysicalObject::Update();
     }
     else
     {
-        /// SPRAWDZAM CZY MARIO JEST ZA BOWSEREM
-        changeReversal();
+        ChangeReversal();
 
-        if(m_atack)
-            (this->*m_atack)();
+        if (mAttack)
+            (this->*mAttack)();
 
-        if(!m_atack&&m_when_atack<CScen::getDurationScen()&&!m_changing_reversal)
-            setAtack();
+        if (!mAttack && mWhenAttack < Scene::GetDurationScene() && !mChangingReversal)
+            SetAttack();
 
-        CPhysicaltObject::update();
+        PhysicalObject::Update();
 
-        /// AKTUALIZUJE POZIOM OSLONY BOWSERA
-        m_shield_pointer->update();
+        mShieldPointer->Update();
 
-        if (m_shield_pointer->isTheEndShield())
-            CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::BOWSER_DEFEAT);
-  
+        if (mShieldPointer->IsShieldDepleted())
+            MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::BowserDefeat);
     }
 }
 
 ///-----
-inline void CBowser::setAtack(KindsAtacks which_attack)
+inline void Bowser::SetAttack(KindsAttacks pWhichAttack)
 {
-    if(which_attack==KindsAtacks::RANDOM)
-        which_attack=static_cast<KindsAtacks>(CGUI::rand(6,0));
+    if (pWhichAttack == KindsAttacks::RANDOM)
+        pWhichAttack = static_cast<KindsAttacks>(Gui::Rand(6, 0));
 
-    switch(which_attack)
+    switch (pWhichAttack)
     {
-    case KindsAtacks::SPECIAL_SIN_FIREBALL_ATACK:
+    case KindsAttacks::SPECIAL_SIN_FIREBALL_ATTACK:
         {
-            (this->m_atack)=&CBowser::specialSinFireBallAtack;
+            (this->mAttack) = &Bowser::SpecialSinFireBallAttack;
 
-            if(m_right_dir_reversal)
-                m_animations->play(MyKindsAnimations::R_SPECIAL_SIN_FIRE_BALL_ATACK,m_current_position);
+            if (mIsRightDirReversal)
+                mAnimations->Play(MyKindsAnimations::R_SPECIAL_SIN_FIRE_BALL_ATTACK, mCurrentPosition);
             else
-                m_animations->play(MyKindsAnimations::L_SPECIAL_SIN_FIRE_BALL_ATACK,m_current_position);
+                mAnimations->Play(MyKindsAnimations::L_SPECIAL_SIN_FIRE_BALL_ATTACK, mCurrentPosition);
 
-            m_animations->setSpeed(m_shooting_speed);
+            mAnimations->SetSpeed(mShootingSpeed);
 
-            m_kind_movement=KindMovement::STANDING;
+            mKindMovement = KindMovement::Standing;
 
-            m_timer=CScen::getDurationScen()+m_fireball_sin_lenght_attack;
+            mTimer = Scene::GetDurationScene() + mFireballSinLengthAttack;
             break;
         }
 
-    case KindsAtacks::SPECIAL_CIRCLE_FIREBALL_ATACK:
+    case KindsAttacks::SPECIAL_CIRCLE_FIREBALL_ATTACK:
         {
-            (this->m_atack)=&CBowser::specialCircleFireBallAtack;
+            (this->mAttack) = &Bowser::SpecialCircleFireBallAttack;
 
-            if(m_right_dir_reversal)
-                m_animations->play(MyKindsAnimations::R_SPECIAL_CIRCLE_FIRE_BALL_ATACK,m_current_position);
+            if (mIsRightDirReversal)
+                mAnimations->Play(MyKindsAnimations::R_SPECIAL_CIRCLE_FIRE_BALL_ATTACK, mCurrentPosition);
             else
-                m_animations->play(MyKindsAnimations::L_SPECIAL_CIRCLE_FIRE_BALL_ATACK,m_current_position);
+                mAnimations->Play(MyKindsAnimations::L_SPECIAL_CIRCLE_FIRE_BALL_ATTACK, mCurrentPosition);
 
-            m_animations->setSpeed(m_shooting_speed);
+            mAnimations->SetSpeed(mShootingSpeed);
 
-            m_kind_movement=KindMovement::STANDING;
-
-            break;
-        }
-
-    case KindsAtacks::BASIC_FIREBALL_ATACK:
-        {
-            (this->m_atack)=&CBowser::basicFireBallAtack;
-
-            if(m_right_dir_reversal)
-                m_animations->play(MyKindsAnimations::R_BASIC_FIRE_BALL_ATACK,m_current_position);
-            else
-                m_animations->play(MyKindsAnimations::L_BASIC_FIRE_BALL_ATACK,m_current_position);
-
-            m_animations->setSpeed(m_shooting_speed);
-
-            m_kind_movement=KindMovement::STANDING;
+            mKindMovement = KindMovement::Standing;
 
             break;
         }
 
-    case KindsAtacks::LEAP_ON_MARIO:
+    case KindsAttacks::BASIC_FIREBALL_ATTACK:
         {
-            (this->m_atack)=&CBowser::leapOnMario;
+            (this->mAttack) = &Bowser::BasicFireBallAttack;
 
-            const float length_between_mario_and_bowser=fabs(m_current_position.x-CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x);
-
-            m_my_pos_before_jump=m_current_position;
-            m_second_zero_place=length_between_mario_and_bowser;
-
-            if(m_right_dir_reversal)
-                m_X_coordinate=0.0f;
+            if (mIsRightDirReversal)
+                mAnimations->Play(MyKindsAnimations::R_BASIC_FIRE_BALL_ATTACK, mCurrentPosition);
             else
-                m_X_coordinate=m_second_zero_place;
+                mAnimations->Play(MyKindsAnimations::L_BASIC_FIRE_BALL_ATTACK, mCurrentPosition);
 
-            float how_hight_jump=150;
+            mAnimations->SetSpeed(mShootingSpeed);
 
-            if(length_between_mario_and_bowser>400)
+            mKindMovement = KindMovement::Standing;
+
+            break;
+        }
+
+    case KindsAttacks::LEAP_ON_MARIO:
+        {
+            (this->mAttack) = &Bowser::LeapOnMario;
+
+            const float lengthBetweenMarioAndBowser = fabs(mCurrentPosition.x - MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x);
+
+            mMyPosBeforeJump = mCurrentPosition;
+            mSecondZeroPlace = lengthBetweenMarioAndBowser;
+
+            if (mIsRightDirReversal)
+                mXCoordinate = 0.0f;
+            else
+                mXCoordinate = mSecondZeroPlace;
+
+            float howHighJump = 150;
+
+            if (lengthBetweenMarioAndBowser > 400)
             {
-                how_hight_jump*=2;
-                m_value_acceleration*=7.0f;
+                howHighJump *= 2;
+                mValueAcceleration *= 7.0f;
+            } else
+                mValueAcceleration *= 5.0f;
 
-            }else m_value_acceleration*=5.0f;
+            mACoefficient = (4 * howHighJump) / -(mSecondZeroPlace * mSecondZeroPlace);
 
-            /// OBLICZMA WSPOLCZYNNIK A KTORY OKRESLA MI WYSOKOSC SKOKU
-            m_A_coefficient=(4*how_hight_jump)/-(m_second_zero_place*m_second_zero_place);
-
-            jump();
-            m_block_changing_reversal=true;
+            Jump();
+            mBlockChangingReversal = true;
 
             break;
         }
 
-    case KindsAtacks::CHARGE:
+    case KindsAttacks::CHARGE:
         {
-            /// WYKORZYTSUJE ZMIENNA DO PRZECHOWANIA POZYCJI MARIA
+            mSecondZeroPlace = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x;
 
-            m_second_zero_place=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x;
-
-            if(fabs(m_second_zero_place-m_current_position.x)>300)
+            if (fabs(mSecondZeroPlace - mCurrentPosition.x) > 300)
             {
-                (this->m_atack)=&CBowser::charge;
-                m_value_acceleration=5.0f;
-                m_block_changing_reversal=true;
-
-            }else
-                setAtack();
+                (this->mAttack) = &Bowser::Charge;
+                mValueAcceleration = 5.0f;
+                mBlockChangingReversal = true;
+            } else
+                SetAttack();
 
             break;
         }
 
-    case KindsAtacks::ENEMIES_RAID:
+    case KindsAttacks::ENEMIES_RAID:
         {
-            (this->m_atack)=&CBowser::enemiesRaid;
+            (this->mAttack) = &Bowser::EnemiesRaid;
 
-            if(m_right_dir_reversal)
-                m_animations->play(MyKindsAnimations::L_CHANGING_TO_REVERSAL,m_current_position);
+            if (mIsRightDirReversal)
+                mAnimations->Play(MyKindsAnimations::L_CHANGING_TO_REVERSAL, mCurrentPosition);
             else
-                m_animations->play(MyKindsAnimations::R_CHANGING_TO_REVERSAL,m_current_position);
+                mAnimations->Play(MyKindsAnimations::R_CHANGING_TO_REVERSAL, mCurrentPosition);
 
-            m_kind_movement=KindMovement::STANDING;
-            m_block_changing_reversal=true;
+            mKindMovement = KindMovement::Standing;
+            mBlockChangingReversal = true;
 
-            m_timer=CScen::getDurationScen()+m_enemies_raid_lenght_attack;
+            mTimer = Scene::GetDurationScene() + mEnemiesRaidLengthAttack;
 
-            /// TWORZE KREATOR WROGOW
+            const int marioPosition = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x;
 
-            const int mario_position=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x;
+            int beginTiles = marioPosition - mRaidLength;
+            int endTiles = marioPosition + mRaidLength;
 
-            int begin_tiles=mario_position-m_raid_lenght;
-            int end_tiles=mario_position+m_raid_lenght;
-
-            // GDY WYCHODZI POZA KRATY
-            if(begin_tiles<m_left_barse_pos+CScen::s_tile_size*2)
+            if (beginTiles < mLeftBarsePos + Scene::sTileSize * 2)
             {
-                begin_tiles=m_left_barse_pos+CScen::s_tile_size*2;
-                end_tiles=begin_tiles+m_raid_lenght*1.5f;
+                beginTiles = mLeftBarsePos + Scene::sTileSize * 2;
+                endTiles = beginTiles + mRaidLength * 1.5f;
             }
 
-            if(end_tiles>m_right_barse_pos-CScen::s_tile_size*2)
+            if (endTiles > mRightBarsePos - Scene::sTileSize * 2)
             {
-                end_tiles=m_right_barse_pos-CScen::s_tile_size*2;
-                begin_tiles=end_tiles-m_raid_lenght*1.5f;
+                endTiles = mRightBarsePos - Scene::sTileSize * 2;
+                beginTiles = endTiles - mRaidLength * 1.5f;
             }
 
-            m_creator_enemies.reset(new CCreatorEnemies(begin_tiles,end_tiles));
+            mCreatorEnemies.reset(new CreatorEnemies(beginTiles, endTiles));
 
             break;
         }
@@ -278,409 +270,385 @@ inline void CBowser::setAtack(KindsAtacks which_attack)
 }
 
 ///----
-void CBowser::enemiesRaid()
+void Bowser::EnemiesRaid()
 {
-    if(m_animations->islastFrame())
-        if(m_animations->getAnimationName()==MyKindsAnimations::R_CHANGING_TO_REVERSAL)
-            m_animations->play(MyKindsAnimations::L_CHANGING_TO_REVERSAL,m_current_position);
+    if (mAnimations->IsLastFrame())
+        if (mAnimations->GetAnimationName() == MyKindsAnimations::R_CHANGING_TO_REVERSAL)
+            mAnimations->Play(MyKindsAnimations::L_CHANGING_TO_REVERSAL, mCurrentPosition);
         else
-            m_animations->play(MyKindsAnimations::R_CHANGING_TO_REVERSAL,m_current_position);
+            mAnimations->Play(MyKindsAnimations::R_CHANGING_TO_REVERSAL, mCurrentPosition);
 
-    CPhysicaltObject * new_enemy=m_creator_enemies->getCreatedEnemy();
+    PhysicalObject* newEnemy = mCreatorEnemies->GetCreatedEnemy();
 
-    if(new_enemy)
-        addNewObject(new_enemy);
+    if (newEnemy)
+        AddNewObject(newEnemy);
 
-    /// KONIEC TEGO ATAKU
-    if(m_timer<CScen::getDurationScen())
+    if (mTimer < Scene::GetDurationScene())
     {
-        setWhenAtack();
-        m_creator_enemies.reset();
+        SetWhenAttack();
+        mCreatorEnemies.reset();
     }
 }
 
 ///------
-void CBowser::charge()
+void Bowser::Charge()
 {
-    if((m_right_dir_reversal&&m_current_position.x>m_second_zero_place)||
-    (!m_right_dir_reversal&&m_current_position.x<m_second_zero_place))
+    if ((mIsRightDirReversal && mCurrentPosition.x > mSecondZeroPlace) ||
+        (!mIsRightDirReversal && mCurrentPosition.x < mSecondZeroPlace))
     {
-        setWhenAtack();
-        m_value_acceleration=m_basic_speed;
+        SetWhenAttack();
+        mValueAcceleration = mBasicSpeed;
     }
 }
 
 ///---
-void CBowser::basicFireBallAtack()
+void Bowser::BasicFireBallAttack()
 {
-    if(m_attack_interrupted)
+    if (mAttackInterrupted)
     {
-        setWhenAtack();
+        SetWhenAttack();
         return;
     }
 
-    /// UZYWAM TIMERA DO PRZECHOWANIA POPRZEDNIEGO INDEKSU KLATKI
-    /// BY MOGL WYKONAC SIE STRZAL
-    if(m_animations->getIndexFrame()!=m_timer)
-        m_shoot=false;
+    if (mAnimations->GetIndexFrame() != mTimer)
+        mShoot = false;
 
-    m_timer=m_animations->getIndexFrame();
+    mTimer = mAnimations->GetIndexFrame();
 
-    shoot({1,2,3},1,KindBullet::BASIC);
+    Shoot({1, 2, 3}, 1, KindBullet::BASIC);
 
-    if (m_animations->islastFrame())
-        setWhenAtack();
+    if (mAnimations->IsLastFrame())
+        SetWhenAttack();
 }
 
 ///---
-void CBowser::specialCircleFireBallAtack()
+void Bowser::SpecialCircleFireBallAttack()
 {
-    if(m_attack_interrupted)
+    if (mAttackInterrupted)
     {
-        setWhenAtack();
+        SetWhenAttack();
         return;
     }
 
-    shoot({1,3,5},1,KindBullet::CIRCLE_MOVEMENT);
+    Shoot({1, 3, 5}, 1, KindBullet::CIRCLE_MOVEMENT);
 
-    /// KONIEC TEGO ATAKU
-    if(m_animations->islastFrame())
-        setWhenAtack();
+    if (mAnimations->IsLastFrame())
+        SetWhenAttack();
 }
 
 ///------
-void CBowser::leapOnMario()
+void Bowser::LeapOnMario()
 {
-    /// CZYLI GDY JUZ JESTEM PO SKOKU
-    if(!m_jump)
+    if (!mIsJump)
     {
-        setWhenAtack();
-        m_value_acceleration=m_basic_speed;
+        SetWhenAttack();
+        mValueAcceleration = mBasicSpeed;
     }
 }
 
 ///----------
-void CBowser::specialSinFireBallAtack()
+void Bowser::SpecialSinFireBallAttack()
 {
-    if(m_attack_interrupted)
-        if(m_changing_reversal)
+    if (mAttackInterrupted)
+        if (mChangingReversal)
             return;
         else
         {
-            m_attack_interrupted=false;
+            mAttackInterrupted = false;
 
-            /// KONTYNULUJE DALEJ TEN ATAK
-            const float time=m_timer;
+            const float time = mTimer;
 
-            setAtack(KindsAtacks::SPECIAL_SIN_FIREBALL_ATACK);
+            SetAttack(KindsAttacks::SPECIAL_SIN_FIREBALL_ATTACK);
 
-            m_timer=time;
+            mTimer = time;
 
-            if(m_timer<CScen::getDurationScen())m_timer+3.0f;
+            if (mTimer < Scene::GetDurationScene()) mTimer + 3.0f;
         }
 
-    shoot({1,3},3,KindBullet::SIN_MOVEMENT);
+    Shoot({1, 3}, 3, KindBullet::SIN_MOVEMENT);
 
-    /// KONIEC TEGO ATAKU
-    if(m_animations->islastFrame()&&m_timer<CScen::getDurationScen())
-        setWhenAtack();
+    if (mAnimations->IsLastFrame() && mTimer < Scene::GetDurationScene())
+        SetWhenAttack();
 }
 
 ///-----
-inline void CBowser::shoot(const vector<int>for_which_frame_shoot,int small_frame,KindBullet kind_bullet)
+inline void Bowser::Shoot(const std::vector<int> pForWhichFrameShoot, int pSmallFrame, KindBullet pKindBullet)
 {
-    /// MECHANIZM STRZELANIA KULAMI (DZIALA DLA KLATEK NIE WYSTEPUJACYCH PO SOBIE)
-    // DLA KLATEK WYSTEPUJACYCH PO SOBIE METODA WYWOLUJACA TA METODE SAMA MUSI ZMIENIC M_SHOOT
+    bool isItFrameToShoot = false;
+    int frameToShoot;
 
-    bool is_it_frame_to_shoot=false;
-    int frame_to_shoot;
-
-    for(const auto &for_which_frame:for_which_frame_shoot)
-        if(m_animations->getIndexFrame()==for_which_frame)
+    for (const auto& forWhichFrame : pForWhichFrameShoot)
+        if (mAnimations->GetIndexFrame() == forWhichFrame)
         {
-            is_it_frame_to_shoot=true;
-            frame_to_shoot=for_which_frame;
+            isItFrameToShoot = true;
+            frameToShoot = forWhichFrame;
             break;
         }
 
-    if(is_it_frame_to_shoot)
+    if (isItFrameToShoot)
     {
-        /// SPRAWIA ZE WYKONA SIE JEDEN STRZAL DLA JEDNEJ KLATKI
-        if(!m_shoot)
+        if (!mShoot)
         {
-            m_shoot=true;
-            sf::Vector2f bullet_pos=m_current_position;
+            mShoot = true;
+            sf::Vector2f bulletPos = mCurrentPosition;
 
-            if(frame_to_shoot!=small_frame)
-                bullet_pos.y-=getSize().y*0.7f;
+            if (frameToShoot != pSmallFrame)
+                bulletPos.y -= GetSize().y * 0.7f;
             else
-                bullet_pos.y-=getSize().y*0.2f;
+                bulletPos.y -= GetSize().y * 0.2f;
 
-            if(m_right_dir_reversal)
-                bullet_pos.x+=getSize().x/2.0f;
+            if (mIsRightDirReversal)
+                bulletPos.x += GetSize().x / 2.0f;
             else
-                bullet_pos.x-=getSize().x/2.0f;
+                bulletPos.x -= GetSize().x / 2.0f;
 
-
-            switch(kind_bullet)
+            switch (pKindBullet)
             {
-
             case KindBullet::BASIC:
-                addNewObject(new CBasicBullet(bullet_pos,m_right_dir_reversal));
+                AddNewObject(new CBasicBullet(bulletPos, mIsRightDirReversal));
                 break;
 
             case KindBullet::SIN_MOVEMENT:
-                addNewObject(new CSinBullet(bullet_pos,m_right_dir_reversal));
+                AddNewObject(new CSinBullet(bulletPos, mIsRightDirReversal));
                 break;
 
             case KindBullet::CIRCLE_MOVEMENT:
-                addNewObject(new CCircleBullet(bullet_pos,m_right_dir_reversal));
+                AddNewObject(new CCircleBullet(bulletPos, mIsRightDirReversal));
                 break;
-
             }
         }
-
-    }else
-        m_shoot=false;
+    } else
+        mShoot = false;
 }
 
 ///--------
-inline void CBowser::changeReversal()
+inline void Bowser::ChangeReversal()
 {
-    if(m_block_changing_reversal)
+    if (mBlockChangingReversal)
         return;
 
-    if(m_changing_reversal)
+    if (mChangingReversal)
     {
-        if(m_animations->islastFrame())
+        if (mAnimations->IsLastFrame())
         {
-            if(m_right_dir_reversal)
-                m_animations->play(CAnimations::R_MOVE,m_current_position);
+            if (mIsRightDirReversal)
+                mAnimations->Play(Animations::RightMove, mCurrentPosition);
             else
-                m_animations->play(CAnimations::L_MOVE,m_current_position);
+                mAnimations->Play(Animations::LeftMove, mCurrentPosition);
 
-            m_changing_reversal=false;
+            mChangingReversal = false;
         }
 
         return;
     }
 
-    if(!m_right_dir_reversal&&CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x>m_current_position.x)
+    if (!mIsRightDirReversal && MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x > mCurrentPosition.x)
     {
-        m_animations->play(MyKindsAnimations::R_CHANGING_TO_REVERSAL,m_current_position);
-        m_changing_reversal=true;
-        m_right_dir_reversal=true;
-        m_kind_movement=KindMovement::RIGHT_RUN;
+        mAnimations->Play(MyKindsAnimations::R_CHANGING_TO_REVERSAL, mCurrentPosition);
+        mChangingReversal = true;
+        mIsRightDirReversal = true;
+        mKindMovement = KindMovement::RightRun;
 
-        if(m_atack)
-            m_attack_interrupted=true;
+        if (mAttack)
+            mAttackInterrupted = true;
     }
     else
-    if(m_right_dir_reversal&&CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x<m_current_position.x)
+    if (mIsRightDirReversal && MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x < mCurrentPosition.x)
     {
-        m_animations->play(MyKindsAnimations::L_CHANGING_TO_REVERSAL,m_current_position);
-        m_changing_reversal=true;
-        m_right_dir_reversal=false;
-        m_kind_movement=KindMovement::LEFT_RUN;
+        mAnimations->Play(MyKindsAnimations::L_CHANGING_TO_REVERSAL, mCurrentPosition);
+        mChangingReversal = true;
+        mIsRightDirReversal = false;
+        mKindMovement = KindMovement::LeftRun;
 
-        if(m_atack)
-            m_attack_interrupted=true;
+        if (mAttack)
+            mAttackInterrupted = true;
     }
 }
 
 ///------
-inline void CBowser::setTrapForMario()
+inline void Bowser::SetTrapForMario()
 {
-    m_enable=true;
+    mEnable = true;
 
-    CMarioGame::instance().getScen<CGameScen>().setGamePlayState(CGameScen::GamePlayStates::FIGHT_WITH_BOWSER);
+    MarioGame::Instance().GetScene<GameScene>().SetGamePlayState(GameScene::GamePlayStates::FightWithBowser);
 
-    /// USTAWIAM KIEDY ATAK
-    this->setWhenAtack();
+    this->SetWhenAttack();
 
-    /// TWORZE LEWA KRATE
-    addNewObject(new CBarse({ m_left_barse_pos,(float)CMarioGame::s_size_window.y }, true, true));
+    AddNewObject(new Barse({mLeftBarsePos, (float)MarioGame::sSizeWindow.y}, true, true));
 
-    /// TWORZE PRAWA KRATE( JEST KLUCZOWA)
-    m_barse_to_princes=new CBarse({m_right_barse_pos,0},false,false);
-    addNewObject(m_barse_to_princes);
+    mBarseToPrincess = new Barse({mRightBarsePos, 0}, false, false);
+    AddNewObject(mBarseToPrincess);
 
-    /// TWORZE WSKAZNIK ZYCIA
-    createShieldPointer(CGUI::createRectangleShape({0,0,500,30},sf::Color::Black,false,true)
-                ,sf::Color::Red,CShieldPointer::KindsOrigin::RIGHT,CGUI::createSprite("Bowser_right",{49,2,84,80},{0,0},0.5f,true));
+    CreateShieldPointer(Gui::CreateRectangleShape({0, 0, 500, 30}, sf::Color::Black, false, true),
+        sf::Color::Red, ShieldPointer::KindsOrigin::Right, Gui::CreateSprite("Bowser_right", {49, 2, 84, 80}, {0, 0}, 0.5f, true));
 }
 
 ///----
-inline void CBowser::setWhenAtack()
+inline void Bowser::SetWhenAttack()
 {
-    if(!m_changing_reversal)
-    if(m_right_dir_reversal)
-    {
-        m_animations->play(CAnimations::R_MOVE,m_current_position);
-        m_kind_movement=KindMovement::RIGHT_RUN;
-    }
+    if (!mChangingReversal)
+        if (mIsRightDirReversal)
+        {
+            mAnimations->Play(Animations::RightMove, mCurrentPosition);
+            mKindMovement = KindMovement::RightRun;
+        }
+        else
+        {
+            mAnimations->Play(Animations::LeftMove, mCurrentPosition);
+            mKindMovement = KindMovement::LeftRun;
+        }
+
+    if (!MarioGame::Instance().GetScene<GameScene>().IsMarioDead())
+        mWhenAttack = Scene::GetDurationScene() + rand() % 2 + 1;
     else
-    {
-        m_animations->play(CAnimations::L_MOVE,m_current_position);
-        m_kind_movement=KindMovement::LEFT_RUN;
-    }
+        mWhenAttack = Scene::GetDurationScene() + 20;
 
-    if(!CMarioGame::instance().getScen<CGameScen>().isMarioDead())
-        m_when_atack=CScen::getDurationScen()+rand()%2+1;
-    else
-        m_when_atack=CScen::getDurationScen()+20;
+    (this->mAttack) = nullptr;
 
-    (this->m_atack)=nullptr;
-
-    m_attack_interrupted=false;
-    m_block_changing_reversal=false;
-    m_shoot=false;
+    mAttackInterrupted = false;
+    mBlockChangingReversal = false;
+    mShoot = false;
 }
 
 ///-----
-void CBowser::makeJump()
+void Bowser::MakeJump()
 {
-    if(m_atack==&CBowser::leapOnMario)
+    if (mAttack == &Bowser::LeapOnMario)
     {
-        /// SKOK NA PODSTAWIE FUNKCJI KWADRATOWEJ
-        if(m_right_dir_reversal)
-            m_X_coordinate+=m_value_acceleration;
+        if (mIsRightDirReversal)
+            mXCoordinate += mValueAcceleration;
         else
-            m_X_coordinate-=m_value_acceleration;
+            mXCoordinate -= mValueAcceleration;
 
-        m_current_position.y=m_my_pos_before_jump.y+(-(m_A_coefficient*(m_X_coordinate-0)*(m_X_coordinate-m_second_zero_place)));
-
-    }else
-        CPhysicaltObject::makeJump();
+        mCurrentPosition.y = mMyPosBeforeJump.y + (-(mACoefficient * (mXCoordinate - 0) * (mXCoordinate - mSecondZeroPlace)));
+    } else
+        PhysicalObject::MakeJump();
 }
 
 ///-------------
-void CBowser::actOnMe(KindAction how_action)
+void Bowser::ActOnMe(KindAction pHowAction)
 {
-    if(how_action== KindAction::HIT)
-        reduceShield();
+    if (pHowAction == KindAction::Hit)
+        ReduceShield();
 }
 
 ///-------------
-void CBowser::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Bowser::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
+    if (pObj->GetParentage() == Parentage::Mario)
     {
-        CMario *mario=dynamic_cast<CMario* >(obj);
-        mario->setDamage(m_damage_value);
+        Mario* mario = dynamic_cast<Mario*>(pObj);
+        mario->SetDamage(mDamageValue);
 
-        obj->actOnMe(KindAction::HIT);
+        pObj->ActOnMe(KindAction::Hit);
 
-        if(m_jump&&!mario->isJumping())
-            obj->actOnMe(KindAction::HOP);
+        if (mIsJump && !mario->IsJumping())
+            pObj->ActOnMe(KindAction::Hop);
     }
 }
 
 ///------
-void CBowser::draw(const unique_ptr<sf::RenderWindow>&window)
+void Bowser::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    m_animator->draw(window);
+    mAnimator->Draw(pWindow);
 
-    if(m_shield_pointer)
-        m_shield_pointer->draw(window,{CMarioGame::instance().getViewPosition().x+CMarioGame::s_size_window.x/2.0f-40,20});
+    if (mShieldPointer)
+        mShieldPointer->Draw(pWindow, {MarioGame::Instance().GetViewPosition().x + MarioGame::sSizeWindow.x / 2.0f - 40, 20});
 }
 
 ///---------
-inline void CBowser::createAnimations()
+inline void Bowser::CreateAnimations()
 {
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({421,4,82,76});
-    m_frame_animation.push_back({337,2,83,78});
-    m_frame_animation.push_back({253,1,83,79});
-    m_frame_animation.push_back({168,4,83,76});
-    m_frame_animation.push_back({84,6,84,74});
-    m_frame_animation.push_back({1,3,82,77});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({421, 4, 82, 76});
+    frameAnimation.push_back({337, 2, 83, 78});
+    frameAnimation.push_back({253, 1, 83, 79});
+    frameAnimation.push_back({168, 4, 83, 76});
+    frameAnimation.push_back({84, 6, 84, 74});
+    frameAnimation.push_back({1, 3, 82, 77});
 
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,1.0f,m_my_scal);
-
-    ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({50,4,82,76});
-    m_frame_animation.push_back({133,2,83,78});
-    m_frame_animation.push_back({217,1,83,79});
-    m_frame_animation.push_back({302,4,83,76});
-    m_frame_animation.push_back({385,6,84,74});
-    m_frame_animation.push_back({470,3,82,77});
-
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,1.0f,m_my_scal);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 1.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({381,125,74,82});
-    m_frame_animation.push_back({458,122,71,85});
+    frameAnimation.clear();
+    frameAnimation.push_back({50, 4, 82, 76});
+    frameAnimation.push_back({133, 2, 83, 78});
+    frameAnimation.push_back({217, 1, 83, 79});
+    frameAnimation.push_back({302, 4, 83, 76});
+    frameAnimation.push_back({385, 6, 84, 74});
+    frameAnimation.push_back({470, 3, 82, 77});
 
-    m_animations->create(MyKindsAnimations::R_CHANGING_TO_REVERSAL,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,3.0f,m_my_scal);
-
-    ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({98,125,74,82});
-    m_frame_animation.push_back({24,122,71,85});
-
-
-    m_animations->create(MyKindsAnimations::L_CHANGING_TO_REVERSAL,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,3.0f,m_my_scal);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 1.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({266,85,84,82});
-    m_frame_animation.push_back({184,80,80,87});
-    m_frame_animation.push_back({95,82,84,78});
-    m_frame_animation.push_back({0,90,91,69});
+    frameAnimation.clear();
+    frameAnimation.push_back({381, 125, 74, 82});
+    frameAnimation.push_back({458, 122, 71, 85});
 
-    m_animations->create(MyKindsAnimations::L_SPECIAL_SIN_FIRE_BALL_ATACK,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,2.0f,m_my_scal);
+    mAnimations->Create(MyKindsAnimations::R_CHANGING_TO_REVERSAL, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 3.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({203,85,84,82});
-    m_frame_animation.push_back({289,80,80,87});
-    m_frame_animation.push_back({374,82,84,78});
-    m_frame_animation.push_back({462,90,91,69});
+    frameAnimation.clear();
+    frameAnimation.push_back({98, 125, 74, 82});
+    frameAnimation.push_back({24, 122, 71, 85});
 
-    m_animations->create(MyKindsAnimations::R_SPECIAL_SIN_FIRE_BALL_ATACK,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,2.0f,m_my_scal);
+    mAnimations->Create(MyKindsAnimations::L_CHANGING_TO_REVERSAL, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 3.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({467,286,84,78});
-    m_frame_animation.push_back({368,295,91,69});
-    m_frame_animation.push_back({276,288,92,76});
-    m_frame_animation.push_back({191,277,81,87});
-    m_frame_animation.push_back({112,267,67,97});
-    m_frame_animation.push_back({6,277,81,86});
+    frameAnimation.clear();
+    frameAnimation.push_back({266, 85, 84, 82});
+    frameAnimation.push_back({184, 80, 80, 87});
+    frameAnimation.push_back({95, 82, 84, 78});
+    frameAnimation.push_back({0, 90, 91, 69});
 
-    m_animations->create(MyKindsAnimations::L_SPECIAL_CIRCLE_FIRE_BALL_ATACK,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,2.0f,m_my_scal);
+    mAnimations->Create(MyKindsAnimations::L_SPECIAL_SIN_FIRE_BALL_ATTACK, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 2.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({2,286,84,78});
-    m_frame_animation.push_back({94,295,91,69});
-    m_frame_animation.push_back({185,288,92,76});
-    m_frame_animation.push_back({281,277,81,87});
-    m_frame_animation.push_back({374,267,67,97});
-    m_frame_animation.push_back({466,277,81,86});
+    frameAnimation.clear();
+    frameAnimation.push_back({203, 85, 84, 82});
+    frameAnimation.push_back({289, 80, 80, 87});
+    frameAnimation.push_back({374, 82, 84, 78});
+    frameAnimation.push_back({462, 90, 91, 69});
 
-    m_animations->create(MyKindsAnimations::R_SPECIAL_CIRCLE_FIRE_BALL_ATACK,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,2.0f,m_my_scal);
+    mAnimations->Create(MyKindsAnimations::R_SPECIAL_SIN_FIRE_BALL_ATTACK, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 2.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({277,185,83,82});
-    m_frame_animation.push_back({182,186,91,81});
-    m_frame_animation.push_back({97,175,80,92});
-    m_frame_animation.push_back({19,167,63,100});
+    frameAnimation.clear();
+    frameAnimation.push_back({467, 286, 84, 78});
+    frameAnimation.push_back({368, 295, 91, 69});
+    frameAnimation.push_back({276, 288, 92, 76});
+    frameAnimation.push_back({191, 277, 81, 87});
+    frameAnimation.push_back({112, 267, 67, 97});
+    frameAnimation.push_back({6, 277, 81, 86});
 
-    m_animations->create(MyKindsAnimations::L_BASIC_FIRE_BALL_ATACK,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,2.0f,m_my_scal);
+    mAnimations->Create(MyKindsAnimations::L_SPECIAL_CIRCLE_FIRE_BALL_ATTACK, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 2.0f, mMyScale);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({193,185,83,82});
-    m_frame_animation.push_back({280,186,91,81});
-    m_frame_animation.push_back({376,175,80,92});
-    m_frame_animation.push_back({471,167,63,100});
+    frameAnimation.clear();
+    frameAnimation.push_back({2, 286, 84, 78});
+    frameAnimation.push_back({94, 295, 91, 69});
+    frameAnimation.push_back({185, 288, 92, 76});
+    frameAnimation.push_back({281, 277, 81, 87});
+    frameAnimation.push_back({374, 267, 67, 97});
+    frameAnimation.push_back({466, 277, 81, 86});
 
-    m_animations->create(MyKindsAnimations::R_BASIC_FIRE_BALL_ATACK,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,2.0f,m_my_scal);
+    mAnimations->Create(MyKindsAnimations::R_SPECIAL_CIRCLE_FIRE_BALL_ATTACK, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 2.0f, mMyScale);
+
+    ///-----
+    frameAnimation.clear();
+    frameAnimation.push_back({277, 185, 83, 82});
+    frameAnimation.push_back({182, 186, 91, 81});
+    frameAnimation.push_back({97, 175, 80, 92});
+    frameAnimation.push_back({19, 167, 63, 100});
+
+    mAnimations->Create(MyKindsAnimations::L_BASIC_FIRE_BALL_ATTACK, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 2.0f, mMyScale);
+
+    ///-----
+    frameAnimation.clear();
+    frameAnimation.push_back({193, 185, 83, 82});
+    frameAnimation.push_back({280, 186, 91, 81});
+    frameAnimation.push_back({376, 175, 80, 92});
+    frameAnimation.push_back({471, 167, 63, 100});
+
+    mAnimations->Create(MyKindsAnimations::R_BASIC_FIRE_BALL_ATTACK, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 2.0f, mMyScale);
 }
-
-

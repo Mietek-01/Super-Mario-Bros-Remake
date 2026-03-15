@@ -2,87 +2,82 @@
 
 using namespace std;
 
-///--------------------CBlock---------------///
-CBlock::CBlock(const sf::IntRect &position_texture,const sf::Vector2f &pos,const string name)
-:CGameObject(new CSprite(CGUI::createSprite(name,position_texture,pos,m_scale_to_tile,true)),Parentage::BLOCK,pos)
+///--------------------Block---------------///
+Block::Block(const sf::IntRect& pPositionTexture, const sf::Vector2f& pPos, const string pName)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite(pName, pPositionTexture, pPos, kScaleToTile, true)), Parentage::Block, pPos)
 {
 }
 
 ///------
-void CBlock::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Block::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    this->corectObjectPositionOnMe(*obj,how_collision);
+    this->CorrectObjectPositionOnMe(*pObj, pHowCollision);
 }
 
-///--------------------CDynamicBlock---------------///
-const float CDynamicBlock::s_block_gravitation=2000.0f;
+///--------------------DynamicBlock---------------///
+const float DynamicBlock::sBlockGravitation = 2000.0f;
 
-CDynamicBlock::CDynamicBlock(sf::IntRect bounds,sf::Vector2f pos,string name)
-:CBlock(bounds,pos,name)
-,m_basic_y_positon(pos.y)
-,m_force(m_jump_force)
+DynamicBlock::DynamicBlock(sf::IntRect pBounds, sf::Vector2f pPos, string pName)
+    : Block(pBounds, pPos, pName)
+    , mBasicYPosition(pPos.y)
+    , mForce(mJumpForce)
 {
 }
 
 ///-------
-void CDynamicBlock::makeJump()
+void DynamicBlock::MakeJump()
 {
-    m_previous_position.y=m_current_position.y;
+    mPreviousPosition.y = mCurrentPosition.y;
 
-    m_force+=s_block_gravitation*CScen::getFrameTime();
-    m_current_position.y+=m_force*CScen::getFrameTime();
+    mForce += sBlockGravitation * Scene::GetFrameTime();
+    mCurrentPosition.y += mForce * Scene::GetFrameTime();
 
-    if(m_current_position.y>=m_basic_y_positon)
-    {
-        m_current_position.y=m_basic_y_positon;
-        m_force=m_jump_force;
-        m_hit=false;
+    if (mCurrentPosition.y >= mBasicYPosition) {
+        mCurrentPosition.y = mBasicYPosition;
+        mForce = mJumpForce;
+        mIsHit = false;
     }
 
-    m_animator->setPosition(m_current_position);
+    mAnimator->setPosition(mCurrentPosition);
 }
 
 ///------
-void CDynamicBlock::actOnMe(KindAction which_action)
+void DynamicBlock::ActOnMe(KindAction pWhichAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    switch(which_action)
-    {
-        case KindAction::DESTROYED:
-        {
-            creatRemoveBlock();
-            CMarioGame::s_sound_manager.play("breakblock");
+    switch (pWhichAction) {
+        case KindAction::Destroyed: {
+            CreateRemoveBlock();
+            MarioGame::sSoundManager.play("breakblock");
             break;
         }
 
-        case KindAction::HIT:
-        {
-            m_force=m_jump_force;
-            m_hit=true;
+        case KindAction::Hit: {
+            mForce = mJumpForce;
+            mIsHit = true;
             break;
         }
     }
 }
 
 ///------
-void CDynamicBlock::creatRemoveBlock()
+void DynamicBlock::CreateRemoveBlock()
 {
-    static const sf::Vector2f forces[]={{1,-300},{-1,-300},{1,-450},{-1,-450}};
+    static const sf::Vector2f forces[] = {{1, -300}, {-1, -300}, {1, -450}, {-1, -450}};
 
-    for(int i=0;i<4;i++)
-    {
-        sf::Sprite *sprite=new sf::Sprite(m_animator->getSprite());
+    for (int i = 0; i < 4; i++) {
+        sf::Sprite* sprite = new sf::Sprite(mAnimator->getSprite());
 
-        sprite->setScale(0.5,0.5);
-        sprite->setOrigin(sprite->getGlobalBounds().width/2,sprite->getGlobalBounds().height/2);
-        sprite->setPosition(m_current_position.x,m_current_position.y-getSize().y/2.0f);
+        sprite->setScale(0.5, 0.5);
+        sprite->setOrigin(sprite->getGlobalBounds().width / 2, sprite->getGlobalBounds().height / 2);
+        sprite->setPosition(mCurrentPosition.x, mCurrentPosition.y - GetSize().y / 2.0f);
 
-        CSpecialEffects * obj=new CSpecialEffects(new CSprite(sprite),CSpecialEffects::KindUpdate::JUMP,CMarioGame::s_size_window.y+CScen::s_tile_size,forces[i]);
+        SpecialEffects* obj = new SpecialEffects(new SpriteAnimator(sprite), SpecialEffects::KindUpdate::JUMP, MarioGame::sSizeWindow.y + Scene::sTileSize, forces[i]);
         obj->activeRotate();
 
-        CGUI::addGuiObject(obj);
+        Gui::AddGuiObject(obj);
     }
 
-    removeObject(this);
+    RemoveObject(this);
 }

@@ -3,18 +3,15 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 
-using namespace std;
-
-class CLandScape
-{
-    unique_ptr<sf::Sprite> m_sprite;
+/// Static visual element placed in the world (e.g. bushes, clouds, pipes).
+class Landscape {
+    std::unique_ptr<sf::Sprite> mSprite;
 
 public:
-    CLandScape(sf::Vector2f,sf::IntRect);
-    CLandScape(sf::Vector2f,sf::IntRect,float);
+    Landscape(sf::Vector2f pPos, sf::IntRect pBoundsTexture);
+    Landscape(sf::Vector2f pPos, sf::IntRect pBoundsTexture, float pScale);
 
-    sf::FloatRect getBounds()const {return m_sprite->getGlobalBounds();}
-    void draw(const unique_ptr<sf::RenderWindow>&);
+    [[nodiscard]] sf::FloatRect GetBounds() const { return mSprite->getGlobalBounds(); }
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow);
 
 };
-

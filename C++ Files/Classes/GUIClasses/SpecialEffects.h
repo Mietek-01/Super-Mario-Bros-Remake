@@ -1,43 +1,42 @@
 #pragma once
 #include <functional>
+#include <memory>
 #include "GUIObject.h"
 #include "Animator.h"
 
-using namespace std;
-
-class CSpecialEffects:public CGuiObject
+class SpecialEffects : public GuiObject
 {
-    static bool s_deactivation_death_animation;
-    bool m_rotate=false;
+    static bool sIsDeactivationDeathAnimation;
+    bool mIsRotate = false;
 
-    sf::Vector2f m_current_pos;
-    sf::Vector2f m_force;
+    sf::Vector2f mCurrentPos;
+    sf::Vector2f mForce;
 
-    unique_ptr<CGuiObject> m_death_animation;
-    unique_ptr<CAnimator> m_animator;
+    std::unique_ptr<GuiObject> mDeathAnimation;
+    std::unique_ptr<Animator> mAnimator;
 
-    std::function<bool(unique_ptr<CAnimator>&)> m_special_update;
+    std::function<bool(std::unique_ptr<Animator>&)> mSpecialUpdate;
 
 public:
 
     enum KindUpdate
     {
-        JUMP,
-        STANDIG,
-        CONST_MOVE,
-        ONE_LOOP_ANIMATION
+        Jump,
+        Standing,
+        ConstMove,
+        OneLoopAnimation
 
-    }const m_kind_update;
+    } const mKindUpdate;
 
-    CSpecialEffects(CAnimator*,KindUpdate,float,sf::Vector2f=sf::Vector2f());
-    CSpecialEffects(CAnimator*,std::function<bool(unique_ptr<CAnimator>&)>);
+    SpecialEffects(Animator* pAnimator, KindUpdate pKindUpdate, float pWhenRemove, sf::Vector2f pForce = sf::Vector2f());
+    SpecialEffects(Animator* pAnimator, std::function<bool(std::unique_ptr<Animator>&)> pSpecialUpdate);
 
-    ~CSpecialEffects();
+    ~SpecialEffects();
 
-    void draw(unique_ptr<sf::RenderWindow>& window)override {m_animator->draw(window);}
-    void update() override;
+    void Draw(std::unique_ptr<sf::RenderWindow>& pWindow) override { mAnimator->Draw(pWindow); }
+    void Update() override;
 
-    void activeRotate(){m_rotate=true;}
-    void setDeathAnimation(CSpecialEffects* obj){m_death_animation.reset(obj);}
-    static void deactivateDeathAnimations(bool value){s_deactivation_death_animation=value;}
+    void ActiveRotate() { mIsRotate = true; }
+    void SetDeathAnimation(SpecialEffects* pObj) { mDeathAnimation.reset(pObj); }
+    static void DeactivateDeathAnimations(bool pValue) { sIsDeactivationDeathAnimation = pValue; }
 };

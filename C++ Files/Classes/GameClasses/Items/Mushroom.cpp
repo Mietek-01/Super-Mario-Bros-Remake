@@ -1,94 +1,94 @@
 #include "../Blocks/MysterBox.h"
 #include "../../GUIClasses/FlowText.h"
 
-CMysterBox::CMushroom::CMushroom(sf::Vector2f pos)
-:CPhysicaltObject(new CSprite(CGUI::createSprite("Items",{128,150,32,32},pos,1.3f,true)),Parentage::ITEM,pos,KindMovement::STANDING,1000)
+MysteryBox::Mushroom::Mushroom(sf::Vector2f pPos)
+    : PhysicalObject(new SpriteAnimator(Gui::CreateSprite("Items", {128, 150, 32, 32}, pPos, 1.3f, true)), Parentage::Item, pPos, KindMovement::Standing, 1000)
 {
-    m_right_dir_reversal=rand()%2+0;
+    mIsRightDirReversal = rand() % 2 + 0;
 
-    if(m_right_dir_reversal)
-        m_kind_movement=KindMovement::RIGHT_RUN;
+    if (mIsRightDirReversal)
+        mKindMovement = KindMovement::RightRun;
     else
-        m_kind_movement=KindMovement::LEFT_RUN;
+        mKindMovement = KindMovement::LeftRun;
 
-    m_value_acceleration=1.0f;
+    mValueAcceleration = 1.0f;
 }
 
 ///-----
-void CMysterBox::CMushroom::updateForCollisionWithBlock(KindCollision how_collision,CBlock* block)
+void MysteryBox::Mushroom::UpdateForCollisionWithBlock(KindCollision pCollision, Block* pBlock)
 {
-    switch(how_collision)
+    switch (pCollision)
     {
-        case KindCollision::TOP:
+        case KindCollision::Top:
         {
-            m_force=0.0;
+            mForce = 0.0;
             break;
         }
 
-        case KindCollision::BOTTOM:
+        case KindCollision::Bottom:
         {
-            if(block->isHit())
-                actOnMe(KindAction::HOP);
+            if (pBlock->IsHit())
+                ActOnMe(KindAction::Hop);
             else
             {
-                m_jump=false;
-                m_in_bottom_collision=true;
+                mIsJump = false;
+                mIsInBottomCollision = true;
             }
 
             break;
         }
 
-        case KindCollision::RIGHT_SIDE:
+        case KindCollision::RightSide:
         {
-            m_kind_movement=KindMovement::LEFT_RUN;
-            m_right_dir_reversal=false;
+            mKindMovement = KindMovement::LeftRun;
+            mIsRightDirReversal = false;
             break;
         }
 
-        case KindCollision::LEFT_SIDE:
+        case KindCollision::LeftSide:
         {
-            m_kind_movement=KindMovement::RIGHT_RUN;
-            m_right_dir_reversal=true;
+            mKindMovement = KindMovement::RightRun;
+            mIsRightDirReversal = true;
             break;
         }
 
-        case KindCollision::NONE:
-            {
-                return;
-            }
+        case KindCollision::None:
+        {
+            return;
+        }
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pCollision);
 }
 
 ///----
-void CMysterBox::CMushroom::actOnObject(CGameObject* obj,KindCollision kind_collision)
+void MysteryBox::Mushroom::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
+    if (pObject->GetParentage() == Parentage::Mario)
     {
-        m_current_position=obj->getCurrentPosition();
-        actOnMe(KindAction::HIT);
+        mCurrentPosition = pObject->GetCurrentPosition();
+        ActOnMe(KindAction::Hit);
 
-        obj->actOnMe(KindAction::LVL_UP);
+        pObject->ActOnMe(KindAction::LevelUp);
     }
 }
 
 ///----
-void CMysterBox::CMushroom::actOnMe(KindAction which_action)
+void MysteryBox::Mushroom::ActOnMe(KindAction pAction)
 {
-    switch(which_action)
+    switch (pAction)
     {
 
-    case KindAction::HIT:
-        {
-            this->createPoints();
-            removeObject(this);
-            break;
-        }
-    case KindAction::HOP:
-        {
-            hop(-500.0f);
-            break;
-        }
+    case KindAction::Hit:
+    {
+        this->CreatePoints();
+        RemoveObject(this);
+        break;
+    }
+    case KindAction::Hop:
+    {
+        Hop(-500.0f);
+        break;
+    }
     }
 }

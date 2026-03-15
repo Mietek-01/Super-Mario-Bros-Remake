@@ -1,41 +1,32 @@
 #pragma once
 #include "../GameObject.h"
 
-using namespace std;
-
-class CLavaBullet: public CGameObject
-{
-    enum MyAnimations
-    {
-        GO_DOWN
+class LavaBullet : public GameObject {
+    enum MyAnimations {
+        GoDown
     };
 
-    static const float s_my_gravitation;
+    static const float sMyGravitation;
 
-    const sf::Vector2f m_basic_position;
+    const sf::Vector2f mBasicPosition;
 
-    const float m_jump_force=-1200;
+    const float mJumpForce = -1200;
 
-    float m_force;
-    float m_when_jump;
+    float mForce;
+    float mWhenJump;
 
-    bool m_go_up=true;
+    bool mGoUp = true;
 
-    inline void move();
-    inline void setWhenJump();
+    inline void Move();
+    inline void SetWhenJump();
 
 public:
 
-    CLavaBullet(sf::Vector2f);
-    ~CLavaBullet(){}
+    LavaBullet(sf::Vector2f pPos);
+    ~LavaBullet() {}
 
-    void update()override;
+    void Update() override;
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction kind_action)override{}
-
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
+    void ActOnMe(KindAction pAction) override {}
 };
-
-
-
-

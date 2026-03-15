@@ -1,92 +1,93 @@
 #include "Gun.h"
 #include "../Mario.h"
-#include"../../MarioGame.h"
+#include "../../MarioGame.h"
 
-CGun::CBullet::CBullet(sf::Vector2f pos,bool right_dir)
-:CGameObject(new CAnimations,Parentage::ITEM,pos,100)
-,m_right_dir(right_dir)
+#include <vector>
+
+Gun::GunBullet::GunBullet(sf::Vector2f pPos, bool pRightDir)
+    : GameObject(new Animations, Parentage::Item, pPos, 100)
+    , mRightDir(pRightDir)
 {
-    vector<sf::IntRect> m_frame_animation;
-    const int additional_length=100*rand()%5+2;
+    std::vector<sf::IntRect> frameAnimation;
+    const int additionalLength = 100 * rand() % 5 + 2;
 
-    if(right_dir)
+    if (pRightDir)
     {
-        m_frame_animation.push_back({416,114,32,29});
-        m_frame_animation.push_back({416,146,32,29});
-        m_frame_animation.push_back({416,178,32,29});
+        frameAnimation.push_back({416, 114, 32, 29});
+        frameAnimation.push_back({416, 146, 32, 29});
+        frameAnimation.push_back({416, 178, 32, 29});
 
-        m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,1.5f,m_scale_to_tile);
+        mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 1.5f, kScaleToTile);
 
-        m_range+=m_current_position.x+additional_length;
+        mRange += mCurrentPosition.x + additionalLength;
 
-    }else
+    } else
     {
-        m_frame_animation.push_back({64,114,32,29});
-        m_frame_animation.push_back({64,146,32,29});
-        m_frame_animation.push_back({64,178,32,29});
+        frameAnimation.push_back({64, 114, 32, 29});
+        frameAnimation.push_back({64, 146, 32, 29});
+        frameAnimation.push_back({64, 178, 32, 29});
 
-        m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,1.5f,m_scale_to_tile);
+        mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 1.5f, kScaleToTile);
 
-        m_range=m_current_position.x-m_range-additional_length;
+        mRange = mCurrentPosition.x - mRange - additionalLength;
     }
 
-    m_current_position.y+=getBounds().height+2;
+    mCurrentPosition.y += GetBounds().height + 2;
 
-    m_animations->setPosition(m_current_position);
+    mAnimations->SetPosition(mCurrentPosition);
 }
 
 ///----------
-void CGun::CBullet::update()
+void Gun::GunBullet::Update()
 {
-    m_previous_position=m_current_position;
+    mPreviousPosition = mCurrentPosition;
 
-    if((m_right_dir&&m_current_position.x>m_range)||
-       (!m_right_dir&&m_current_position.x<m_range))
+    if ((mRightDir && mCurrentPosition.x > mRange) ||
+        (!mRightDir && mCurrentPosition.x < mRange))
     {
-        m_the_end_range=true;
-        actOnMe(KindAction::HIT);
+        mTheEndRange = true;
+        ActOnMe(KindAction::Hit);
     }
     else
     {
-        if(m_right_dir)
-            m_current_position.x+=m_speed;
+        if (mRightDir)
+            mCurrentPosition.x += mSpeed;
         else
-            m_current_position.x-=m_speed;
+            mCurrentPosition.x -= mSpeed;
     }
 
-    m_animations->update(m_current_position);
+    mAnimations->Update(mCurrentPosition);
 }
 
 ///--------
-void CGun::CBullet::actOnMe(KindAction how_action)
+void Gun::GunBullet::ActOnMe(KindAction pAction)
 {
-    if(how_action==KindAction::HIT)
+    if (pAction == KindAction::Hit)
     {
-        sf::Sprite *sprite=new sf::Sprite(m_animations->getSprite());
+        sf::Sprite* sprite = new sf::Sprite(mAnimations->GetSprite());
 
-        CGuiObject *obj=new CSpecialEffects(new CSprite(sprite),CSpecialEffects::JUMP,CMarioGame::s_size_window.y+CScen::s_tile_size,{0,10});
-        CGUI::addGuiObject(obj);
+        GuiObject* obj = new SpecialEffects(new SpriteAnimator(sprite), SpecialEffects::Jump, MarioGame::sSizeWindow.y + Scene::sTileSize, {0, 10});
+        Gui::AddGuiObject(obj);
 
-        if(!m_the_end_range)
-            createPoints();
+        if (!mTheEndRange)
+            CreatePoints();
 
-        removeObject(this);
+        RemoveObject(this);
     }
 }
 
 ///----------
-void CGun::CBullet::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Gun::GunBullet::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        if(how_collision==KindCollision::BOTTOM)
+    if (pObject->GetParentage() == Parentage::Mario)
+        if (pCollision == KindCollision::Bottom)
         {
-            corectObjectPositionOnMe(*obj,how_collision);
-            obj->actOnMe(KindAction::HOP);
+            CorrectObjectPositionOnMe(*pObject, pCollision);
+            pObject->ActOnMe(KindAction::Hop);
 
-            this->actOnMe(KindAction::HIT);
+            this->ActOnMe(KindAction::Hit);
 
         }
         else
-            obj->actOnMe(KindAction::HIT);
+            pObject->ActOnMe(KindAction::Hit);
 }
-

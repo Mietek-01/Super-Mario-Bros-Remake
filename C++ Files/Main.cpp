@@ -2,6 +2,6 @@
 
 int main()
 {
-    CMarioGame::instance().run();
+    MarioGame::Instance().Run();
     return 0;
 }

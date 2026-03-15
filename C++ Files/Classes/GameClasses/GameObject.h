@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include <assert.h>
+#include <cassert>
 #include <map>
 #include <memory>
 #include <vector>
@@ -12,104 +12,98 @@
 #include "../GUIClasses/SpecialEffects.h"
 #include "../GUIClasses/GUI.h"
 
-using namespace std;
-
-class CGameObject
-{
+class GameObject {
 
 public:
 
-    enum class KindCollision
-    {
-        BOTTOM,
-        LEFT_SIDE,
-        RIGHT_SIDE,
-        TOP,
-        NONE,
+    enum class KindCollision {
+        Bottom,
+        LeftSide,
+        RightSide,
+        Top,
+        None,
     };
 
-    enum class Parentage
-    {
-       BLOCK,
-       ENEMY,
-       ITEM,
-       MARIO
+    enum class Parentage {
+        Block,
+        Enemy,
+        Item,
+        Mario
     };
 
-    enum class KindAction
-    {
-        UNDER_MAP,
-        HIT,
-        CRUMPLED,
-        HOP,
-        LVL_UP,
-        DESTROYED
+    enum class KindAction {
+        UnderMap,
+        Hit,
+        Crumpled,
+        Hop,
+        LevelUp,
+        Destroyed
     };
 
-    const static float m_scale_to_tile;
+    static const float kScaleToTile;
 
-    CGameObject(CAnimator*,Parentage,const sf::Vector2f&,int=100);
-    virtual ~CGameObject(){}
+    GameObject(Animator* pAnimator, Parentage pParentage, const sf::Vector2f& pPosition, int pPoints = 100);
+    virtual ~GameObject() {}
 
-    /// METHODS
-    virtual void draw(const unique_ptr<sf::RenderWindow>&);
-    virtual void update()=0;
+    /// Methods
+    virtual void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow);
+    virtual void Update() = 0;
 
-    virtual void actOnObject(CGameObject*,KindCollision)=0;
-    virtual void actOnMe(KindAction)=0;
+    virtual void ActOnObject(GameObject* pObject, KindCollision pCollision) = 0;
+    virtual void ActOnMe(KindAction pAction) = 0;
 
-    virtual bool isVisible()const{return m_visible;}
+    virtual bool IsVisible() const { return mIsVisible; }
 
-    KindCollision howCollision(const CGameObject&)const;
-    void movePosition(sf::Vector2f);
-    void corectObjectPositionOnMe(CGameObject&,KindCollision)const;
+    KindCollision HowCollision(const GameObject& pObject) const;
+    void MovePosition(sf::Vector2f pValue);
+    void CorrectObjectPositionOnMe(GameObject& pObject, KindCollision pCollision) const;
 
-    /// GETTERS
-    int getValuePoints()const {return m_my_value_points;}
-    Parentage getParentage()const {return m_parentage;}
-    bool iamDead()const {return m_dead;}
+    /// Getters
+    [[nodiscard]] int GetValuePoints() const { return mValuePoints; }
+    [[nodiscard]] Parentage GetParentage() const { return mParentage; }
+    [[nodiscard]] bool IsDead() const { return mIsDead; }
 
-    sf::Vector2f getCurrentPosition()const{return m_current_position;}
-    sf::Vector2f getPreviousPosition()const{return m_previous_position;}
+    [[nodiscard]] sf::Vector2f GetCurrentPosition() const { return mCurrentPosition; }
+    [[nodiscard]] sf::Vector2f GetPreviousPosition() const { return mPreviousPosition; }
 
-    sf::FloatRect getBounds()const {return m_animator->getGlobalBounds();}
-    sf::FloatRect getPreviousBounds()const;
-    sf::Vector2f getSize()const {return sf::Vector2f(m_animator->getGlobalBounds().width,m_animator->getGlobalBounds().height);}
+    [[nodiscard]] sf::FloatRect GetBounds() const { return mAnimator->getGlobalBounds(); }
+    [[nodiscard]] sf::FloatRect GetPreviousBounds() const;
+    [[nodiscard]] sf::Vector2f GetSize() const { return sf::Vector2f(mAnimator->getGlobalBounds().width, mAnimator->getGlobalBounds().height); }
 
-    /// SETTERS
-    void setPosition(sf::Vector2f pos){m_current_position=pos;m_animator->setPosition(pos);}
-    void setPreviousPosition(sf::Vector2f pos){m_previous_position=pos;}
-    void setVisible(bool visbl){m_visible=visbl;}
+    /// Setters
+    void SetPosition(sf::Vector2f pPosition) { mCurrentPosition = pPosition; mAnimator->setPosition(pPosition); }
+    void SetPreviousPosition(sf::Vector2f pPosition) { mPreviousPosition = pPosition; }
+    void SetVisible(bool pVisible) { mIsVisible = pVisible; }
 
-    /// STATIC METHOD
-    static vector<CGameObject* >& getRemovedObjects(){return s_removed_objects;}
-    static vector<CGameObject* >& getNewObjects(){return s_new_objects;}
+    /// Static Methods
+    [[nodiscard]] static std::vector<GameObject*>& GetRemovedObjects() { return sRemovedObjects; }
+    [[nodiscard]] static std::vector<GameObject*>& GetNewObjects() { return sNewObjects; }
 
 protected:
 
-    bool m_visible=false;
-    bool m_dead=false;
+    bool mIsVisible = false;
+    bool mIsDead = false;
 
-    const int m_my_value_points;
-    const Parentage m_parentage;
+    const int mValuePoints;
+    const Parentage mParentage;
 
-    sf::Vector2f m_previous_position,m_current_position;
-    unique_ptr<CAnimator> m_animator;
-    CAnimations * m_animations;
+    sf::Vector2f mPreviousPosition, mCurrentPosition;
+    std::unique_ptr<Animator> mAnimator;
+    Animations* mAnimations;
 
-    void isUnderMap();
+    void CheckUnderMap();
 
-    void createBeatsObjSpecialEfect(float=-600.0f);
-    void createPoints()const;
+    void CreateBeatObjectEffect(float pHopForce = -600.0f);
+    void CreatePoints() const;
 
-    static void addNewObject(CGameObject* obj);
-    static void removeObject(CGameObject* obj);
+    static void AddNewObject(GameObject* pObject);
+    static void RemoveObject(GameObject* pObject);
 
 private:
 
-    static vector<CGameObject* > s_removed_objects;
-    static vector<CGameObject* > s_new_objects;
+    static std::vector<GameObject*> sRemovedObjects;
+    static std::vector<GameObject*> sNewObjects;
 
-    KindCollision specialCheckingHowCollision(const CGameObject&)const ;
+    KindCollision SpecialCheckingHowCollision(const GameObject& pObject) const;
 
 };

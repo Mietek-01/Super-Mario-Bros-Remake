@@ -1,301 +1,283 @@
 #include "ArmedTurtle.h"
 #include "../../Scens/GameScen.h"
-#include <time.h>
 
-const float CArmedTurtle::s_length_road=150.0f;
-const float CArmedTurtle::s_correction_pos_hammer=10.0f;
-const float CArmedTurtle::s_force_hop=-500.0f;
+#include <ctime>
+#include <vector>
 
-CArmedTurtle::CArmedTurtle(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::ENEMY,{pos.x,pos.y-1},CPhysicaltObject::KindMovement::LEFT_RUN,500)
-,m_after_what_time_jump(rand()%2+2)
-,m_after_what_time_throw_hammer(rand()%2+1)
+const float ArmedTurtle::sLengthRoad = 150.0f;
+const float ArmedTurtle::sCorrectionPosHammer = 10.0f;
+const float ArmedTurtle::sForceHop = -500.0f;
+
+ArmedTurtle::ArmedTurtle(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Enemy, {pPos.x, pPos.y - 1}, PhysicalObject::KindMovement::LeftRun, 500)
+    , mAfterWhatTimeJump(rand() % 2 + 2)
+    , mAfterWhatTimeThrowHammer(rand() % 2 + 1)
 {
-    m_value_acceleration=0.8f;
-    m_jump_force=-1200.0f;
-    m_where_change_direction=m_current_position.x-s_length_road;
+    mValueAcceleration = 0.8f;
+    mJumpForce = -1200.0f;
+    mWhereChangeDirection = mCurrentPosition.x - sLengthRoad;
 
-    /// TWORZE ANIMACJE
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    m_frame_animation.push_back(sf::IntRect(288,159,32,50));
-    m_frame_animation.push_back(sf::IntRect(320,159,32,50));
+    frameAnimation.push_back(sf::IntRect(288, 159, 32, 50));
+    frameAnimation.push_back(sf::IntRect(320, 159, 32, 50));
 
-    m_animations->create(MyKindsAnimations::R_MOVE_WITH_HAMMER,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::R_MOVE_WITH_HAMMER, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 1.5f, kScaleToTile);
 
     ///------
-    m_frame_animation.clear();
-    m_frame_animation.push_back(sf::IntRect(384,159,32,50));
-    m_frame_animation.push_back(sf::IntRect(352,159,32,50));
-    m_frame_animation.push_back(sf::IntRect(384,159,32,50));
+    frameAnimation.clear();
+    frameAnimation.push_back(sf::IntRect(384, 159, 32, 50));
+    frameAnimation.push_back(sf::IntRect(352, 159, 32, 50));
+    frameAnimation.push_back(sf::IntRect(384, 159, 32, 50));
 
-    m_animations->create(MyKindsAnimations::R_MOVE_THROWING_HAMMER,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,2.3f,m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::R_MOVE_THROWING_HAMMER, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 2.3f, kScaleToTile);
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back(sf::IntRect(160,159,32,50));
-    m_frame_animation.push_back(sf::IntRect(192,159,32,50));
+    frameAnimation.clear();
+    frameAnimation.push_back(sf::IntRect(160, 159, 32, 50));
+    frameAnimation.push_back(sf::IntRect(192, 159, 32, 50));
 
-    m_animations->create(MyKindsAnimations::L_MOVE_WITH_HAMMER,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::L_MOVE_WITH_HAMMER, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 1.5f, kScaleToTile);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back(sf::IntRect(96,159,32,50));
-    m_frame_animation.push_back(sf::IntRect(128,159,32,50));
-    m_frame_animation.push_back(sf::IntRect(96,159,32,50));
+    frameAnimation.clear();
+    frameAnimation.push_back(sf::IntRect(96, 159, 32, 50));
+    frameAnimation.push_back(sf::IntRect(128, 159, 32, 50));
+    frameAnimation.push_back(sf::IntRect(96, 159, 32, 50));
 
-    m_animations->create(MyKindsAnimations::L_MOVE_THROWING_HAMMER,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.3f,m_scale_to_tile);
+    mAnimations->Create(MyKindsAnimations::L_MOVE_THROWING_HAMMER, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.3f, kScaleToTile);
 
-    m_animations->play(MyKindsAnimations::L_MOVE_THROWING_HAMMER,m_current_position);
-    m_animations->setIndexFrame(2,m_current_position);
+    mAnimations->Play(MyKindsAnimations::L_MOVE_THROWING_HAMMER, mCurrentPosition);
+    mAnimations->SetIndexFrame(2, mCurrentPosition);
 }
 
 ///----------
-inline void CArmedTurtle::createHammer()
+inline void ArmedTurtle::CreateHammer()
 {
-    m_my_hammer=new CHammer({m_current_position.x,m_current_position.y-getSize().y/2.0f+s_correction_pos_hammer},m_right_dir_reversal);
-    addNewObject(m_my_hammer);
+    mMyHammer = new Hammer({mCurrentPosition.x, mCurrentPosition.y - GetSize().y / 2.0f + sCorrectionPosHammer}, mIsRightDirReversal);
+    AddNewObject(mMyHammer);
 
-    m_when_throw_hammer=CScen::getDurationScen()+m_after_what_time_throw_hammer;
+    mWhenThrowHammer = Scene::GetDurationScene() + mAfterWhatTimeThrowHammer;
 
-    if(m_right_dir_reversal)
-        m_animations->play(MyKindsAnimations::R_MOVE_WITH_HAMMER,m_current_position);
+    if (mIsRightDirReversal)
+        mAnimations->Play(MyKindsAnimations::R_MOVE_WITH_HAMMER, mCurrentPosition);
     else
-        m_animations->play(MyKindsAnimations::L_MOVE_WITH_HAMMER,m_current_position);
+        mAnimations->Play(MyKindsAnimations::L_MOVE_WITH_HAMMER, mCurrentPosition);
 }
 
 ///----------
-inline bool CArmedTurtle::randKindJump()
+inline bool ArmedTurtle::RandKindJump()
 {
-    bool up_jump=rand()%2;
+    bool upJump = rand() % 2;
 
-    /// SPRAWDZAM CZY MOGE WYKONAC SKOK DO GORY
-    if(up_jump&&m_current_position.y<CScen::s_tile_size*4+1)
-        up_jump=false;
+    if (upJump && mCurrentPosition.y < Scene::sTileSize * 4 + 1)
+        upJump = false;
 
-    /// MECHANIZM OPRACOWUJACY WYLOSOWANY RODZAJ SKOKU
-    if(up_jump)
+    if (upJump)
         return true;
     else
     {
-        ///WYKONUJE SYMULACJE SKOKU W DOL I OKRESLAM ILE ZLAPIE KOLIZJI
-        ///DOLNYCH I CZY SPELNIAJA ONE PEWNE KRYTERIA
+        const auto gameSceneBlocks = MarioGame::Instance().GetScene<GameScene>().GetBlocks();
+        std::vector<int> potentialBlockWithBottomCollision;
 
-         const auto game_scen_blocks=CMarioGame::instance().getScen<CGameScen>().getBlocks();
-         vector<int> potential_block_with_bottom_collision;
+        const sf::Vector2f savedCurrentPosition = mCurrentPosition;
+        const KindMovement savedKindMovement = mKindMovement;
+        const float savedChangeDirectionPos = mWhereChangeDirection;
 
-         const sf::Vector2f saved_current_position=m_current_position;
-         const KindMovement saved_kind_movement=m_kind_movement;
-         const float saved_change_direction_pos=m_where_change_direction;
+        int prevYPosBlockWithBottomCollision = 0;
 
-         int prev_y_pos_block_with_bottom_collision=0;
+        Hop(sForceHop);
 
-         hop(s_force_hop);
+        while (mCurrentPosition.y < MarioGame::sSizeWindow.y)
+        {
+            ChangeMovementDirection();
+            PhysicalObject::Update();
 
-         /// ZLICZAM ILOSC DOLNYCH KOLIZJI I ZAPISUJE TE KTORE NIE SPRAWIA BUGOW
-         while(m_current_position.y<CMarioGame::s_size_window.y)
-         {
-            changeMovementDirection();
-            CPhysicaltObject::update();
-
-            /// SPRAWDZAM DOLNE KOLIZJE
-            for(const auto &block:*game_scen_blocks)
+            for (const auto& block : *gameSceneBlocks)
             {
-                if(!block->isVisible())continue;
+                if (!block->IsVisible()) continue;
 
-                const KindCollision how_collision=howCollision(*block);
+                const KindCollision howCollision = HowCollision(*block);
 
-                 if(how_collision==KindCollision::BOTTOM)
-                 {
-                    /// GLOWNY WARUNEK CALEGO ALGORYTMU
-                    if(m_previous_position.y>saved_current_position.y&&!block->isHit()&&
-                      block->getBounds().top-this->getBounds().height>prev_y_pos_block_with_bottom_collision)
+                if (howCollision == KindCollision::Bottom)
+                {
+                    if (mPreviousPosition.y > savedCurrentPosition.y && !block->IsHit() &&
+                        block->GetBounds().top - this->GetBounds().height > prevYPosBlockWithBottomCollision)
                     {
-                        potential_block_with_bottom_collision.push_back(block->getCurrentPosition().y);
+                        potentialBlockWithBottomCollision.push_back(block->GetCurrentPosition().y);
                     }
 
-                    prev_y_pos_block_with_bottom_collision=block->getCurrentPosition().y;
+                    prevYPosBlockWithBottomCollision = block->GetCurrentPosition().y;
 
                     break;
                 }
             }
+        }
 
-         }
+        this->SetPosition(savedCurrentPosition);
+        mPreviousPosition = savedCurrentPosition;
+        mPreviousPosition.y -= PhysicalObject::sCorrectionToBottomCollision;
 
-         /// PRZYWRACAM DAWNA POZYCJE
-         this->setPosition(saved_current_position);
-         m_previous_position=saved_current_position;
-         m_previous_position.y-=CPhysicaltObject::s_correction_to_bottom_collision;
+        mKindMovement = savedKindMovement;
+        mWhereChangeDirection = savedChangeDirectionPos;
 
-         m_kind_movement=saved_kind_movement;
-         m_where_change_direction=saved_change_direction_pos;
+        mIsJump = false;
 
-         m_jump=false;
+        if (potentialBlockWithBottomCollision.size() != 0)
+        {
+            mForWhichBlockBottomCollision = potentialBlockWithBottomCollision
+                [rand() % potentialBlockWithBottomCollision.size()];
 
-         if(potential_block_with_bottom_collision.size()!=0)
-         {
-             m_for_which_block_bottom_collision=potential_block_with_bottom_collision
-             [rand()%potential_block_with_bottom_collision.size()];
+            mDownJump = true;
 
-             m_down_jump=true;
-
-             return false;
-         }else
+            return false;
+        } else
             return true;
     }
 }
 
 ///----------
-void CArmedTurtle::jump()
+void ArmedTurtle::Jump()
 {
-    m_can_jump=false;
+    mCanJump = false;
 
-    if(randKindJump())
-        CPhysicaltObject::jump();
+    if (RandKindJump())
+        PhysicalObject::Jump();
     else
-        hop(s_force_hop);
+        Hop(sForceHop);
 }
 
 ///---------
-void CArmedTurtle::update()
+void ArmedTurtle::Update()
 {
-    /// ZMIANA KIERUNKU RUCHU
-    changeMovementDirection();
+    ChangeMovementDirection();
 
-    /// SKOK W OKRESLONYM CZASIE
-    if(m_when_jump<CScen::getDurationScen()&&m_can_jump)
-        this->jump();
+    if (mWhenJump < Scene::GetDurationScene() && mCanJump)
+        this->Jump();
 
-    CPhysicaltObject::update();
+    PhysicalObject::Update();
 
-    ///----------MECHANIZM MLOTKA-------///
+    ///----------HAMMER MECHANISM-------///
 
-    /// STWORZENIE NOWEGO MLOTKA
-    if(!m_my_hammer&&m_animations->islastFrame())
-        createHammer();
+    if (!mMyHammer && mAnimations->IsLastFrame())
+        CreateHammer();
 
-    /// RZUT MLOTKIEM
-    if(m_my_hammer&&m_when_throw_hammer<CScen::getDurationScen())
+    if (mMyHammer && mWhenThrowHammer < Scene::GetDurationScene())
     {
-        m_my_hammer->setEnabled(m_jump);
-        m_my_hammer=nullptr;
+        mMyHammer->SetEnabled(mIsJump);
+        mMyHammer = nullptr;
 
-        if(m_right_dir_reversal)
-            m_animations->play(MyKindsAnimations::R_MOVE_THROWING_HAMMER,m_current_position);
+        if (mIsRightDirReversal)
+            mAnimations->Play(MyKindsAnimations::R_MOVE_THROWING_HAMMER, mCurrentPosition);
         else
-            m_animations->play(MyKindsAnimations::L_MOVE_THROWING_HAMMER,m_current_position);
+            mAnimations->Play(MyKindsAnimations::L_MOVE_THROWING_HAMMER, mCurrentPosition);
     }
 
-    /// RUCH Z MLOTKIEM
-    if(m_my_hammer)
-        m_my_hammer->setPosition({m_current_position.x,m_current_position.y-getSize().y/2.0f-s_correction_pos_hammer});
+    if (mMyHammer)
+        mMyHammer->SetPosition({mCurrentPosition.x, mCurrentPosition.y - GetSize().y / 2.0f - sCorrectionPosHammer});
 
-    /// ZMIANA ZWROTU
-    changeLookingDirection();
+    ChangeLookingDirection();
 }
 
 ///-------
-inline void CArmedTurtle::changeMovementDirection()
+inline void ArmedTurtle::ChangeMovementDirection()
 {
-    /// IF TUTAJ BO WYWOLUJE TA FUNKCE ROWNIEZ GDY OKRESLAM SKOK W DOL
-    if((m_kind_movement==KindMovement::LEFT_RUN&&m_current_position.x<m_where_change_direction)||(m_kind_movement==KindMovement::RIGHT_RUN&&m_current_position.x>m_where_change_direction))
+    if ((mKindMovement == KindMovement::LeftRun && mCurrentPosition.x < mWhereChangeDirection) ||
+        (mKindMovement == KindMovement::RightRun && mCurrentPosition.x > mWhereChangeDirection))
     {
-        if(m_kind_movement==KindMovement::LEFT_RUN)
+        if (mKindMovement == KindMovement::LeftRun)
         {
-            m_where_change_direction=m_current_position.x+s_length_road;
-            m_kind_movement=KindMovement::RIGHT_RUN;
-        }else
+            mWhereChangeDirection = mCurrentPosition.x + sLengthRoad;
+            mKindMovement = KindMovement::RightRun;
+        } else
         {
-            m_where_change_direction=m_current_position.x-s_length_road;
-            m_kind_movement=KindMovement::LEFT_RUN;
+            mWhereChangeDirection = mCurrentPosition.x - sLengthRoad;
+            mKindMovement = KindMovement::LeftRun;
         }
     }
 }
 
 ///-----
-inline void CArmedTurtle::changeLookingDirection()
+inline void ArmedTurtle::ChangeLookingDirection()
 {
-    if(!m_right_dir_reversal&&CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x>m_current_position.x)
+    if (!mIsRightDirReversal && MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x > mCurrentPosition.x)
     {
-        if(m_my_hammer)
+        if (mMyHammer)
         {
-            m_animations->play(MyKindsAnimations::R_MOVE_WITH_HAMMER,m_current_position);
-            m_my_hammer->changeReversal(m_current_position);
-
-        }else
+            mAnimations->Play(MyKindsAnimations::R_MOVE_WITH_HAMMER, mCurrentPosition);
+            mMyHammer->ChangeReversal(mCurrentPosition);
+        } else
         {
-            const int saved_index_frame=m_animations->getIndexFrame();
-            m_animations->play(MyKindsAnimations::R_MOVE_THROWING_HAMMER,m_current_position);
-            m_animations->setIndexFrame(saved_index_frame,m_current_position);
+            const int savedIndexFrame = mAnimations->GetIndexFrame();
+            mAnimations->Play(MyKindsAnimations::R_MOVE_THROWING_HAMMER, mCurrentPosition);
+            mAnimations->SetIndexFrame(savedIndexFrame, mCurrentPosition);
         }
 
-        m_right_dir_reversal=true;
-
-    }else
-        if(m_right_dir_reversal&&CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x<m_current_position.x)
+        mIsRightDirReversal = true;
+    } else
+        if (mIsRightDirReversal && MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x < mCurrentPosition.x)
         {
-            if(m_my_hammer)
+            if (mMyHammer)
             {
-                m_animations->play(MyKindsAnimations::L_MOVE_WITH_HAMMER,m_current_position);
-                m_my_hammer->changeReversal(m_current_position);
-            }else
+                mAnimations->Play(MyKindsAnimations::L_MOVE_WITH_HAMMER, mCurrentPosition);
+                mMyHammer->ChangeReversal(mCurrentPosition);
+            } else
             {
-                const int saved_index_frame=m_animations->getIndexFrame();
-                m_animations->play(MyKindsAnimations::L_MOVE_THROWING_HAMMER,m_current_position);
-                m_animations->setIndexFrame(saved_index_frame,m_current_position);
+                const int savedIndexFrame = mAnimations->GetIndexFrame();
+                mAnimations->Play(MyKindsAnimations::L_MOVE_THROWING_HAMMER, mCurrentPosition);
+                mAnimations->SetIndexFrame(savedIndexFrame, mCurrentPosition);
             }
 
-            m_right_dir_reversal=false;
+            mIsRightDirReversal = false;
         }
 }
 
 ///----------
-void CArmedTurtle::updateForCollisionWithBlock(KindCollision how_collision ,CBlock* block)
+void ArmedTurtle::UpdateForCollisionWithBlock(KindCollision pHowCollision, Block* pBlock)
 {
-    if(how_collision==KindCollision::BOTTOM)
+    if (pHowCollision == KindCollision::Bottom)
     {
-        if(block->isHit()||block->iamDead())
-            actOnMe(KindAction::HIT);
+        if (pBlock->IsHit() || pBlock->IsDead())
+            ActOnMe(KindAction::Hit);
         else
         {
-            /// TUTAJ SPRAWDZAM ZA KTORA DOLNA KOLIZJA MAM WYKONAC KORYGACJE
-            if(m_down_jump)
+            if (mDownJump)
             {
-                if(static_cast<int>(block->getCurrentPosition().y)==m_for_which_block_bottom_collision)
-                    m_down_jump=false;
+                if (static_cast<int>(pBlock->GetCurrentPosition().y) == mForWhichBlockBottomCollision)
+                    mDownJump = false;
                 else
                     return;
             }
 
-            m_in_bottom_collision=true;
-            m_jump=false;
+            mIsInBottomCollision = true;
+            mIsJump = false;
 
-            setWhenJump();
+            SetWhenJump();
         }
 
-        block->actOnObject(this,how_collision);
+        pBlock->ActOnObject(this, pHowCollision);
     }
 }
 
 ///-----
-void CArmedTurtle::actOnObject(CGameObject* obj,KindCollision how_collision)
+void ArmedTurtle::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        obj->actOnMe(KindAction::HIT);
+    if (pObj->GetParentage() == Parentage::Mario)
+        pObj->ActOnMe(KindAction::Hit);
 }
 
 ///-----
-void CArmedTurtle::actOnMe(KindAction which_action)
+void ArmedTurtle::ActOnMe(KindAction pWhichAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    switch(which_action)
+    switch (pWhichAction)
     {
-    case KindAction::HIT:
+    case KindAction::Hit:
         {
-            if(m_my_hammer)
-                removeObject(m_my_hammer);
+            if (mMyHammer)
+                RemoveObject(mMyHammer);
 
-            createBeatsObjSpecialEfect(-100.0f);
+            CreateBeatObjectEffect(-100.0f);
 
             break;
         }
@@ -303,18 +285,17 @@ void CArmedTurtle::actOnMe(KindAction which_action)
 }
 
 ///------
-inline void CArmedTurtle::setWhenJump()
+inline void ArmedTurtle::SetWhenJump()
 {
-    m_can_jump=true;
-    m_when_jump=CScen::getDurationScen()+m_after_what_time_jump;
+    mCanJump = true;
+    mWhenJump = Scene::GetDurationScene() + mAfterWhatTimeJump;
 }
 
 ///---------
-void CArmedTurtle::draw(const unique_ptr<sf::RenderWindow>& window)
+void ArmedTurtle::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    m_animations->draw(window);
+    mAnimations->Draw(pWindow);
 
-    if(m_my_hammer)
-        m_my_hammer->draw(window);
+    if (mMyHammer)
+        mMyHammer->Draw(pWindow);
 }
-

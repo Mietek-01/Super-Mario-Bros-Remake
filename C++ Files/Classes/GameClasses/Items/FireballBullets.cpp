@@ -2,183 +2,181 @@
 #include "../Shield.h"
 #include "../../MarioGame.h"
 
-#include <math.h>
+#include <cmath>
+#include <vector>
 
-///-----------------CBullet------------///
+///-----------------Bullet------------///
 
-CBullet::CBullet(sf::Vector2f pos,bool right_dir,float speed,float scale)
-:CGameObject(new CAnimations,Parentage::ITEM,pos)
-,m_right_dir(right_dir)
-,m_speed(speed)
-,m_my_scal(scale)
-,m_basic_position(pos)
+Bullet::Bullet(sf::Vector2f pPos, bool pRightDir, float pSpeed, float pScale)
+    : GameObject(new Animations, Parentage::Item, pPos)
+    , mRightDir(pRightDir)
+    , mSpeed(pSpeed)
+    , mMyScale(pScale)
+    , mBasicPosition(pPos)
 {
-    CMarioGame::s_sound_manager.play("bowser_fire");
+    MarioGame::sSoundManager.play("bowser_fire");
 }
 
 ///------
-void CBullet::update()
+void Bullet::Update()
 {
-    m_previous_position=m_current_position;
+    mPreviousPosition = mCurrentPosition;
 
-    if(m_right_dir)
+    if (mRightDir)
     {
-        if(m_current_position.x>m_basic_position.x+m_range&&m_animations->islastFrame())
-            actOnMe(KindAction::HIT);
+        if (mCurrentPosition.x > mBasicPosition.x + mRange && mAnimations->IsLastFrame())
+            ActOnMe(KindAction::Hit);
 
-        m_current_position.x+=m_speed;
+        mCurrentPosition.x += mSpeed;
 
-    }else
+    } else
     {
-        if(m_current_position.x<m_basic_position.x-m_range&&m_animations->islastFrame())
-            actOnMe(KindAction::HIT);
+        if (mCurrentPosition.x < mBasicPosition.x - mRange && mAnimations->IsLastFrame())
+            ActOnMe(KindAction::Hit);
 
-        m_current_position.x-=m_speed;
+        mCurrentPosition.x -= mSpeed;
     }
 
-    this->corectPosition();
+    this->CorrectPosition();
 
-    m_animations->update(m_current_position);
+    mAnimations->Update(mCurrentPosition);
 }
 
 ///--------
-void CBullet::actOnMe(KindAction how_action)
+void Bullet::ActOnMe(KindAction pAction)
 {
-    if(how_action==KindAction::HIT)
-        removeObject(this);
+    if (pAction == KindAction::Hit)
+        RemoveObject(this);
 }
 
 ///----------
-void CBullet::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Bullet::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
+    if (pObject->GetParentage() == Parentage::Mario)
     {
-        CShield *obj_with_shield=dynamic_cast<CShield* >(obj);
+        Shield* objWithShield = dynamic_cast<Shield*>(pObject);
 
-        if(obj_with_shield)
-            obj_with_shield->setDamage(m_damage_value);
+        if (objWithShield)
+            objWithShield->SetDamage(mDamageValue);
 
-        obj->actOnMe(KindAction::HIT);
-        actOnMe(KindAction::HIT);
+        pObject->ActOnMe(KindAction::Hit);
+        ActOnMe(KindAction::Hit);
     }
 }
 
-///---------------------CBasicBullet---------------///
-CBasicBullet::CBasicBullet(sf::Vector2f pos,bool right_dir)
-:CBullet(pos,right_dir,rand()%3+2,CGameObject::m_scale_to_tile*1.4f)
+///---------------------BasicBullet---------------///
+BasicBullet::BasicBullet(sf::Vector2f pPos, bool pRightDir)
+    : Bullet(pPos, pRightDir, rand() % 3 + 2, GameObject::kScaleToTile * 1.4f)
 {
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    if(right_dir)
+    if (pRightDir)
     {
-        m_frame_animation.push_back({7,370,20,12});
-        m_frame_animation.push_back({35,368,25,16});
-        m_frame_animation.push_back({66,365,30,22});
-        m_frame_animation.push_back({97,364,32,26});
+        frameAnimation.push_back({7, 370, 20, 12});
+        frameAnimation.push_back({35, 368, 25, 16});
+        frameAnimation.push_back({66, 365, 30, 22});
+        frameAnimation.push_back({97, 364, 32, 26});
 
-        m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,2.5f,m_my_scal);
-    }else
+        mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 2.5f, mMyScale);
+    } else
     {
-        m_frame_animation.push_back({526,370,20,12});
-        m_frame_animation.push_back({493,368,25,16});
-        m_frame_animation.push_back({457,365,30,22});
-        m_frame_animation.push_back({425,364,32,26});
+        frameAnimation.push_back({526, 370, 20, 12});
+        frameAnimation.push_back({493, 368, 25, 16});
+        frameAnimation.push_back({457, 365, 30, 22});
+        frameAnimation.push_back({425, 364, 32, 26});
 
-        m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,2.5f,m_my_scal);
+        mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 2.5f, mMyScale);
     }
 
-    m_animations->play(CAnimations::STANDARD,m_current_position);
+    mAnimations->Play(Animations::Standard, mCurrentPosition);
 }
 
-///---------------------CCircleBullet---------------///
-CCircleBullet::CCircleBullet(sf::Vector2f pos,bool right_dir)
-:CBullet(pos,right_dir,3,CGameObject::m_scale_to_tile)
-,m_center_circle_x_pos(pos.x)
+///---------------------CircleBullet---------------///
+CircleBullet::CircleBullet(sf::Vector2f pPos, bool pRightDir)
+    : Bullet(pPos, pRightDir, 3, GameObject::kScaleToTile)
+    , mCenterCircleXPos(pPos.x)
 {
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    m_frame_animation.push_back({194,80,28,32});
-    m_frame_animation.push_back({226,80,28,32});
-    m_frame_animation.push_back({258,80,28,32});
+    frameAnimation.push_back({194, 80, 28, 32});
+    frameAnimation.push_back({226, 80, 28, 32});
+    frameAnimation.push_back({258, 80, 28, 32});
 
-    m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.5f,m_my_scal);
+    mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.5f, mMyScale);
 
-    corectPosition();
+    CorrectPosition();
 
-    m_animations->play(CAnimations::STANDARD,m_current_position);
+    mAnimations->Play(Animations::Standard, mCurrentPosition);
 }
 
 ///-----
-void CCircleBullet::update()
+void CircleBullet::Update()
 {
-    m_previous_position=m_current_position;
+    mPreviousPosition = mCurrentPosition;
 
-    if(m_right_dir)
-        if(m_current_position.x>m_basic_position.x+m_range&&m_animations->islastFrame())
-            actOnMe(KindAction::HIT);
+    if (mRightDir)
+        if (mCurrentPosition.x > mBasicPosition.x + mRange && mAnimations->IsLastFrame())
+            ActOnMe(KindAction::Hit);
     else
-        if(m_current_position.x<m_basic_position.x-m_range&&m_animations->islastFrame())
-            actOnMe(KindAction::HIT);
+        if (mCurrentPosition.x < mBasicPosition.x - mRange && mAnimations->IsLastFrame())
+            ActOnMe(KindAction::Hit);
 
-    corectPosition();
+    CorrectPosition();
 }
 
 ///-------
-void CCircleBullet::corectPosition()
+void CircleBullet::CorrectPosition()
 {
-    m_angle+=m_spin_speed;
-    m_rotate+=m_rotate_speed;
+    mAngle += mSpinSpeed;
+    mRotate += mRotateSpeed;
 
-    if(m_right_dir)
-        m_center_circle_x_pos+=m_speed;
+    if (mRightDir)
+        mCenterCircleXPos += mSpeed;
     else
-        m_center_circle_x_pos-=m_speed;
+        mCenterCircleXPos -= mSpeed;
 
-    m_current_position.y=m_basic_position.y-5.0f*m_radius*sin(m_angle);
-    m_current_position.x=m_center_circle_x_pos-5.0f*m_radius*cos(m_angle);
+    mCurrentPosition.y = mBasicPosition.y - 5.0f * mRadius * sin(mAngle);
+    mCurrentPosition.x = mCenterCircleXPos - 5.0f * mRadius * cos(mAngle);
 
-    m_animations->update(m_current_position);
-    m_animations->getSprite().setRotation(m_rotate);
+    mAnimations->Update(mCurrentPosition);
+    mAnimations->GetSprite().setRotation(mRotate);
 }
 
-///---------------------CSinBullet---------------///
+///---------------------SinBullet---------------///
 
-CSinBullet::CSinBullet(sf::Vector2f pos,bool right_dir)
-:CBullet(pos,right_dir,2.5,CGameObject::m_scale_to_tile*1.4f)
+SinBullet::SinBullet(sf::Vector2f pPos, bool pRightDir)
+    : Bullet(pPos, pRightDir, 2.5, GameObject::kScaleToTile * 1.4f)
 {
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    if(right_dir)
+    if (pRightDir)
     {
-        m_frame_animation.push_back({7,370,20,12});
-        m_frame_animation.push_back({35,368,25,16});
-        m_frame_animation.push_back({66,365,30,22});
-        m_frame_animation.push_back({97,364,32,26});
+        frameAnimation.push_back({7, 370, 20, 12});
+        frameAnimation.push_back({35, 368, 25, 16});
+        frameAnimation.push_back({66, 365, 30, 22});
+        frameAnimation.push_back({97, 364, 32, 26});
 
-        m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Bowser_left"],m_frame_animation,2.5f,m_my_scal);
-    }else
+        mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Bowser_left"], frameAnimation, 2.5f, mMyScale);
+    } else
     {
-        m_frame_animation.push_back({526,370,20,12});
-        m_frame_animation.push_back({493,368,25,16});
-        m_frame_animation.push_back({457,365,30,22});
-        m_frame_animation.push_back({425,364,32,26});
+        frameAnimation.push_back({526, 370, 20, 12});
+        frameAnimation.push_back({493, 368, 25, 16});
+        frameAnimation.push_back({457, 365, 30, 22});
+        frameAnimation.push_back({425, 364, 32, 26});
 
-        m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Bowser_right"],m_frame_animation,2.5f,m_my_scal);
+        mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Bowser_right"], frameAnimation, 2.5f, mMyScale);
     }
 
-    m_animations->play(CAnimations::STANDARD,m_current_position);
+    mAnimations->Play(Animations::Standard, mCurrentPosition);
 }
 
 ///------
-void CSinBullet::corectPosition()
+void SinBullet::CorrectPosition()
 {
-    if(m_right_dir)
-        m_my_speed+=m_sin_function_speed;
+    if (mRightDir)
+        mMySpeed += mSinFunctionSpeed;
     else
-        m_my_speed-=m_sin_function_speed;
+        mMySpeed -= mSinFunctionSpeed;
 
-    m_current_position.y=m_basic_position.y+(45.0f*sin(m_my_speed));
+    mCurrentPosition.y = mBasicPosition.y + (45.0f * sin(mMySpeed));
 }
-
-
-

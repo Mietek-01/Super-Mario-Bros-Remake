@@ -2,51 +2,47 @@
 #include "GameObject.h"
 #include "Blocks/Block.h"
 
-using namespace std;
+#include <map>
 
-class CPhysicaltObject:public CGameObject
-{
+class Block;
+
+class PhysicalObject : public GameObject {
 protected:
+    enum class KindMovement {
+        LeftRun,
+        RightRun,
+        Standing
+    } mKindMovement;
 
-    enum class KindMovement
-    {
-        LEFT_RUN,
-        RIGHT_RUN,
-        STANDING
-    }m_kind_movement;
+    const float mFallingForce = 250.0f;
+    float mForce = 0.0f;
+    float mValueAcceleration = 0.1f;
+    float mJumpForce = -900.0f;
 
-    const float m_falling_force=250.0f;
-    float m_force=0.0f;
-    float m_value_acceleration=0.1f;
-    float m_jump_force=-900.0f;
+    bool mIsRightDirReversal;
+    bool mIsJump = false;
+    bool mIsInBottomCollision = true;
 
-    bool m_right_dir_reversal;
-    bool m_jump=false;
-    bool m_in_bottom_collision=true;
+    // Methods
+    virtual void UpdateForCollisionWithBlock(KindCollision, Block*);
+    virtual void Jump();
+    virtual void Falling();
+    virtual void MakeJump();
 
-    /// METHODS
-    virtual void updateForCollisionWithBlock(KindCollision,CBlock*);
-    virtual void jump();
-    virtual void falling();
-    virtual void makeJump();
-
-    void move();
+    void Move();
 
 public:
+    const static float sGravitation;
+    const static float sCorrectionToBottomCollision;
 
-     const static float s_gravitation;
-     const static float s_correction_to_bottom_collision;
+    PhysicalObject(Animator*, Parentage, const sf::Vector2f&, KindMovement = KindMovement::LeftRun, int = 100);
+    virtual ~PhysicalObject() {}
 
-     CPhysicaltObject(CAnimator *,Parentage,const sf::Vector2f&,KindMovement=KindMovement::LEFT_RUN,int=100);
-     virtual ~CPhysicaltObject(){}
+    virtual void Update() override;
+    virtual void Hop(float);
 
-     virtual void update()override;
-     virtual void hop(float);
+    void PhysicGameWithBlock(std::map<KindCollision, Block*>&, bool);
 
-     void physicGameWithBlock(map<KindCollision,CBlock*>&,bool);
-
-     bool isJumping()const {return m_jump;}
-     bool isInBottomCollision()const {return m_in_bottom_collision;}
-
+    [[nodiscard]] bool IsJumping() const { return mIsJump; }
+    [[nodiscard]] bool IsInBottomCollision() const { return mIsInBottomCollision; }
 };
-

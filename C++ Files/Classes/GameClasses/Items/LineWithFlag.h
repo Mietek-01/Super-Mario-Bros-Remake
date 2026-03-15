@@ -1,54 +1,48 @@
 #pragma once
 #include "../GameObject.h"
 
-using namespace std;
+#include <memory>
 
-class CLineWithFlag: public CGameObject
-{
+class LineWithFlag : public GameObject {
 
-    enum MyKindsAnimations
-    {
-        FLAG_ANIMATION,
-        MOVEMENT_MARIO,
-        R_RATCHETING_BY_MARIO,
-        L_RATCHETING_BY_MARIO,
-
+    enum MyKindsAnimations {
+        FlagAnimation,
+        MovementMario,
+        RRatchetingByMario,
+        LRatchetingByMario,
     };
 
-    enum class MarioAnimationsStates
-    {
-        LEFT_RATCHETING,
-        RIGHT_RATHETING,
-        GO_TO_CASTLE
+    enum class MarioAnimationsStates {
+        LeftRatcheting,
+        RightRatcheting,
+        GoToCastle
 
-    }m_ratcheting_flag_state=MarioAnimationsStates::LEFT_RATCHETING;
+    } mRatchetingFlagState = MarioAnimationsStates::LeftRatcheting;
 
+    std::unique_ptr<sf::Sprite> mCastle;
+    std::unique_ptr<Animations> mCastleFlag;
+    std::unique_ptr<Animations> mMario;
 
-    unique_ptr<sf::Sprite> m_castle;
-    unique_ptr<CAnimations> m_castle_flag;
-    unique_ptr<CAnimations> m_mario;
+    Animations mLineFlag;
 
-    CAnimations m_line_flag;
+    bool mIsFlagRatcheting = false;
 
-    bool m_is_flag_ratcheting=false;
+    const float mCastlePosition;
+    const float mCastleFlagSpeed = 0.3f;
+    const float mFlagSpeedRatcheting = 2.2f;
+    const float mMarioSpeedRatcheting = 2.5f;
+    const float mMarioSpeed = 2.8f;
 
-    const float m_castle_position;
-    const float m_castle_flag_speed=0.3f;
-    const float m_flag_speed_ratcheting=2.2f;
-    const float m_mario_speed_ratcheting=2.5f;
-    const float m_mario_speed=2.8f;
-
-    sf::Vector2f m_line_flag_position,m_mario_position,m_castle_flag_position;
+    sf::Vector2f mLineFlagPosition, mMarioPosition, mCastleFlagPosition;
 
 public:
 
-    CLineWithFlag(sf::Vector2f);
-    ~CLineWithFlag(){}
+    LineWithFlag(sf::Vector2f pPos);
+    ~LineWithFlag() {}
 
-    void draw(const unique_ptr<sf::RenderWindow>&) override;
-    void update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) override;
+    void Update() override;
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
+    void ActOnMe(KindAction pAction) override;
 };
-

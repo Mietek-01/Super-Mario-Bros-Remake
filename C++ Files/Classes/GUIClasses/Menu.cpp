@@ -6,275 +6,255 @@
 
 using namespace std;
 
-const float CMenu::s_value_margin=50.0f;
+const float Menu::sValueMargin = 50.0f;
 
-/// POZWALA NA WPROWADZENIE JAKIEGOS OPISU DO MENU W FORMIE TYTULU
-CMenu::CMenu(bool vertical_control,vector<CLabel*>& labels,sf::RectangleShape * background,sf::Text * title,string texture_name)
-:m_vertical_control(vertical_control)
+/// ALLOWS ADDING A DESCRIPTION TO THE MENU IN THE FORM OF A TITLE
+Menu::Menu(bool pVerticalControl, vector<Label*>& pLabels, sf::RectangleShape* pBackground, sf::Text* pTitle, string pTextureName)
+    : mIsVerticalControl(pVerticalControl)
 {
     ///------
-    if(background)
-        m_background.reset(background);
+    if (pBackground)
+        mBackground.reset(pBackground);
 
     ///-----
-    for(auto label:labels)
-        m_my_labels.push_back(unique_ptr<CLabel>(label));
+    for (auto label : pLabels)
+        mLabels.push_back(unique_ptr<Label>(label));
 
     ///-----
-    m_pointer_to_label.reset(new CPointerToLabel(m_my_labels,texture_name));
+    mPointerToLabel.reset(new PointerToLabel(mLabels, pTextureName));
 
     ///-----
-    if(title)
-        m_title.reset(title);
+    if (pTitle)
+        mTitle.reset(pTitle);
 }
 
 ///------
-CMenu::CMenu(bool vertical_control,vector<CLabel*>& labels,sf::RectangleShape * background,string name_title,bool double_size,string texture_name)
-:m_vertical_control(vertical_control)
+Menu::Menu(bool pVerticalControl, vector<Label*>& pLabels, sf::RectangleShape* pBackground, string pNameTitle, bool pDoubleSize, string pTextureName)
+    : mIsVerticalControl(pVerticalControl)
 {
     ///------
-    if(background)
-        m_background.reset(background);
+    if (pBackground)
+        mBackground.reset(pBackground);
 
     ///-----
-    for(auto label:labels)
-        m_my_labels.push_back(unique_ptr<CLabel>(label));
+    for (auto label : pLabels)
+        mLabels.push_back(unique_ptr<Label>(label));
 
     ///-----
-    m_pointer_to_label.reset(new CPointerToLabel(m_my_labels,texture_name));
+    mPointerToLabel.reset(new PointerToLabel(mLabels, pTextureName));
 
     ///-----
-    setTitle(name_title,double_size);
+    SetTitle(pNameTitle, pDoubleSize);
 }
 
 ///---
-CLabel* CMenu::createOptionLabel(const sf::Vector2f pos_label,const sf::Vector2f pos_option_menu,const sf::Color color)
+Label* Menu::CreateOptionLabel(const sf::Vector2f pPosLabel, const sf::Vector2f pPosOptionMenu, const sf::Color pColor)
 {
-    std::function<void(int)> action_create_menu=[pos_option_menu](int ascii)
+    std::function<void(int)> actionCreateMenu = [pPosOptionMenu](int pAscii)
     {
 
-    const sf::IntRect bounds_menu(pos_option_menu.x,pos_option_menu.y,550,500);
+    const sf::IntRect boundsMenu(pPosOptionMenu.x, pPosOptionMenu.y, 550, 500);
 
-    const sf::Vector2f first_label_pos(bounds_menu.left-bounds_menu.width/2.0f+CMenu::s_value_margin,
-    bounds_menu.top-bounds_menu.height/2.0f+CMenu::s_value_margin/2.0f);
+    const sf::Vector2f firstLabelPos(boundsMenu.left - boundsMenu.width / 2.0f + Menu::sValueMargin,
+    boundsMenu.top - boundsMenu.height / 2.0f + Menu::sValueMargin / 2.0f);
 
-    ///---- TWORZE ETYKIETKI I POZNIEJ BD DODAWAL DO NICH AKCJE
+    ///---- CREATE LABELS AND LATER ADD ACTIONS TO THEM
 
-    std::vector<CLabel*> m_options_collection;
+    std::vector<Label*> optionsCollection;
 
-    const int number_labels=8;
-    string names[number_labels]={"VOLUME SOUND","VOLUME MUSIC","LEFT RUN","RIGHT RUN","JUMP","CROUCH","SHOOT","DEFAULT STEERAGE"};
+    const int numberLabels = 8;
+    string names[numberLabels] = {"VOLUME SOUND", "VOLUME MUSIC", "LEFT RUN", "RIGHT RUN", "JUMP", "CROUCH", "SHOOT", "DEFAULT STEERAGE"};
 
-    for(int i=0;i<number_labels;i++)
-    {
-        sf::Text * name;
+    for (int i = 0; i < numberLabels; i++) {
+        sf::Text* name;
 
-        if(i<number_labels-1)
-            name=CGUI::createText(names[i],{first_label_pos.x,first_label_pos.y+CMenu::s_value_margin*i},sf::Color(250,250,255,100),"menu_font",false);
+        if (i < numberLabels - 1)
+            name = Gui::CreateText(names[i], {firstLabelPos.x, firstLabelPos.y + Menu::sValueMargin * i}, sf::Color(250, 250, 255, 100), "menu_font", false);
         else
-            name=CGUI::createText(names[i],{first_label_pos.x,first_label_pos.y+CMenu::s_value_margin*i+15},sf::Color(250,250,255,100),"menu_font",false);
+            name = Gui::CreateText(names[i], {firstLabelPos.x, firstLabelPos.y + Menu::sValueMargin * i + 15}, sf::Color(250, 250, 255, 100), "menu_font", false);
 
-        m_options_collection.push_back(new CLabel(name));
+        optionsCollection.push_back(new Label(name));
     }
 
     ///----- SOUND VOLUME LABEL
-    m_options_collection[0]->addRectangleShap(CGUI::createRectangleShape(sf::IntRect(first_label_pos.x+260,first_label_pos.y,10*20+2*5,25),sf::Color::Black,false,true,sf::Color(250,250,255,100)));
-    m_options_collection[0]->addRectangleShap(CGUI::createRectangleShape(sf::IntRect(first_label_pos.x+265,first_label_pos.y+5,(CMarioGame::s_sound_manager.getVolume()/10)*20,15),sf::Color(250,250,255,100),false));
+    optionsCollection[0]->AddRectangleShape(Gui::CreateRectangleShape(sf::IntRect(firstLabelPos.x + 260, firstLabelPos.y, 10 * 20 + 2 * 5, 25), sf::Color::Black, false, true, sf::Color(250, 250, 255, 100)));
+    optionsCollection[0]->AddRectangleShape(Gui::CreateRectangleShape(sf::IntRect(firstLabelPos.x + 265, firstLabelPos.y + 5, (MarioGame::sSoundManager.getVolume() / 10) * 20, 15), sf::Color(250, 250, 255, 100), false));
 
-    /// AKCJA DLA SOUND VOLUME LABEL
-    m_options_collection[0]->addAction([m_options_collection](int ascii){
+    /// ACTION FOR SOUND VOLUME LABEL
+    optionsCollection[0]->AddAction([optionsCollection](int pAscii) {
 
-    const unique_ptr<sf::RectangleShape>& rctn=m_options_collection[0]->getRectangleShape(1);
+    const unique_ptr<sf::RectangleShape>& rctn = optionsCollection[0]->GetRectangleShape(1);
 
-    if(CGUI::isLabelMaintenance()&&ascii==(int)(sf::Keyboard::Return))
-    {
-        m_options_collection[0]->getRectangleShape(0)->setOutlineColor(m_options_collection[0]->getBasicColor());
-        rctn->setFillColor(m_options_collection[0]->getBasicColor());
+    if (Gui::IsLabelMaintenance() && pAscii == (int)(sf::Keyboard::Return)) {
+        optionsCollection[0]->GetRectangleShape(0)->setOutlineColor(optionsCollection[0]->GetBasicColor());
+        rctn->setFillColor(optionsCollection[0]->GetBasicColor());
 
-        CGUI::setLabelMaintenance(false);
+        Gui::SetLabelMaintenance(false);
         return;
     }
 
-    if(!CGUI::isLabelMaintenance())
-    {
-        m_options_collection[0]->getRectangleShape(0)->setOutlineColor(sf::Color::White);
+    if (!Gui::IsLabelMaintenance()) {
+        optionsCollection[0]->GetRectangleShape(0)->setOutlineColor(sf::Color::White);
         rctn->setFillColor(sf::Color::White);
 
-        CMarioGame::s_sound_manager.play("coin");
-        CGUI::setLabelMaintenance(true);
+        MarioGame::sSoundManager.play("coin");
+        Gui::SetLabelMaintenance(true);
     }
 
-    if(ascii==(int)(sf::Keyboard::Left)&&rctn->getSize().x>0)
-    {
-        rctn->setSize({rctn->getSize().x-20,rctn->getSize().y});
-        CMarioGame::s_sound_manager.updateVolume(false);
-        CMarioGame::s_sound_manager.play("coin");
+    if (pAscii == (int)(sf::Keyboard::Left) && rctn->getSize().x > 0) {
+        rctn->setSize({rctn->getSize().x - 20, rctn->getSize().y});
+        MarioGame::sSoundManager.updateVolume(false);
+        MarioGame::sSoundManager.play("coin");
     }
-    if(ascii==(int)(sf::Keyboard::Right)&&rctn->getSize().x<200)
-    {
-        rctn->setSize({rctn->getSize().x+20,rctn->getSize().y});
-        CMarioGame::s_sound_manager.updateVolume(true);
-        CMarioGame::s_sound_manager.play("coin");
+    if (pAscii == (int)(sf::Keyboard::Right) && rctn->getSize().x < 200) {
+        rctn->setSize({rctn->getSize().x + 20, rctn->getSize().y});
+        MarioGame::sSoundManager.updateVolume(true);
+        MarioGame::sSoundManager.play("coin");
     }
 
     });
 
     ///----- MUSIC VOLUME LABEL
-    m_options_collection[1]->addRectangleShap(CGUI::createRectangleShape(sf::IntRect(first_label_pos.x+260,first_label_pos.y+CMenu::s_value_margin,10*20+2*5,25),sf::Color::Black,false,true,sf::Color(250,250,255,100)));
-    m_options_collection[1]->addRectangleShap(CGUI::createRectangleShape(sf::IntRect(first_label_pos.x+265,first_label_pos.y+5+CMenu::s_value_margin,(CMarioGame::s_music_manager.getVolume()/10)*20,15),sf::Color(250,250,255,100),false));
+    optionsCollection[1]->AddRectangleShape(Gui::CreateRectangleShape(sf::IntRect(firstLabelPos.x + 260, firstLabelPos.y + Menu::sValueMargin, 10 * 20 + 2 * 5, 25), sf::Color::Black, false, true, sf::Color(250, 250, 255, 100)));
+    optionsCollection[1]->AddRectangleShape(Gui::CreateRectangleShape(sf::IntRect(firstLabelPos.x + 265, firstLabelPos.y + 5 + Menu::sValueMargin, (MarioGame::sMusicManager.getVolume() / 10) * 20, 15), sf::Color(250, 250, 255, 100), false));
 
-    /// AKCJA DLA MUSIC LABEL
-    m_options_collection[1]->addAction([m_options_collection](int ascii){
+    /// ACTION FOR MUSIC LABEL
+    optionsCollection[1]->AddAction([optionsCollection](int pAscii) {
 
-    const unique_ptr<sf::RectangleShape>& rctn=m_options_collection[1]->getRectangleShape(1);
+    const unique_ptr<sf::RectangleShape>& rctn = optionsCollection[1]->GetRectangleShape(1);
 
-    if(CGUI::isLabelMaintenance()&&ascii==(int)(sf::Keyboard::Return))
-    {
-        m_options_collection[1]->getRectangleShape(0)->setOutlineColor(m_options_collection[1]->getBasicColor());
-        rctn->setFillColor(m_options_collection[1]->getBasicColor());
+    if (Gui::IsLabelMaintenance() && pAscii == (int)(sf::Keyboard::Return)) {
+        optionsCollection[1]->GetRectangleShape(0)->setOutlineColor(optionsCollection[1]->GetBasicColor());
+        rctn->setFillColor(optionsCollection[1]->GetBasicColor());
 
-        CGUI::setLabelMaintenance(false);
-        CMarioGame::s_music_manager.stop();
+        Gui::SetLabelMaintenance(false);
+        MarioGame::sMusicManager.stop();
         return;
     }
 
-    if(!CGUI::isLabelMaintenance())
-    {
-        m_options_collection[1]->getRectangleShape(0)->setOutlineColor(sf::Color::White);
+    if (!Gui::IsLabelMaintenance()) {
+        optionsCollection[1]->GetRectangleShape(0)->setOutlineColor(sf::Color::White);
         rctn->setFillColor(sf::Color::White);
 
-        CMarioGame::s_music_manager.playToDefineVolume();
-        CGUI::setLabelMaintenance(true);
+        MarioGame::sMusicManager.playToDefineVolume();
+        Gui::SetLabelMaintenance(true);
     }
 
-    if(ascii==(int)(sf::Keyboard::Left)&&rctn->getSize().x>0)
-    {
-        rctn->setSize({rctn->getSize().x-20,rctn->getSize().y});
-        CMarioGame::s_music_manager.updateMusicVolume(false);
+    if (pAscii == (int)(sf::Keyboard::Left) && rctn->getSize().x > 0) {
+        rctn->setSize({rctn->getSize().x - 20, rctn->getSize().y});
+        MarioGame::sMusicManager.updateMusicVolume(false);
     }
-    if(ascii==(int)(sf::Keyboard::Right)&&rctn->getSize().x<200)
-    {
-        rctn->setSize({rctn->getSize().x+20,rctn->getSize().y});
-        CMarioGame::s_music_manager.updateMusicVolume(true);
+    if (pAscii == (int)(sf::Keyboard::Right) && rctn->getSize().x < 200) {
+        rctn->setSize({rctn->getSize().x + 20, rctn->getSize().y});
+        MarioGame::sMusicManager.updateMusicVolume(true);
     }
 
     });
 
-    ///----AKCJE DLA STEERAGE LABELS
-    for(int i=2;i<number_labels-1;i++)
-    {
-       CEventHandler::DecisionsPlayer my_decision=static_cast<CEventHandler::DecisionsPlayer>(i-2);
-       string inscription=CEventHandler::convertKeyToString(CEventHandler::getRegisteredKeys()[my_decision]);
+    ///----ACTIONS FOR STEERAGE LABELS
+    for (int i = 2; i < numberLabels - 1; i++) {
+        EventHandler::PlayerDecision myDecision = static_cast<EventHandler::PlayerDecision>(i - 2);
+        string inscription = EventHandler::ConvertKeyToString(EventHandler::GetRegisteredKeys()[myDecision]);
 
-       m_options_collection[i]->addText(CGUI::createText(inscription,{first_label_pos.x+260,first_label_pos.y+CMenu::s_value_margin*i},sf::Color(250,250,255,100),"menu_font",false));
+        optionsCollection[i]->AddText(Gui::CreateText(inscription, {firstLabelPos.x + 260, firstLabelPos.y + Menu::sValueMargin * i}, sf::Color(250, 250, 255, 100), "menu_font", false));
 
-       m_options_collection[i]->addAction([i,m_options_collection,my_decision](int ascii)
+        optionsCollection[i]->AddAction([i, optionsCollection, myDecision](int pAscii)
         {
-            const unique_ptr<sf::Text>& m_text=m_options_collection[i]->getText();
+            const unique_ptr<sf::Text>& text = optionsCollection[i]->GetText();
 
-            if(CGUI::isLabelMaintenance())
-            {
-                if(ascii!=(int)(sf::Keyboard::Return))
-                {
-                    string new_text=CEventHandler::convertKeyToString(ascii);
-                    if(new_text==""||CEventHandler::isOccupyThisKeyCode(ascii))return;
+            if (Gui::IsLabelMaintenance()) {
+                if (pAscii != (int)(sf::Keyboard::Return)) {
+                    string newText = EventHandler::ConvertKeyToString(pAscii);
+                    if (newText == "" || EventHandler::IsKeyCodeOccupied(pAscii)) return;
 
-                    CEventHandler::changeRegisteredKeys(my_decision,ascii);
+                    EventHandler::ChangeRegisteredKeys(myDecision, pAscii);
 
-                    m_text->setString(new_text);
+                    text->setString(newText);
 
-                }else
-                {
-                    m_text->setFillColor(m_options_collection[i]->getBasicColor());
-                    CGUI::setLabelMaintenance(false);
+                } else {
+                    text->setFillColor(optionsCollection[i]->GetBasicColor());
+                    Gui::SetLabelMaintenance(false);
                 }
                 return;
-            }
-            else
-            {
-                m_text->setFillColor(sf::Color::White);
-                CGUI::setLabelMaintenance(true);
+            } else {
+                text->setFillColor(sf::Color::White);
+                Gui::SetLabelMaintenance(true);
             }
 
         });
     }
 
-    /// AKCJA DLA DEFAULT STEERAGE
-    m_options_collection[number_labels-1]->addAction([m_options_collection,number_labels](int ascii){
+    /// ACTION FOR DEFAULT STEERAGE
+    optionsCollection[numberLabels - 1]->AddAction([optionsCollection, numberLabels](int pAscii) {
 
-    if(ascii==(int)(sf::Keyboard::Return))
-    {
-        CEventHandler::setDefaultRegisteredKeys();
+    if (pAscii == (int)(sf::Keyboard::Return)) {
+        EventHandler::SetDefaultRegisteredKeys();
 
-        for(int i=2;i<number_labels-1;i++)
-        {
-            const string inscription=CEventHandler::convertKeyToString(CEventHandler::getRegisteredKeys()[static_cast<CEventHandler::DecisionsPlayer>(i-2)]);
+        for (int i = 2; i < numberLabels - 1; i++) {
+            const string inscription = EventHandler::ConvertKeyToString(EventHandler::GetRegisteredKeys()[static_cast<EventHandler::PlayerDecision>(i - 2)]);
 
-            m_options_collection[i]->getText()->setString(inscription);
+            optionsCollection[i]->GetText()->setString(inscription);
         }
     }
 
     });
 
-    /// DODAJE ETYKIETKI POWROTU
-    m_options_collection.push_back(CMenu::createReturnLabel(CGUI::createText("MAIN MENU",{first_label_pos.x,first_label_pos.y+CMenu::s_value_margin*number_labels+20},sf::Color(250,250,255,100),"menu_font",false)));
+    /// ADD RETURN LABELS
+    optionsCollection.push_back(Menu::CreateReturnLabel(Gui::CreateText("MAIN MENU", {firstLabelPos.x, firstLabelPos.y + Menu::sValueMargin * numberLabels + 20}, sf::Color(250, 250, 255, 100), "menu_font", false)));
 
-    /// TWORZE MENI
-    sf::RectangleShape * backgorund=CGUI::createRectangleShape(bounds_menu,sf::Color::Black,true,true);
-    CGUI::addMenu(new CMenu(true,m_options_collection,backgorund,nullptr));
+    /// CREATE THE MENU
+    sf::RectangleShape* background = Gui::CreateRectangleShape(boundsMenu, sf::Color::Black, true, true);
+    Gui::AddMenu(new Menu(true, optionsCollection, background, nullptr));
 
     };
 
-    ///--------------ZWRACAM STWORZONA ETYKIETKE----------------///
-    sf::Text *name=CGUI::createText("OPTIONS",pos_label,color,"menu_font");
-    return new CLabel(name,action_create_menu);
+    ///--------------RETURN THE CREATED LABEL----------------///
+    sf::Text* name = Gui::CreateText("OPTIONS", pPosLabel, pColor, "menu_font");
+    return new Label(name, actionCreateMenu);
 }
 
 ///---
-CLabel* CMenu::createReturnLabel(sf::Text*text)
+Label* Menu::CreateReturnLabel(sf::Text* pText)
 {
-    CLabel* m_return_label=new CLabel(text,[](int ascii)
+    Label* returnLabel = new Label(pText, [](int pAscii)
     {
-        CGUI::removeCurrentMenu();
+        Gui::RemoveCurrentMenu();
     });
 
-    return m_return_label;
+    return returnLabel;
 }
 
 ///----
-void CMenu::setTitle(string text,bool double_size)
+void Menu::SetTitle(string pText, bool pDoubleSize)
 {
-    if(!m_background)
+    if (!mBackground)
         return;
 
-    const sf::FloatRect &background_bounds=m_background->getGlobalBounds();
+    const sf::FloatRect& backgroundBounds = mBackground->getGlobalBounds();
 
-    sf::Vector2f pos_title={background_bounds.left+background_bounds.width/2.0f,background_bounds.top+CMenu::s_value_margin};
-    size_t size_text=CGUI::s_basic_size_text;
+    sf::Vector2f posTitle = {backgroundBounds.left + backgroundBounds.width / 2.0f, backgroundBounds.top + Menu::sValueMargin};
+    size_t sizeText = Gui::sBasicSizeText;
 
-    if(double_size)
-    {
-        size_text*=1.6;
-        pos_title.x+=5;
-    }
-    else
-        size_text*=1.2;
+    if (pDoubleSize) {
+        sizeText *= 1.6;
+        posTitle.x += 5;
+    } else
+        sizeText *= 1.2;
 
-    m_title.reset(CGUI::createText(text,pos_title,sf::Color::Red,"menu_font",true,size_text));
+    mTitle.reset(Gui::CreateText(pText, posTitle, sf::Color::Red, "menu_font", true, sizeText));
 }
 
 ///----
-void CMenu::draw(const std::unique_ptr<sf::RenderWindow>&window)
+void Menu::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    if(m_background)
-        window->draw(*m_background);
+    if (mBackground)
+        pWindow->draw(*mBackground);
 
-    if(m_title)
-        window->draw(*m_title);
+    if (mTitle)
+        pWindow->draw(*mTitle);
 
-    m_pointer_to_label->draw(window);
+    mPointerToLabel->Draw(pWindow);
 
-    for(auto &obj:m_my_labels)
-        obj->draw(window);
+    for (auto& obj : mLabels)
+        obj->Draw(pWindow);
 }
-

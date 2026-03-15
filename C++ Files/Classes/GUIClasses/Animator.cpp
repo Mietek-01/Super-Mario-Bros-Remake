@@ -1,123 +1,127 @@
 #include "Animator.h"
 
-///-----------------------------
-void CAnimations::create(int name, const sf::Texture& texture, const sf::IntRect& rect,float m_scale,bool bottom_origin)
+using namespace std;
+
+/// -----------------------------
+/// Create a single-frame animation entry from one rectangle.
+void Animations::Create(int pName, const sf::Texture& pTexture, const sf::IntRect& pRect, float pScale, bool pBottomOrigin)
 {
-    assert(m_animations.end()==m_animations.find(name));
+    assert(mAnimations.end() == mAnimations.find(pName));
 
-    sf::Sprite m_sprite_to_load(texture,rect);
+    sf::Sprite spriteToLoad(pTexture, pRect);
 
-    if(bottom_origin)
-        m_sprite_to_load.setOrigin(rect.width/2.0f,rect.height);
-
-    m_sprite_to_load.setScale(m_scale,m_scale);
-
-    m_animations[name]={{m_sprite_to_load},0.0f};
-
-    ///DOMYSLNIE
-    play(name,{0,0});
-}
-
-///-----------------------
-void CAnimations::create(int name, const sf::Texture& texture, const std::vector<sf::IntRect>& rects, float speed,float m_scale,bool bottom_origin)
-{
-    assert(m_animations.end()==m_animations.find(name));
-    assert(speed>0);
-
-    vector<sf::Sprite> m_sprites;
-
-    for(const auto &frames:rects)
-    {
-        sf::Sprite m_sprite_to_load(texture,frames);
-
-        if(bottom_origin)
-            m_sprite_to_load.setOrigin(frames.width/2.0f,frames.height);
-
-        m_sprite_to_load.setScale(m_scale,m_scale);
-        m_sprites.push_back(m_sprite_to_load);
+    if (pBottomOrigin) {
+        spriteToLoad.setOrigin(pRect.width / 2.0f, pRect.height);
     }
 
-    m_animations[name]={m_sprites,speed};
+    spriteToLoad.setScale(pScale, pScale);
 
-    ///DOMYSLNIE
-    play(name,{0,0});
+    mAnimations[pName] = {{spriteToLoad}, 0.0f};
+
+    /// Play by default
+    Play(pName, {0, 0});
 }
 
-///-------------------
-void CAnimations::update(const sf::Vector2f& pos)
+/// -----------------------
+/// Create a multi-frame animation entry from a list of rectangles.
+void Animations::Create(int pName, const sf::Texture& pTexture, const std::vector<sf::IntRect>& pRects, float pSpeed, float pScale, bool pBottomOrigin)
 {
-    this->update();
-    m_current_frame->setPosition(pos);
+    assert(mAnimations.end() == mAnimations.find(pName));
+    assert(pSpeed > 0);
+
+    vector<sf::Sprite> sprites;
+
+    for (const auto& frame : pRects) {
+        sf::Sprite spriteToLoad(pTexture, frame);
+
+        if (pBottomOrigin) {
+            spriteToLoad.setOrigin(frame.width / 2.0f, frame.height);
+        }
+
+        spriteToLoad.setScale(pScale, pScale);
+        sprites.push_back(spriteToLoad);
+    }
+
+    mAnimations[pName] = {sprites, pSpeed};
+
+    /// Play by default
+    Play(pName, {0, 0});
 }
 
-///-------------------
-void CAnimations::update()
+/// -------------------
+/// Update animation frame and set position.
+void Animations::Update(const sf::Vector2f& pPosition)
 {
-    /// MECHANIZM ZMIENIANIA KLATEK CO OKRESLONY CZAS
+    this->Update();
+    mCurrentFrame->setPosition(pPosition);
+}
 
-    if(m_count_frames>1)
-    {
-        m_timer+=0.1f;
-        if(m_timer>=m_current_speed)
-        {
-            m_index_frame++;
-            if(m_index_frame>=m_count_frames)
-            {
-                m_index_frame=0;
-                m_last_frame=true;
+/// -------------------
+/// Advance animation frame based on elapsed time.
+void Animations::Update()
+{
+    if (mCountFrames > 1) {
+        mTimer += 0.1f;
+        if (mTimer >= mCurrentSpeed) {
+            mIndexFrame++;
+            if (mIndexFrame >= mCountFrames) {
+                mIndexFrame = 0;
+                mIsLastFrame = true;
+            } else {
+                mIsLastFrame = false;
             }
-            else
-                m_last_frame=false;
 
-            setCurrentFrame();
-            m_timer=0.0f;
+            SetCurrentFrame();
+            mTimer = 0.0f;
         }
     }
 }
 
-///---------------------
-void CAnimations::setSpeed(float new_speed)
+/// ---------------------
+/// Change playback speed of the current animation.
+void Animations::SetSpeed(float pNewSpeed)
 {
-    assert(new_speed>0);
-    assert(m_animations.end()!=m_animations.find(m_current_animation));
+    assert(pNewSpeed > 0);
+    assert(mAnimations.end() != mAnimations.find(mCurrentAnimation));
 
-    m_current_speed=m_animations[m_current_animation].second=new_speed;
+    mCurrentSpeed = mAnimations[mCurrentAnimation].second = pNewSpeed;
 }
 
-///---------
-void CAnimations::play(int name,const sf::Vector2f& pos)
+/// ---------
+/// Switch to a named animation and reset playback state.
+void Animations::Play(int pName, const sf::Vector2f& pPosition)
 {
-    assert(m_animations.end()!=m_animations.find(name));
+    assert(mAnimations.end() != mAnimations.find(pName));
 
-    m_current_animation=name;
-    m_index_frame=0;
-    m_current_speed=m_animations[m_current_animation].second;
-    m_timer=0.0f;
-    m_count_frames=(m_animations[m_current_animation].first).size();
+    mCurrentAnimation = pName;
+    mIndexFrame = 0;
+    mCurrentSpeed = mAnimations[mCurrentAnimation].second;
+    mTimer = 0.0f;
+    mCountFrames = (mAnimations[mCurrentAnimation].first).size();
 
-    /// GDY ILOSC KLATEK DANEJ ANIMACJI WYNOSI 1 TO OKRESLAM ZE JEST TO
-    /// OSTATNIA KLATKA
-    m_last_frame=m_count_frames==1;
+    /// If the animation has only one frame, mark it as the last frame
+    mIsLastFrame = mCountFrames == 1;
 
-    setCurrentFrame();
+    SetCurrentFrame();
 
-    m_current_frame->setPosition(pos);
+    mCurrentFrame->setPosition(pPosition);
 }
 
-///-----------------------
-inline void CAnimations::setCurrentFrame()
+/// -----------------------
+/// Point mCurrentFrame to the active sprite in the animation map.
+inline void Animations::SetCurrentFrame()
 {
-     m_current_frame=&(m_animations[m_current_animation].first)[m_index_frame];
+    mCurrentFrame = &(mAnimations[mCurrentAnimation].first)[mIndexFrame];
 }
 
-///-----------
-void CAnimations::setIndexFrame(int new_index,const sf::Vector2f &pos)
+/// -----------
+/// Jump to a specific frame index and reposition.
+void Animations::SetIndexFrame(int pNewIndex, const sf::Vector2f& pPosition)
 {
-    assert(new_index>=0&&new_index<m_count_frames);
+    assert(pNewIndex >= 0 && pNewIndex < mCountFrames);
 
-    m_index_frame=new_index;
-    setCurrentFrame();
+    mIndexFrame = pNewIndex;
+    SetCurrentFrame();
 
-    m_current_frame->setPosition(pos);
+    mCurrentFrame->setPosition(pPosition);
 }
-

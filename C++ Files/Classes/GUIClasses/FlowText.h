@@ -1,32 +1,30 @@
 #pragma once
 #include "GUIObject.h"
 #include <functional>
+#include <memory>
 
-using namespace std;
-
-class CFlowText:public CGuiObject
+class FlowText : public GuiObject
 {
-    const float m_speed_changing_transparency;
+    const float mSpeedChangingTransparency;
 
-    float m_value_transparency=0.0f;
-    sf::Color m_color;
+    float mValueTransparency = 0.0f;
+    sf::Color mColor;
 
-    unique_ptr<sf::Text> m_text;
-    std::function<bool(unique_ptr<sf::Text>&)> m_special_update;
+    std::unique_ptr<sf::Text> mText;
+    std::function<bool(std::unique_ptr<sf::Text>&)> mSpecialUpdate;
 
     enum class KindChangingTransparency
     {
-        NONE,
-        LOWER,
-        TALLER
-    }m_kind_changing_transparency;
+        None,
+        Lower,
+        Taller
+    } mKindChangingTransparency;
 
 public:
-     CFlowText(sf::Text*,float,float =-1.8f);
-     CFlowText(sf::Text*,std::function<bool(unique_ptr<sf::Text>&)>,float =-1.8f);
-    ~CFlowText(){}
+    FlowText(sf::Text* pText, float pWhenRemove, float pSpeedChanging = -1.8f);
+    FlowText(sf::Text* pText, std::function<bool(std::unique_ptr<sf::Text>&)> pSpecialUpdate, float pSpeedChanging = -1.8f);
+    ~FlowText() {}
 
-    void draw(unique_ptr<sf::RenderWindow>&window)override{window->draw(*m_text);}
-    void update()override;
+    void Draw(std::unique_ptr<sf::RenderWindow>& pWindow) override { pWindow->draw(*mText); }
+    void Update() override;
 };
-

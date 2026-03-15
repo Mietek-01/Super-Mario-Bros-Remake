@@ -1,173 +1,176 @@
 #include "PhysicalObject.h"
 #include <math.h>
 
-const float CPhysicaltObject::s_gravitation=2600.0f;
-const float CPhysicaltObject::s_correction_to_bottom_collision=0.2f;
+using namespace std;
 
-CPhysicaltObject::CPhysicaltObject(CAnimator * animator,Parentage parentage,const sf::Vector2f& pos,KindMovement how_movement,int points)
-:CGameObject(animator,parentage,pos,points)
-,m_kind_movement(how_movement)
+const float PhysicalObject::sGravitation = 2600.0f;
+const float PhysicalObject::sCorrectionToBottomCollision = 0.2f;
+
+PhysicalObject::PhysicalObject(Animator* pAnimator, Parentage pParentage, const sf::Vector2f& pPos, KindMovement pHowMovement, int pPoints)
+    : GameObject(pAnimator, pParentage, pPos, pPoints)
+    , mKindMovement(pHowMovement)
 {
-    m_current_position.y+=0.1f;
+    mCurrentPosition.y += 0.1f;
 
-    if(how_movement==KindMovement::LEFT_RUN||how_movement==KindMovement::STANDING)
-        m_right_dir_reversal=false;
-    else
-        m_right_dir_reversal=true;
+    if (pHowMovement == KindMovement::LeftRun || pHowMovement == KindMovement::Standing) {
+        mIsRightDirReversal = false;
+    } else {
+        mIsRightDirReversal = true;
+    }
 }
 
 ///-----------
-void CPhysicaltObject::update()
+void PhysicalObject::Update()
 {
-    m_previous_position=m_current_position;
+    mPreviousPosition = mCurrentPosition;
 
-    /// ZAPEWNIA PRAWIDLOWE DZIALANIE SYSTEMU OKRESLANIA KOLIZJI
-    if(m_in_bottom_collision)
-        m_previous_position.y-=s_correction_to_bottom_collision;
+    // Ensures correct operation of collision detection system
+    if (mIsInBottomCollision) {
+        mPreviousPosition.y -= sCorrectionToBottomCollision;
+    }
 
-    move();
+    Move();
 
-    if(m_jump)
-        makeJump();
+    if (mIsJump) {
+        MakeJump();
+    }
 
-    m_animator->update(m_current_position);
+    mAnimator->update(mCurrentPosition);
 }
 
 ///-----
-void CPhysicaltObject::updateForCollisionWithBlock(KindCollision how_collision ,CBlock* block)
+void PhysicalObject::UpdateForCollisionWithBlock(KindCollision pHowCollision, Block* pBlock)
 {
-    /// TUTAJ OKRESLAM WLASNIE FIZYKE GRY CZYLI REAGOWANIE NA BLOKI
-    switch(how_collision)
-    {
-        case KindCollision::TOP:
-        {
-            m_force=0.0f;
+    // Defines game physics: reactions to blocks
+    switch (pHowCollision) {
+        case KindCollision::Top: {
+            mForce = 0.0f;
             break;
         }
 
-        case KindCollision::BOTTOM:
-        {
-            if(block->isHit()||block->iamDead())
-                actOnMe(KindAction::HIT);
-            else
-            {
-                m_jump=false;
-                m_in_bottom_collision=true;
+        case KindCollision::Bottom: {
+            if (pBlock->IsHit() || pBlock->IsDead()) {
+                ActOnMe(KindAction::Hit);
+            } else {
+                mIsJump = false;
+                mIsInBottomCollision = true;
             }
 
             break;
         }
 
-        /// JEST TO OKRESLONE POD WROGOW
-        case KindCollision::RIGHT_SIDE:
-        {
-            m_right_dir_reversal=false;
-            m_kind_movement=KindMovement::LEFT_RUN;
+        // Defined for enemies
+        case KindCollision::RightSide: {
+            mIsRightDirReversal = false;
+            mKindMovement = KindMovement::LeftRun;
 
-            if(m_animations)
-                m_animations->play(CAnimations::L_MOVE,m_current_position);
-
-            break;
-        }
-
-        case KindCollision::LEFT_SIDE:
-        {
-            m_right_dir_reversal=true;
-            m_kind_movement=KindMovement::RIGHT_RUN;
-
-            if(m_animations)
-                m_animations->play(CAnimations::R_MOVE,m_current_position);
-
-            break;
-        }
-
-        case KindCollision::NONE:
-            {
-                return;
+            if (mAnimations) {
+                mAnimations->play(Animations::LeftMove, mCurrentPosition);
             }
+
+            break;
+        }
+
+        case KindCollision::LeftSide: {
+            mIsRightDirReversal = true;
+            mKindMovement = KindMovement::RightRun;
+
+            if (mAnimations) {
+                mAnimations->play(Animations::RightMove, mCurrentPosition);
+            }
+
+            break;
+        }
+
+        case KindCollision::None: {
+            return;
+        }
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pHowCollision);
 }
 
 ///---------------------------
-void CPhysicaltObject::physicGameWithBlock(map<KindCollision,CBlock*>& collisions,bool none_collision)
+void PhysicalObject::PhysicGameWithBlock(map<KindCollision, Block*>& pCollisions, bool pNoneCollision)
 {
-        if(!m_jump&&none_collision)
-        {
-            falling();
-            return;
+    if (!mIsJump && pNoneCollision) {
+        Falling();
+        return;
+    }
+
+    ///---------
+    if (pCollisions[KindCollision::RightSide]) {
+        UpdateForCollisionWithBlock(KindCollision::RightSide, pCollisions[KindCollision::RightSide]);
+    }
+
+    ///--------
+    if (pCollisions[KindCollision::LeftSide]) {
+        UpdateForCollisionWithBlock(KindCollision::LeftSide, pCollisions[KindCollision::LeftSide]);
+    }
+
+    ///----------
+    if (pCollisions[KindCollision::Top]) {
+        if (pCollisions[KindCollision::LeftSide] || pCollisions[KindCollision::RightSide]) {
+            // Check if still in this collision after correcting for side collisions
+            if (KindCollision::Top == this->HowCollision(*pCollisions[KindCollision::Top])) {
+                UpdateForCollisionWithBlock(KindCollision::Top, pCollisions[KindCollision::Top]);
+            }
+        } else {
+            UpdateForCollisionWithBlock(KindCollision::Top, pCollisions[KindCollision::Top]);
         }
+    }
 
-        ///---------
-        if(collisions[KindCollision::RIGHT_SIDE])
-            updateForCollisionWithBlock(KindCollision::RIGHT_SIDE,collisions[KindCollision::RIGHT_SIDE]);
-
-        ///--------
-        if(collisions[KindCollision::LEFT_SIDE])
-            updateForCollisionWithBlock(KindCollision::LEFT_SIDE,collisions[KindCollision::LEFT_SIDE]);
-
-        ///----------
-        if(collisions[KindCollision::TOP])
-            if(collisions[KindCollision::LEFT_SIDE]||collisions[KindCollision::RIGHT_SIDE])
-            {
-                /// SPRAWDZAM CZY DALEJ JESTEM W TEJ KOLIZJI PO SKORYGOWANIU JUZ DLA KOL BOCZNYCH
-                if(KindCollision::TOP==this->howCollision(*collisions[KindCollision::TOP]))
-                    updateForCollisionWithBlock(KindCollision::TOP,collisions[KindCollision::TOP]);
-            }else
-                updateForCollisionWithBlock(KindCollision::TOP,collisions[KindCollision::TOP]);
-
-        ///-----------------
-        if(collisions[KindCollision::BOTTOM])
-            if(collisions[KindCollision::LEFT_SIDE]||collisions[KindCollision::RIGHT_SIDE])
-            {
-                /// SPRAWDZAM CZY DALEJ JESTEM W TEJ KOLIZJI PO SKORYGOWANIU JUZ DLA KOL BOCZNYCH
-                if(KindCollision::BOTTOM==this->howCollision(*collisions[KindCollision::BOTTOM]))
-                    updateForCollisionWithBlock(KindCollision::BOTTOM,collisions[KindCollision::BOTTOM]);
-            }else
-                updateForCollisionWithBlock(KindCollision::BOTTOM,collisions[KindCollision::BOTTOM]);
+    ///-----------------
+    if (pCollisions[KindCollision::Bottom]) {
+        if (pCollisions[KindCollision::LeftSide] || pCollisions[KindCollision::RightSide]) {
+            // Check if still in this collision after correcting for side collisions
+            if (KindCollision::Bottom == this->HowCollision(*pCollisions[KindCollision::Bottom])) {
+                UpdateForCollisionWithBlock(KindCollision::Bottom, pCollisions[KindCollision::Bottom]);
+            }
+        } else {
+            UpdateForCollisionWithBlock(KindCollision::Bottom, pCollisions[KindCollision::Bottom]);
+        }
+    }
 }
 
 ///----------------------
-void CPhysicaltObject::move()
+void PhysicalObject::Move()
 {
-    switch(m_kind_movement)
-    {
-        case KindMovement::RIGHT_RUN: m_current_position.x+=m_value_acceleration;break;
-
-        case KindMovement::LEFT_RUN: m_current_position.x-=m_value_acceleration;break;
+    switch (mKindMovement) {
+        case KindMovement::RightRun: mCurrentPosition.x += mValueAcceleration; break;
+        case KindMovement::LeftRun: mCurrentPosition.x -= mValueAcceleration; break;
     }
 }
 
 ///--------------------------
-void CPhysicaltObject::makeJump()
+void PhysicalObject::MakeJump()
 {
-    m_force+=s_gravitation*CScen::getFrameTime();
-    m_current_position.y+=m_force*CScen::getFrameTime();
+    mForce += sGravitation * Scene::GetFrameTime();
+    mCurrentPosition.y += mForce * Scene::GetFrameTime();
 
-    isUnderMap();
+    CheckUnderMap();
 }
 
 ///-------------------------------
-void CPhysicaltObject::falling()
+void PhysicalObject::Falling()
 {
-    m_in_bottom_collision=false;
-    m_jump=true;
-    m_force=m_falling_force;
+    mIsInBottomCollision = false;
+    mIsJump = true;
+    mForce = mFallingForce;
 }
 
 ///-----------------------------
-void CPhysicaltObject::jump()
+void PhysicalObject::Jump()
 {
-    m_force=m_jump_force;
-    m_jump=true;
-    m_in_bottom_collision=false;
+    mForce = mJumpForce;
+    mIsJump = true;
+    mIsInBottomCollision = false;
 }
 
 ///--------------------
-void CPhysicaltObject::hop(float force)
+void PhysicalObject::Hop(float pForce)
 {
-    m_force=force;
-    m_jump=true;
-    m_in_bottom_collision=false;
+    mForce = pForce;
+    mIsJump = true;
+    mIsInBottomCollision = false;
 }

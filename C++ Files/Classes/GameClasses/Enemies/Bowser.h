@@ -3,197 +3,187 @@
 #include "../Blocks/Block.h"
 #include "../Shield.h"
 
-using namespace std;
+#include <memory>
+#include <vector>
 
-class CBowser:public CPhysicaltObject,public CShield
-{
-    class CBarse:public CStaticBlock
-    {
-        const bool m_go_up;
-        const float m_move_speed=4.0f;
+class Bowser : public PhysicalObject, public Shield {
+    class Barse : public StaticBlock {
+        const bool mGoUp;
+        const float mMoveSpeed = 4.0f;
 
-        bool m_active;
+        bool mActive;
 
     public:
 
-        CBarse(sf::Vector2f,bool,bool);
-        ~CBarse(){}
+        Barse(sf::Vector2f, bool, bool);
+        ~Barse() {}
 
-        void update()override;
-        void active(){m_active=true;}
+        void Update() override;
+        void Activate() { mActive = true; }
     };
 
     ///------
-    class CPrincess:public CGameObject
-    {
-        class CBotMario:public CPhysicaltObject
-        {
-            bool m_iam_blocking=false;
-            bool m_change_animation=false;
+    class Princess : public GameObject {
+        class BotMario : public PhysicalObject {
+            bool mIsBlocking = false;
+            bool mChangeAnimation = false;
 
-            void updateForCollisionWithBlock(KindCollision, CBlock*)override;
+            void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
         public:
 
-            CBotMario(sf::Vector2f);
-            ~CBotMario(){}
+            BotMario(sf::Vector2f);
+            ~BotMario() {}
 
-            void actOnMe(KindAction)override{}
-            void actOnObject(CGameObject*,KindCollision)override{}
+            void ActOnMe(KindAction) override {}
+            void ActOnObject(GameObject*, KindCollision) override {}
 
-            void update()override;
+            void Update() override;
 
-            void falling()override;
+            void Falling() override;
 
-            void stop();
+            void Stop();
 
-        }* m_bot_mario=nullptr;
+        }* mBotMario = nullptr;
 
-        const string m_message_to_mario="THANKS MARIO !!!";
-        const float m_when_show_message=1.0f;
-        const float m_when_state_win_game = 3.0f;
-        const float m_stop_mario_position=50;
-        
-        float m_timer;
-        bool m_bot_mario_stoped=false;
+        const std::string mMessageToMario = "THANKS MARIO !!!";
+        const float mWhenShowMessage = 1.0f;
+        const float mWhenStateWinGame = 3.0f;
+        const float mStopMarioPosition = 50;
 
-        unique_ptr<sf::Text>m_text;
+        float mTimer;
+        bool mBotMarioStopped = false;
+
+        std::unique_ptr<sf::Text> mText;
 
     public:
 
-    CPrincess(sf::Vector2f);
-    ~CPrincess(){}
+        Princess(sf::Vector2f);
+        ~Princess() {}
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&)override;
+        void Update() override;
+        void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
-    void actOnMe(KindAction)override{}
-    void actOnObject(CGameObject*,KindCollision)override{}
-
+        void ActOnMe(KindAction) override {}
+        void ActOnObject(GameObject*, KindCollision) override {}
     };
 
     ///-----
-    class CCreatorEnemies
-    {
-        float m_when_create_enemie=0;
-        int m_last_rand_tile=-1;
+    class CreatorEnemies {
+        float mWhenCreateEnemy = 0;
+        int mLastRandTile = -1;
 
-        const int m_number_tiles;
-        const int m_first_tile_position;
-        const float m_creating_speed=0.5f;
+        const int mNumberTiles;
+        const int mFirstTilePosition;
+        const float mCreatingSpeed = 0.5f;
 
-        inline void setWhenNextEnemy();
+        inline void SetWhenNextEnemy();
 
     public:
 
-        CCreatorEnemies(int,int);
-        CPhysicaltObject *getCreatedEnemy();
-
+        CreatorEnemies(int, int);
+        PhysicalObject* GetCreatedEnemy();
     };
 
 ///------------------------------------///
 
-    enum MyKindsAnimations
-    {
+    enum MyKindsAnimations {
         R_CHANGING_TO_REVERSAL,
         L_CHANGING_TO_REVERSAL,
 
-        R_BASIC_FIRE_BALL_ATACK,
-        L_BASIC_FIRE_BALL_ATACK,
+        R_BASIC_FIRE_BALL_ATTACK,
+        L_BASIC_FIRE_BALL_ATTACK,
 
-        R_SPECIAL_CIRCLE_FIRE_BALL_ATACK,
-        L_SPECIAL_CIRCLE_FIRE_BALL_ATACK,
+        R_SPECIAL_CIRCLE_FIRE_BALL_ATTACK,
+        L_SPECIAL_CIRCLE_FIRE_BALL_ATTACK,
 
-        R_SPECIAL_SIN_FIRE_BALL_ATACK,
-        L_SPECIAL_SIN_FIRE_BALL_ATACK,
+        R_SPECIAL_SIN_FIRE_BALL_ATTACK,
+        L_SPECIAL_SIN_FIRE_BALL_ATTACK,
     };
 
     ///---
-    enum class KindsAtacks
-    {
-        RANDOM=-1,
+    enum class KindsAttacks {
+        RANDOM = -1,
         LEAP_ON_MARIO,
-        SPECIAL_CIRCLE_FIREBALL_ATACK,
-        SPECIAL_SIN_FIREBALL_ATACK,
-        BASIC_FIREBALL_ATACK,
+        SPECIAL_CIRCLE_FIREBALL_ATTACK,
+        SPECIAL_SIN_FIREBALL_ATTACK,
+        BASIC_FIREBALL_ATTACK,
         CHARGE,
         ENEMIES_RAID
     };
 
     ///----
-    enum class KindBullet
-    {
+    enum class KindBullet {
         BASIC,
         SIN_MOVEMENT,
         CIRCLE_MOVEMENT
     };
 
-    ///ATRYBUTY
+    ///ATTRIBUTES
 
-    static bool s_instance;
+    static bool sInstance;
 
-    void (CBowser::*m_atack)()=nullptr;
+    void (Bowser::*mAttack)() = nullptr;
 
-    CBarse * m_barse_to_princes=nullptr;
-    unique_ptr<CCreatorEnemies> m_creator_enemies;
+    Barse* mBarseToPrincess = nullptr;
+    std::unique_ptr<CreatorEnemies> mCreatorEnemies;
 
-    bool m_changing_reversal=false;
-    bool m_enable=false;
-    bool m_shoot=false;
-    bool m_attack_interrupted=false;
-    bool m_block_changing_reversal=false;
+    bool mChangingReversal = false;
+    bool mEnable = false;
+    bool mShoot = false;
+    bool mAttackInterrupted = false;
+    bool mBlockChangingReversal = false;
 
-    const sf::Vector2f m_princess_position;
-    
-    const float m_my_scal=CGameObject::m_scale_to_tile*1.3f;
-    const float m_where_barse;
-    const float m_shooting_speed=5.0f;
-    const float m_basic_speed=1.0f;
-    const float m_raid_lenght=350;
-    const float m_left_barse_pos;
-    const float m_right_barse_pos;
-    const float m_enemies_raid_lenght_attack=4.0f;
-    const float m_fireball_sin_lenght_attack=6.0f;
+    const sf::Vector2f mPrincessPosition;
 
-    const int m_damage_value=250;
+    const float mMyScale = GameObject::kScaleToTile * 1.3f;
+    const float mWhereBarse;
+    const float mShootingSpeed = 5.0f;
+    const float mBasicSpeed = 1.0f;
+    const float mRaidLength = 350;
+    const float mLeftBarsePos;
+    const float mRightBarsePos;
+    const float mEnemiesRaidLengthAttack = 4.0f;
+    const float mFireballSinLengthAttack = 6.0f;
 
-    float m_timer=0.0f;
-    float m_when_atack;
+    const int mDamageValue = 250;
 
-    /// ATRYBUTY DO OBSLUGI SKOKU
-    sf::Vector2f m_my_pos_before_jump;
-    float m_second_zero_place;
-    float m_A_coefficient;
-    float m_X_coordinate;
+    float mTimer = 0.0f;
+    float mWhenAttack;
 
-    ///---METODY
-    inline void createAnimations();
-    inline void changeReversal();
-    inline void setTrapForMario();
+    /// Attributes for jump handling
+    sf::Vector2f mMyPosBeforeJump;
+    float mSecondZeroPlace;
+    float mACoefficient;
+    float mXCoordinate;
 
-    inline void setAtack(KindsAtacks= KindsAtacks::RANDOM);
-    inline void setWhenAtack();
-    inline void shoot(const vector<int>,int,KindBullet);
+    ///---Methods
+    inline void CreateAnimations();
+    inline void ChangeReversal();
+    inline void SetTrapForMario();
 
-    void makeJump()override;
+    inline void SetAttack(KindsAttacks = KindsAttacks::RANDOM);
+    inline void SetWhenAttack();
+    inline void Shoot(const std::vector<int>, int, KindBullet);
 
-    ///---METODY ATAKU
-    void basicFireBallAtack();
-    void specialCircleFireBallAtack();
-    void specialSinFireBallAtack();
-    void leapOnMario();
-    void charge();
-    void enemiesRaid();
+    void MakeJump() override;
+
+    ///---Attack methods
+    void BasicFireBallAttack();
+    void SpecialCircleFireBallAttack();
+    void SpecialSinFireBallAttack();
+    void LeapOnMario();
+    void Charge();
+    void EnemiesRaid();
 
 public:
 
-    CBowser(sf::Vector2f);
-    ~CBowser();
+    Bowser(sf::Vector2f);
+    ~Bowser();
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&)override;
+    void Update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 };
-

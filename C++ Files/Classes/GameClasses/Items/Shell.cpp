@@ -1,82 +1,83 @@
 #include "Shell.h"
 
-CShell::CShell(sf::Vector2f pos)
-:CPhysicaltObject(new CAnimations,Parentage::ITEM,{pos.x,pos.y-CPhysicaltObject::s_correction_to_bottom_collision},KindMovement::RIGHT_RUN)
+#include <vector>
+
+Shell::Shell(sf::Vector2f pPos)
+    : PhysicalObject(new Animations, Parentage::Item, {pPos.x, pPos.y - PhysicalObject::sCorrectionToBottomCollision}, KindMovement::RightRun)
 {
-    m_value_acceleration=2.0f;
+    mValueAcceleration = 2.0f;
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back(sf::IntRect(65,48,30,26));
-    m_frame_animation.push_back(sf::IntRect(97,48,32,26));
-    m_frame_animation.push_back(sf::IntRect(128,48,30,26));
-    m_frame_animation.push_back(sf::IntRect(159,48,32,26));
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back(sf::IntRect(65, 48, 30, 26));
+    frameAnimation.push_back(sf::IntRect(97, 48, 32, 26));
+    frameAnimation.push_back(sf::IntRect(128, 48, 30, 26));
+    frameAnimation.push_back(sf::IntRect(159, 48, 32, 26));
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,1.5f,m_scale_to_tile);
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,1.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 1.5f, kScaleToTile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 1.5f, kScaleToTile);
 
-    m_animations->setPosition(m_current_position);
+    mAnimations->SetPosition(mCurrentPosition);
 }
 
 ///------
-void CShell::update()
+void Shell::Update()
 {
-    if(m_active)
-        CPhysicaltObject::update();
+    if (mActive)
+        PhysicalObject::Update();
     else
     {
-        if(m_jump)
+        if (mIsJump)
         {
-            makeJump();
-            m_animator->setPosition(m_current_position);
+            MakeJump();
+            mAnimator->SetPosition(mCurrentPosition);
         }
     }
 }
 
-
 ///----------
-void CShell::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Shell::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    switch(obj->getParentage())
+    switch (pObject->GetParentage())
     {
-        case Parentage::MARIO:
+        case Parentage::Mario:
+        {
+            if (pCollision == KindCollision::Bottom)
             {
-                if(how_collision==KindCollision::BOTTOM)
-                {
-                    m_active=!m_active;
-                    this->corectObjectPositionOnMe(*obj,how_collision);
-                    obj->actOnMe(KindAction::HOP);
-                }else
-                    if(m_active)
-                        obj->actOnMe(KindAction::HIT);
+                mActive = !mActive;
+                this->CorrectObjectPositionOnMe(*pObject, pCollision);
+                pObject->ActOnMe(KindAction::Hop);
+            } else
+                if (mActive)
+                    pObject->ActOnMe(KindAction::Hit);
 
-                break;
-            }
-        case Parentage::ITEM:
+            break;
+        }
+        case Parentage::Item:
+        {
+            if (mActive)
             {
-                if(m_active)
-                {
-                    CShell * shell=dynamic_cast<CShell*>(obj);
+                Shell* shell = dynamic_cast<Shell*>(pObject);
 
-                    if(shell)
-                        shell->actOnMe(KindAction::HIT);
-                }
+                if (shell)
+                    shell->ActOnMe(KindAction::Hit);
+            }
 
-                break;
-            }
-        case Parentage::ENEMY:
-            {
-                if(m_active)
-                    obj->actOnMe(KindAction::HIT);
-                break;
-            }
+            break;
+        }
+        case Parentage::Enemy:
+        {
+            if (mActive)
+                pObject->ActOnMe(KindAction::Hit);
+            break;
+        }
     }
 }
 
 ///---------
-void CShell::actOnMe(KindAction which_action)
+void Shell::ActOnMe(KindAction pAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    if(which_action==KindAction::HIT)
-        this->createBeatsObjSpecialEfect();
+    if (pAction == KindAction::Hit)
+        this->CreateBeatObjectEffect();
 }

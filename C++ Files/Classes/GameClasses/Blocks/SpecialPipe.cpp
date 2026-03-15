@@ -5,328 +5,331 @@
 
 #include "../Mario.h"
 
-vector<CEnteringPipe*> CEnteringPipe::s_activate_entering_pipes;
+#include <algorithm>
+#include <string>
 
-///-----------CEnteringPipe---------------///
-CEnteringPipe::CEnteringPipe(const pair<sf::Vector2f,CPipe::KindPipe> &data_pipe,string underground_lvl_name,CPipe* return_pipe)
-:CPipe(data_pipe.first,data_pipe.second)
-,m_underground_lvl_name(underground_lvl_name)
-,m_return_pipe(return_pipe)
+std::vector<EnteringPipe*> EnteringPipe::sActivateEnteringPipes;
+
+///-----------EnteringPipe---------------///
+EnteringPipe::EnteringPipe(const std::pair<sf::Vector2f, Pipe::KindPipe>& pDataPipe, std::string pUndergroundLvlName, Pipe* pReturnPipe)
+    : Pipe(pDataPipe.first, pDataPipe.second)
+    , mUndergroundLvlName(pUndergroundLvlName)
+    , mReturnPipe(pReturnPipe)
 {
 
 }
 
 ///----
-CEnteringPipe::CEnteringPipe(const pair<sf::Vector2f,CPipe::KindPipe> &data_pipe,string underground_lvl_name)
-:CPipe(data_pipe.first,data_pipe.second)
-,m_underground_lvl_name(underground_lvl_name)
+EnteringPipe::EnteringPipe(const std::pair<sf::Vector2f, Pipe::KindPipe>& pDataPipe, std::string pUndergroundLvlName)
+    : Pipe(pDataPipe.first, pDataPipe.second)
+    , mUndergroundLvlName(pUndergroundLvlName)
 {
-    m_return_pipe=this;
+    mReturnPipe = this;
 }
 
 ///-----
-void CEnteringPipe::update()
+void EnteringPipe::Update()
 {
-    if(!m_active)
+    if (!mActive)
         return;
 
-    CGameScen &game_scen=CMarioGame::instance().getScen<CGameScen>();
+    GameScene& gameScene = MarioGame::Instance().GetScene<GameScene>();
 
-    /// MUSZE TAK BO INACZEJ NIE DZIALA
-    const float entry_pos = m_current_position.y - getBounds().height;
-    
-    if(!game_scen.isMarioDead())
-    if(game_scen.m_mario->iAmCrouching())
-    if(game_scen.getMarioPosition().y> entry_pos&&
-       game_scen.getMarioPosition().x>=m_current_position.x-m_entering_range&&
-       game_scen.getMarioPosition().x<=m_current_position.x+m_entering_range)
-    if(game_scen.setGamePlayState(CGameScen::GamePlayStates::ENTERING_TO_PIPE))
+    /// MUST DO IT THIS WAY OTHERWISE IT DOESN'T WORK
+    const float entryPos = mCurrentPosition.y - GetBounds().height;
+
+    if (!gameScene.IsMarioDead())
+    if (gameScene.mMario->IsCrouching())
+    if (gameScene.GetMarioPosition().y > entryPos &&
+       gameScene.GetMarioPosition().x >= mCurrentPosition.x - mEnteringRange &&
+       gameScene.GetMarioPosition().x <= mCurrentPosition.x + mEnteringRange)
+    if (gameScene.SetGamePlayState(GameScene::GamePlayStates::EnteringToPipe))
     {
-        setEnteringToPipeAnimation(false);
-        s_activate_entering_pipes.push_back(this);
+        SetEnteringToPipeAnimation(false);
+        sActivateEnteringPipes.push_back(this);
     }
 }
 
 ///------
-void CEnteringPipe::setBeforeWorld()
+void EnteringPipe::SetBeforeWorld()
 {
-    CGameScen &game_scen=CMarioGame::instance().getScen<CGameScen>();
+    GameScene& gameScene = MarioGame::Instance().GetScene<GameScene>();
 
-    assert(game_scen.m_game_play_state==CGameScen::GamePlayStates::LEAVING_UNDERGROUND_WORLD_BY_PIPE);
+    assert(gameScene.mGamePlayState == GameScene::GamePlayStates::LeavingUndergroundWorldByPipe);
 
-    /// PRZYWRACAM DAWNE OBIEKTY NADRZEDNEGO POZIOMU I USUWAM TE Z OBECNEGO
+    /// RESTORE OLD OBJECTS FROM THE PARENT LEVEL AND REMOVE THOSE FROM THE CURRENT ONE
 
-    m_landscapes.swap(game_scen.m_landscapes);
-    m_landscapes.reset();
+    mLandscapes.swap(gameScene.mLandscapes);
+    mLandscapes.reset();
 
     ///------
-    m_blocks.swap(game_scen.m_blocks);
-    m_blocks.reset();
+    mBlocks.swap(gameScene.mBlocks);
+    mBlocks.reset();
 
     ///----
-    m_not_physical_objs.swap(game_scen.m_not_physical_objs);
-    m_not_physical_objs.reset();
+    mNotPhysicalObjs.swap(gameScene.mNotPhysicalObjs);
+    mNotPhysicalObjs.reset();
 
     ///----
-    m_physical_objs.swap(game_scen.m_physical_objs);
-    m_physical_objs.reset();
+    mPhysicalObjs.swap(gameScene.mPhysicalObjs);
+    mPhysicalObjs.reset();
 
     ///---
-    game_scen.m_background.setTexture(CMarioGame::s_texture_manager[m_background_lvl_name]);
-    game_scen.m_texture_background_name=m_background_lvl_name;
+    gameScene.mBackground.setTexture(MarioGame::sTextureManager[mBackgroundLvlName]);
+    gameScene.mTextureBackgroundName = mBackgroundLvlName;
 
-    ///- USTAWIAM WIDOK I GRANICE WIDOKU
-    float new_x_center;
+    ///- SET THE VIEW AND VIEW BOUNDARIES
+    float newXCenter;
 
-    if(m_return_pipe->getCurrentPosition().x>CMarioGame::s_size_window.x/2.0f)
-        new_x_center=m_return_pipe->getCurrentPosition().x;
+    if (mReturnPipe->GetCurrentPosition().x > MarioGame::sSizeWindow.x / 2.0f)
+        newXCenter = mReturnPipe->GetCurrentPosition().x;
     else
-        new_x_center=CMarioGame::s_size_window.x/2.0f;
+        newXCenter = MarioGame::sSizeWindow.x / 2.0f;
 
-    game_scen.m_view.setCenter(new_x_center,CMarioGame::s_size_window.y/2.0f);
-    game_scen.m_bounds_view.left=new_x_center-game_scen.m_bounds_view.width/2.0f;
-    game_scen.m_background.setPosition(new_x_center-CMarioGame::s_size_window.x/2.0f,0);
+    gameScene.mView.setCenter(newXCenter, MarioGame::sSizeWindow.y / 2.0f);
+    gameScene.mBoundsView.left = newXCenter - gameScene.mBoundsView.width / 2.0f;
+    gameScene.mBackground.setPosition(newXCenter - MarioGame::sSizeWindow.x / 2.0f, 0);
 
-    CGUI::setPositionMainLabels(new_x_center);
+    Gui::SetPositionMainLabels(newXCenter);
 
-    /// ROBIE TAK ZAMIAST METODA BO TAM JEST WARUNEK KTORY UNIEMOZLIWI ZMIANE STANU
-    game_scen.m_game_play_state=CGameScen::GamePlayStates::RETURN_TO_BEFORE_WORLD;
-    CMarioGame::s_music_manager.resume();
+    /// DOING IT THIS WAY INSTEAD OF USING THE METHOD BECAUSE THERE IS A CONDITION THAT WOULD PREVENT THE STATE CHANGE
+    gameScene.mGamePlayState = GameScene::GamePlayStates::ReturnToBeforeWorld;
+    MarioGame::sMusicManager.Resume();
 
-    setLeavingPipeAnimation();
+    SetLeavingPipeAnimation();
 
-    /// WAZNE USTAWIAM MOJA POZYCJE TAK BY BYLA WIDOCZNA W OKNIE 
-    /// BY MOC RUSOWAC ANIMACJE WYCHODZENIA. POZNIEJ PRZYWRACAM PIERWOTNA POZYCJE
-    if(m_return_pipe!=this&&!CMarioGame::instance().getScen<CGameScen>().isObjectVisible(getBounds()))
+    /// IMPORTANT: SET MY POSITION SO IT IS VISIBLE IN THE WINDOW
+    /// TO BE ABLE TO DRAW THE EXIT ANIMATION. LATER RESTORE THE ORIGINAL POSITION
+    if (mReturnPipe != this && !MarioGame::Instance().GetScene<GameScene>().IsObjectVisible(GetBounds()))
     {
-        m_current_position.x=m_return_pipe->getCurrentPosition().x;
-        m_current_position.y=0;
-        m_animator->setPosition(m_current_position);
+        mCurrentPosition.x = mReturnPipe->GetCurrentPosition().x;
+        mCurrentPosition.y = 0;
+        mAnimator->SetPosition(mCurrentPosition);
     }
 
-    /// BY KWIATEK NIE BYL RYSOWANY
-    m_return_pipe->resetFlower();
+    /// SO THE FLOWER IS NOT DRAWN
+    mReturnPipe->ResetFlower();
 }
 
 ///----
-void CEnteringPipe::setUndergroundLvl()
+void EnteringPipe::SetUndergroundLvl()
 {
-    CGameScen &game_scen=CMarioGame::instance().getScen<CGameScen>();
+    GameScene& gameScene = MarioGame::Instance().GetScene<GameScene>();
 
-    assert(game_scen.m_game_play_state==CGameScen::GamePlayStates::ENTERING_TO_PIPE);
+    assert(gameScene.mGamePlayState == GameScene::GamePlayStates::EnteringToPipe);
 
-    /// ZAPISUJE OBIEKTY GLOWNEGO POZIOMU
-    game_scen.m_landscapes.swap(m_landscapes);
-    game_scen.m_blocks.swap(m_blocks);
-    game_scen.m_not_physical_objs.swap(m_not_physical_objs);
-    game_scen.m_physical_objs.swap(m_physical_objs);
+    /// SAVE THE MAIN LEVEL OBJECTS
+    gameScene.mLandscapes.swap(mLandscapes);
+    gameScene.mBlocks.swap(mBlocks);
+    gameScene.mNotPhysicalObjs.swap(mNotPhysicalObjs);
+    gameScene.mPhysicalObjs.swap(mPhysicalObjs);
 
-    const float game_time = game_scen.m_game_time;
-    m_duration_scen = CGameScen::s_duration_scen;
-    m_background_lvl_name = game_scen.m_texture_background_name;
+    const float gameTime = gameScene.mGameTime;
+    mDurationScene = Scene::sDurationScene;
+    mBackgroundLvlName = gameScene.mTextureBackgroundName;
 
-    /// WCZYTUJE PODZIEMNY POZIOM I USTAWIAM NOWE DANE W GAMESCENIE
+    /// LOAD THE UNDERGROUND LEVEL AND SET NEW DATA IN THE GAME SCENE
 
-    string lvl_name=CMarioGame::instance().getCurrentLevelName()+"/";
+    std::string lvlName = MarioGame::Instance().GetCurrentLevelName() + "/";
 
-    for(auto pipe:s_activate_entering_pipes)
-        lvl_name+=(pipe->m_underground_lvl_name)+"/";
+    for (auto pPipe : sActivateEnteringPipes)
+        lvlName += (pPipe->mUndergroundLvlName) + "/";
 
-    CLoadingGameScen(lvl_name,this);/// TWORZE CHWILOWY OBIEKT BO CHCE BY MI TYLKO ZALADOWALO OBIEKTY
+    LoadingGameScene(lvlName, this);/// CREATE A TEMPORARY OBJECT BECAUSE I ONLY WANT IT TO LOAD THE OBJECTS
 
-    /// USTAWIAM RESZTE DANYCH
+    /// SET THE REMAINING DATA
 
-    CMarioGame::instance().getScen<CGameScen>().m_mario->setPosition({CScen::s_tile_size*2.5f,0});
-    CMarioGame::instance().getScen<CGameScen>().m_game_time=game_time;
+    MarioGame::Instance().GetScene<GameScene>().mMario->SetPosition({static_cast<float>(Scene::sTileSize) * 2.5f, 0});
+    MarioGame::Instance().GetScene<GameScene>().mGameTime = gameTime;
 
-    m_mario_entering_animation.reset();
+    mMarioEnteringAnimation.reset();
 }
 
 ///------
-void CEnteringPipe::reasumeGame()
+void EnteringPipe::ResumeGame()
 {
-    CGameScen &game_scen=CMarioGame::instance().getScen<CGameScen>();
+    GameScene& gameScene = MarioGame::Instance().GetScene<GameScene>();
 
-    assert(game_scen.m_game_play_state==CGameScen::GamePlayStates::RETURN_TO_BEFORE_WORLD);
+    assert(gameScene.mGamePlayState == GameScene::GamePlayStates::ReturnToBeforeWorld);
 
-    CGameScen::s_duration_scen=m_duration_scen;
+    Scene::sDurationScene = mDurationScene;
 
-    game_scen.m_mario.reset(new CMario({m_return_pipe->getCurrentPosition().x,m_return_pipe->getBounds().top}));
+    gameScene.mMario.reset(new Mario({mReturnPipe->GetCurrentPosition().x, mReturnPipe->GetBounds().top}));
 
-    game_scen.m_game_play_state=CGameScen::GamePlayStates::MAIN_GAME;
+    gameScene.mGamePlayState = GameScene::GamePlayStates::MainGame;
 
-    m_mario_entering_animation.reset();
+    mMarioEnteringAnimation.reset();
 
-    m_active=false;
+    mActive = false;
 
-    s_activate_entering_pipes.pop_back();
+    sActivateEnteringPipes.pop_back();
 
-    /// BY KWIATEK NIE UDERZYL W MARIA
-    m_return_pipe->resetFlower();
+    /// SO THE FLOWER DOESN'T HIT MARIO
+    mReturnPipe->ResetFlower();
 
-    /// USTAWAIAM MOJA POPRZEDNIA PIERWOTNA POZYCJE 
-    if(m_return_pipe!=this)
+    /// RESTORE MY PREVIOUS ORIGINAL POSITION
+    if (mReturnPipe != this)
     {
-        m_current_position=m_previous_position;
-        m_animator->setPosition(m_current_position);
+        mCurrentPosition = mPreviousPosition;
+        mAnimator->SetPosition(mCurrentPosition);
     }
 }
 
 ///-------
-void CEnteringPipe::setLeavingPipeAnimation()
+void EnteringPipe::SetLeavingPipeAnimation()
 {
-    if(CMario::getLevelMario()==CMario::LevelMario::BIG_MARIO)
-        m_mario_entering_animation.reset(CGUI::createSprite("Mario_right",{0,38,32,58},{0,0},CGameObject::m_scale_to_tile,true));
+    if (Mario::GetLevelMario() == Mario::LevelMario::BigMario)
+        mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_right", {0, 38, 32, 58}, {0, 0}, GameObject::kScaleToTile, true));
     else
-        m_mario_entering_animation.reset(CGUI::createSprite("Mario_right",{4,96,24,32},{0,0},CGameObject::m_scale_to_tile,true));
+        mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_right", {4, 96, 24, 32}, {0, 0}, GameObject::kScaleToTile, true));
 
-    m_mario_entering_animation->setPosition(m_return_pipe->getCurrentPosition().x,m_return_pipe->getBounds().top+m_mario_entering_animation->getGlobalBounds().height);
-    m_end_entering_animation=false;
-    m_up_entering_animation=true;
+    mMarioEnteringAnimation->setPosition(mReturnPipe->GetCurrentPosition().x, mReturnPipe->GetBounds().top + mMarioEnteringAnimation->getGlobalBounds().height);
+    mEndEnteringAnimation = false;
+    mUpEnteringAnimation = true;
 
-    m_end_animation_pos = m_return_pipe->getBounds().top;
+    mEndAnimationPos = mReturnPipe->GetBounds().top;
 
 }
 
 ///------
-void CEnteringPipe::setEnteringToPipeAnimation(bool up_animation)
+void EnteringPipe::SetEnteringToPipeAnimation(bool pUpAnimation)
 {
-    const CMario *mario=CMarioGame::instance().getScen<CGameScen>().m_mario.get();
+    const Mario* mario = MarioGame::Instance().GetScene<GameScene>().mMario.get();
 
-    const sf::Vector2f mario_pos=mario->getCurrentPosition();
-    const bool right_reversal_mario=mario->isInRightReversal();
+    const sf::Vector2f marioPos = mario->GetCurrentPosition();
+    const bool rightReversalMario = mario->IsInRightReversal();
 
-    if(CMario::getLevelMario()==CMario::LevelMario::BIG_MARIO)
-        if(!up_animation)
+    if (Mario::GetLevelMario() == Mario::LevelMario::BigMario)
+        if (!pUpAnimation)
         {
-            if(right_reversal_mario)
-                m_mario_entering_animation.reset(CGUI::createSprite("Mario_right",{192,50,32,46},mario_pos,CGameObject::m_scale_to_tile,true));
+            if (rightReversalMario)
+                mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_right", {192, 50, 32, 46}, marioPos, GameObject::kScaleToTile, true));
             else
-                m_mario_entering_animation.reset(CGUI::createSprite("Mario_left",{287,50,32,46},mario_pos,CGameObject::m_scale_to_tile,true));
-        }else
+                mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_left", {287, 50, 32, 46}, marioPos, GameObject::kScaleToTile, true));
+        }
+        else
         {
-            if(right_reversal_mario)
-                m_mario_entering_animation.reset(CGUI::createSprite("Mario_right",{0,38,32,58},mario_pos,CGameObject::m_scale_to_tile,true));
+            if (rightReversalMario)
+                mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_right", {0, 38, 32, 58}, marioPos, GameObject::kScaleToTile, true));
             else
-                m_mario_entering_animation.reset(CGUI::createSprite("Mario_left",{480,38,32,58},mario_pos,CGameObject::m_scale_to_tile,true));
+                mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_left", {480, 38, 32, 58}, marioPos, GameObject::kScaleToTile, true));
         }
     else
-        if(right_reversal_mario)
-            m_mario_entering_animation.reset(CGUI::createSprite("Mario_right",{4,96,24,32},mario_pos,CGameObject::m_scale_to_tile,true));
+        if (rightReversalMario)
+            mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_right", {4, 96, 24, 32}, marioPos, GameObject::kScaleToTile, true));
         else
-            m_mario_entering_animation.reset(CGUI::createSprite("Mario_left",{484,96,24,32},mario_pos,CGameObject::m_scale_to_tile,true));
+            mMarioEnteringAnimation.reset(Gui::CreateSprite("Mario_left", {484, 96, 24, 32}, marioPos, GameObject::kScaleToTile, true));
 
 
-    removeObject(CMarioGame::instance().getScen<CGameScen>().m_mario.get());
-    m_end_entering_animation=false;
-    m_up_entering_animation=up_animation;
+    RemoveObject(MarioGame::Instance().GetScene<GameScene>().mMario.get());
+    mEndEnteringAnimation = false;
+    mUpEnteringAnimation = pUpAnimation;
 
-    if(up_animation)
-        m_end_animation_pos=m_current_position.y-1;
+    if (pUpAnimation)
+        mEndAnimationPos = mCurrentPosition.y - 1;
     else
-        m_end_animation_pos=this->getBounds().top + 1;
+        mEndAnimationPos = this->GetBounds().top + 1;
 }
 
 ///------
-void CEnteringPipe::enteringAnimation()
+void EnteringPipe::EnteringAnimation()
 {
-    if(!m_mario_entering_animation||m_end_entering_animation)
+    if (!mMarioEnteringAnimation || mEndEnteringAnimation)
         return;
 
-    if(m_up_entering_animation)
+    if (mUpEnteringAnimation)
     {
-        if(m_mario_entering_animation->getPosition().y>m_end_animation_pos)
-            m_mario_entering_animation->move(0,-m_entering_speed);
+        if (mMarioEnteringAnimation->getPosition().y > mEndAnimationPos)
+            mMarioEnteringAnimation->move(0, -mEnteringSpeed);
         else
-            m_end_entering_animation=true;
-    }else
+            mEndEnteringAnimation = true;
+    }
+    else
     {
-        if(m_mario_entering_animation->getGlobalBounds().top<m_end_animation_pos)
-            m_mario_entering_animation->move(0,m_entering_speed);
+        if (mMarioEnteringAnimation->getGlobalBounds().top < mEndAnimationPos)
+            mMarioEnteringAnimation->move(0, mEnteringSpeed);
         else
-            m_end_entering_animation=true;
+            mEndEnteringAnimation = true;
     }
 }
 
 ///------
-CEnteringPipe* CEnteringPipe::getActivatePipe()
+EnteringPipe* EnteringPipe::GetActivatePipe()
 {
-    if(s_activate_entering_pipes.size()==0)
+    if (sActivateEnteringPipes.size() == 0)
         return nullptr;
 
-    return s_activate_entering_pipes[s_activate_entering_pipes.size()-1];
+    return sActivateEnteringPipes[sActivateEnteringPipes.size() - 1];
 }
 
 ///------
-void CEnteringPipe::resetActivatedPipes()
+void EnteringPipe::ResetActivatedPipes()
 {
-    for(auto activate_pipe:s_activate_entering_pipes)
+    for (auto pActivatePipe : sActivateEnteringPipes)
     {
-        auto &blocks_container=activate_pipe->m_blocks;
+        auto& blocksContainer = pActivatePipe->mBlocks;
 
-        /// JEST TO SYTUACJA GDY USUWAM W MOMENCIE WCHODZENIA DO RURY
-        /// WTEDY AKTYWUJE RURE ALE TAKA RURA NIE MA JESZCZE ZAPISANEGO POZIOMU
-        if(!blocks_container)
+        /// THIS IS THE SITUATION WHEN DELETING WHILE ENTERING THE PIPE
+        /// THE PIPE IS ACTIVATED BUT IT DOESN'T HAVE A SAVED LEVEL YET
+        if (!blocksContainer)
             continue;
 
-        auto my_pos_in_container=find_if(blocks_container->begin(),blocks_container->end(),
-                             [activate_pipe](const unique_ptr<CBlock>& block){return block.get()==activate_pipe;});
+        auto myPosInContainer = find_if(blocksContainer->begin(), blocksContainer->end(),
+                             [pActivatePipe](const std::unique_ptr<Block>& pBlock) { return pBlock.get() == pActivatePipe; });
 
-        /// BARDZO WAZNE BO ZAPOBIEGA PODWOJNEMU USUNIECIU
-        my_pos_in_container->release();
-        delete activate_pipe;/// USUWAJAC RURE USUWAM ZAPISANY W NIEJ POZIOM!!!
+        /// VERY IMPORTANT BECAUSE IT PREVENTS DOUBLE DELETION
+        myPosInContainer->release();
+        delete pActivatePipe;/// DELETING THE PIPE ALSO DELETES THE LEVEL SAVED IN IT!!!
     }
 
-    s_activate_entering_pipes.clear();
+    sActivateEnteringPipes.clear();
 }
 
 ///------
-void CEnteringPipe::draw(const unique_ptr<sf::RenderWindow>& window)
+void EnteringPipe::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    if(m_mario_entering_animation)
+    if (mMarioEnteringAnimation)
     {
-        window->draw(*m_mario_entering_animation);
+        pWindow->draw(*mMarioEnteringAnimation);
 
-        /// MUSZE NADRYSOWYWAC RURE NA ANIMACJE
-        if(m_return_pipe!=this&&CMarioGame::instance().getScen<CGameScen>().m_game_play_state==CGameScen::GamePlayStates::RETURN_TO_BEFORE_WORLD)
-            m_return_pipe->draw(window);
+        /// MUST DRAW THE PIPE OVER THE ANIMATION
+        if (mReturnPipe != this && MarioGame::Instance().GetScene<GameScene>().mGamePlayState == GameScene::GamePlayStates::ReturnToBeforeWorld)
+            mReturnPipe->Draw(pWindow);
     }
 
-    m_animator->draw(window);
+    mAnimator->Draw(pWindow);
 }
 
-///-----------CReturnPipe---------------///
-CReturnPipe::CReturnPipe(sf::Vector2f pos)
-:CStaticBlock({187,366,64,128},{pos.x-CScen::s_tile_size/2.0f,pos.y})
+///-----------ReturnPipe---------------///
+ReturnPipe::ReturnPipe(sf::Vector2f pPos)
+    : StaticBlock({187, 366, 64, 128}, {pPos.x - static_cast<float>(Scene::sTileSize) / 2.0f, pPos.y})
 {
 }
 
 ///-----
-void CReturnPipe::update()
+void ReturnPipe::Update()
 {
-    CGameScen &game_scen=CMarioGame::instance().getScen<CGameScen>();
+    GameScene& gameScene = MarioGame::Instance().GetScene<GameScene>();
 
-    if(CEnteringPipe::getActivatePipe())
-    if(!game_scen.isMarioDead())
-    if(game_scen.m_mario->isJumping())
-    if(game_scen.m_mario->getBounds().top-1<m_current_position.y&&
-       game_scen.getMarioPosition().x>=m_current_position.x-m_entering_range&&
-       game_scen.getMarioPosition().x<=m_current_position.x+m_entering_range)
-    if(game_scen.setGamePlayState(CGameScen::GamePlayStates::LEAVING_UNDERGROUND_WORLD_BY_PIPE))
+    if (EnteringPipe::GetActivatePipe())
+    if (!gameScene.IsMarioDead())
+    if (gameScene.mMario->IsJumping())
+    if (gameScene.mMario->GetBounds().top - 1 < mCurrentPosition.y &&
+       gameScene.GetMarioPosition().x >= mCurrentPosition.x - mEnteringRange &&
+       gameScene.GetMarioPosition().x <= mCurrentPosition.x + mEnteringRange)
+    if (gameScene.SetGamePlayState(GameScene::GamePlayStates::LeavingUndergroundWorldByPipe))
     {
-        /// UZYWAM MECHANIZMU ANIMACJI Z WCHODZACEJ RURY
-        CEnteringPipe::getActivatePipe()->setEnteringToPipeAnimation(true);
+        /// USING THE ANIMATION MECHANISM FROM THE ENTERING PIPE
+        EnteringPipe::GetActivatePipe()->SetEnteringToPipeAnimation(true);
     }
 }
 
 ///--------
-void CReturnPipe::draw(const unique_ptr<sf::RenderWindow>&window)
+void ReturnPipe::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    if(CEnteringPipe::getActivatePipe())/// UZYWAM MECHANIZMU ANIMACJI Z WCHODZACEJ RURY, TUTAJ TYLKO RYSUJE
-    if(CEnteringPipe::getActivatePipe()->m_mario_entering_animation)
-        window->draw(*(CEnteringPipe::getActivatePipe()->m_mario_entering_animation));
+    if (EnteringPipe::GetActivatePipe())/// USING THE ANIMATION MECHANISM FROM THE ENTERING PIPE, HERE ONLY DRAWING
+    if (EnteringPipe::GetActivatePipe()->mMarioEnteringAnimation)
+        pWindow->draw(*(EnteringPipe::GetActivatePipe()->mMarioEnteringAnimation));
 
-    m_animator->draw(window);
+    mAnimator->Draw(pWindow);
 }
-
-

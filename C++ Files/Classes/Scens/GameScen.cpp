@@ -13,184 +13,186 @@
 #include "../MarioGame.h"
 #include "../GUIClasses/SpecialEffects.h"
 
-int CGameScen::m_points=0;
+#include <algorithm>
+#include <functional>
+#include <string>
+
+int GameScene::mPoints = 0;
 
 ///------------------
-CGameScen::CGameScen(int lvl_time,string music_name,string bcg_name,shared_ptr<std::vector<CLandScape>> landscapes,shared_ptr<std::list<unique_ptr<CBlock>>> blocks,
-shared_ptr<std::list<unique_ptr<CPhysicaltObject>>>physical_objs,shared_ptr<std::list<unique_ptr<CGameObject>>>not_physical_objs)
-:
-CScen(bcg_name)
-,m_view(sf::FloatRect(0,0,CMarioGame::s_size_window.x,CMarioGame::s_size_window.y))
-,m_my_removed_objects(CGameObject::getRemovedObjects())
-,m_my_new_objects(CGameObject::getNewObjects())
-,m_when_activate_warning(lvl_time/4.0f)
-,m_game_time(lvl_time)
-,m_mario(new CMario(sf::Vector2f(s_tile_size*2.5f,CMarioGame::s_size_window.y-(s_tile_size*2))))
-,m_texture_background_name(bcg_name)
+GameScene::GameScene(int pLevelTime, std::string pMusicName, std::string pBackgroundName,
+    std::shared_ptr<std::vector<Landscape>> pLandscapes,
+    std::shared_ptr<std::list<std::unique_ptr<Block>>> pBlocks,
+    std::shared_ptr<std::list<std::unique_ptr<PhysicalObject>>> pPhysicalObjs,
+    std::shared_ptr<std::list<std::unique_ptr<GameObject>>> pNotPhysicalObjs)
+    : Scene(pBackgroundName)
+    , mView(sf::FloatRect(0, 0, MarioGame::sSizeWindow.x, MarioGame::sSizeWindow.y))
+    , mMyRemovedObjects(GameObject::GetRemovedObjects())
+    , mMyNewObjects(GameObject::GetNewObjects())
+    , mWhenActivateWarning(pLevelTime / 4.0f)
+    , mGameTime(pLevelTime)
+    , mMario(new Mario(sf::Vector2f(sTileSize * 2.5f, MarioGame::sSizeWindow.y - (sTileSize * 2))))
+    , mTextureBackgroundName(pBackgroundName)
 {
-    /// PRZYPISUJE STWORZONE OBIEKTY
-    m_landscapes=landscapes;
-    m_blocks=blocks;
-    m_physical_objs=physical_objs;
-    m_not_physical_objs=not_physical_objs;
+    /// ASSIGN CREATED OBJECTS
+    mLandscapes = pLandscapes;
+    mBlocks = pBlocks;
+    mPhysicalObjs = pPhysicalObjs;
+    mNotPhysicalObjs = pNotPhysicalObjs;
 
-    ///USTAWIAM GRANICE WIDOKU
-    //m_view.zoom(2);
-    m_bounds_view.left-=static_cast<int>(s_tile_size*2);
-    m_bounds_view.top-=static_cast<int>(s_tile_size*10);
-    m_bounds_view.width=CMarioGame::s_size_window.x+s_tile_size*4;
-    m_bounds_view.height=CMarioGame::s_size_window.y+s_tile_size*20;
+    /// SET VIEW BOUNDS
+    mBoundsView.left -= static_cast<int>(sTileSize * 2);
+    mBoundsView.top -= static_cast<int>(sTileSize * 10);
+    mBoundsView.width = MarioGame::sSizeWindow.x + sTileSize * 4;
+    mBoundsView.height = MarioGame::sSizeWindow.y + sTileSize * 20;
 
-    CMarioGame::s_music_manager.play(music_name);
+    MarioGame::sMusicManager.play(pMusicName);
 
-    updateNewGameObjects();/// DODA OBIEKTY DO KONTENEROW
+    UpdateNewGameObjects();
 }
 
 ///------
-CGameScen::~CGameScen()
+GameScene::~GameScene()
 {
-    /// DESTRUKTOR WYKONUJE SIE PO STWORZENIU LOADINGSCEN
-    for(auto obj:m_my_removed_objects)delete obj;
-        m_my_removed_objects.clear();
+    for (auto obj : mMyRemovedObjects) delete obj;
+        mMyRemovedObjects.clear();
 
-    CGUI::setPositionMainLabels(CMarioGame::s_size_window.x/2.0f);
-    CGUI::resetGuiObjects();
-    CGUI::setVisibleMainLables(true);
+    Gui::SetPositionMainLabels(MarioGame::sSizeWindow.x / 2.0f);
+    Gui::ResetGuiObjects();
+    Gui::SetVisibleMainLabels(true);
 
-    CMarioGame::instance().resetView();
+    MarioGame::Instance().ResetView();
 
-    CMarioGame::s_sound_manager.stop();
+    MarioGame::sSoundManager.stop();
 }
 
 ///------
-void CGameScen::setGameState(GameStates state)
+void GameScene::SetGameState(GameStates pState)
 {
-    m_game_state=state;
+    mGameState = pState;
 
-    switch(state)
+    switch (pState)
     {
     ///----
-    case GameStates::GAME_OVER:
+    case GameStates::GameOver:
     {
-        setTimer(m_gameover_length_time);
+        SetTimer(mGameoverLengthTime);
 
-        CMarioGame::s_sound_manager.play("game_over");
-        this->createExtinguishingEfect("GAME OVER");
+        MarioGame::sSoundManager.play("game_over");
+        this->CreateExtinguishingEffect("GAME OVER");
 
         break;
     }
 
     ///----
-    case GameStates::WIN_GAME:
+    case GameStates::WinGame:
         {
-            setTimer(m_win_game_length_time);
+            SetTimer(mWinGameLengthTime);
 
-            CMarioGame::s_music_manager.resetAllMusic();
-            this->createExtinguishingEfect("YOU WIN !!!");
-            CMario::resetLvlMario();
+            MarioGame::sMusicManager.resetAllMusic();
+            this->CreateExtinguishingEffect("YOU WIN !!!");
+            Mario::ResetLevelMario();
             break;
         }
     }
 }
 
 ///------------
-bool CGameScen::setGamePlayState(GamePlayStates state)
+bool GameScene::SetGamePlayState(GamePlayStates pState)
 {
-    if(isMarioDead())
+    if (IsMarioDead())
         return false;
 
-    if(m_game_play_state==GamePlayStates::LVL_COMPLETED)
+    if (mGamePlayState == GamePlayStates::LevelCompleted)
         return false;
 
-    if(m_game_play_state==GamePlayStates::BOWSER_DEFEAT)
+    if (mGamePlayState == GamePlayStates::BowserDefeat)
         return false;
 
-    if(m_game_play_state==GamePlayStates::CHANGING_LVL_MARIO&&state!=GamePlayStates::MAIN_GAME)
+    if (mGamePlayState == GamePlayStates::ChangingLevelMario && pState != GamePlayStates::MainGame)
         return false;
 
     ///------------//
 
-    if(m_game_play_state==GamePlayStates::CHANGING_LVL_MARIO)
-    s_duration_scen-=m_mario->getHowLongChangingLvl();
+    if (mGamePlayState == GamePlayStates::ChangingLevelMario)
+        sDurationScene -= mMario->GetHowLongChangingLevel();
 
-    m_game_play_state=state;
+    mGamePlayState = pState;
 
-    switch(state)
+    switch (pState)
     {
     ///-----
-    case GamePlayStates::ENTERING_TO_PIPE:
+    case GamePlayStates::EnteringToPipe:
     {
-        setTimer(m_entering_to_pipe_length_time);
-        CMarioGame::s_music_manager.pause();
-        CMarioGame::s_sound_manager.play("pipe");
+        SetTimer(mEnteringToPipeLengthTime);
+        MarioGame::sMusicManager.pause();
+        MarioGame::sSoundManager.play("pipe");
 
         break;
     }
 
         ///-----
-    case GamePlayStates::LEAVING_UNDERGROUND_WORLD_BY_PIPE:
+    case GamePlayStates::LeavingUndergroundWorldByPipe:
     {
-        setTimer(m_entering_to_pipe_length_time);
-        CMarioGame::s_music_manager.stop();
-        CMarioGame::s_sound_manager.play("pipe");
+        SetTimer(mEnteringToPipeLengthTime);
+        MarioGame::sMusicManager.stop();
+        MarioGame::sSoundManager.play("pipe");
 
         break;
     }
 
     ///-----
-    case GamePlayStates::MARIO_DEAD:
+    case GamePlayStates::MarioDead:
     {
-        CMario::createDeathAnimation(m_mario->getCurrentPosition());
+        Mario::CreateDeathAnimation(mMario->GetCurrentPosition());
 
-        setTimer(m_mario_dead_length_time);
-        CMarioGame::s_music_manager.resetAllMusic();
-        CMarioGame::s_sound_manager.play("mario_die");
+        SetTimer(mMarioDeadLengthTime);
+        MarioGame::sMusicManager.resetAllMusic();
+        MarioGame::sSoundManager.play("mario_die");
 
         break;
     }
 
     ///----
-    case GamePlayStates::BOWSER_DEFEAT:
+    case GamePlayStates::BowserDefeat:
     {
-        setTimer(m_bowser_defeat_length_time);
-        CMarioGame::s_music_manager.resetAllMusic();
+        SetTimer(mBowserDefeatLengthTime);
+        MarioGame::sMusicManager.resetAllMusic();
 
-        m_bowser_is_dying=true;
+        mBowserIsDying = true;
         break;
     }
 
     ///---
-    case GamePlayStates::FIGHT_WITH_BOWSER:
+    case GamePlayStates::FightWithBowser:
     {
-        /// WAZNE BO POZWALA NA UPDATE WSZYSTKICH OBIEKTOW NAWET JAK NIE SA WIDOCZNE W OKNNIE
-        /// A W WALCE Z BOSEM NA TYM MI ZLAERZY
-        setDoubleBoundsView();
-        CGUI::setVisibleMainLables(false);
+        SetDoubleBoundsView();
+        Gui::SetVisibleMainLabels(false);
 
         break;
     }
 
     ///-----
-    case GamePlayStates::WARNING:
+    case GamePlayStates::Warning:
     {
-        CMarioGame::s_music_manager.pause();
-        CMarioGame::s_sound_manager.play("warning");
-        setTimer(m_warning_length_time);
+        MarioGame::sMusicManager.pause();
+        MarioGame::sSoundManager.play("warning");
+        SetTimer(mWarningLengthTime);
 
-        m_before_warning=false;
+        mBeforeWarning = false;
 
         break;
     }
 
     ///----
-    case GamePlayStates::LVL_COMPLETED:
+    case GamePlayStates::LevelCompleted:
     {
-        CMarioGame::s_music_manager.resetAllMusic();
-        CMarioGame::s_sound_manager.play("stage_clear");
-        CMarioGame::s_sound_manager.play("flagpole");
+        MarioGame::sMusicManager.resetAllMusic();
+        MarioGame::sSoundManager.play("stage_clear");
+        MarioGame::sSoundManager.play("flagpole");
 
-        CMario::resetLvlMario();
-        CMario::resetLivesMario();
+        Mario::ResetLevelMario();
+        Mario::ResetLivesMario();
 
         break;
     }
@@ -201,184 +203,184 @@ bool CGameScen::setGamePlayState(GamePlayStates state)
 }
 
 ///----------------------
-void CGameScen::update()
+void GameScene::Update()
 {
-    switch(m_game_state)
+    switch (mGameState)
     {
 
     ///--------------------------
-    case GameStates::GAMEPLAY:
+    case GameStates::Gameplay:
     {
-        switch(m_game_play_state)
+        switch (mGamePlayState)
         {
         ///------
-        case GamePlayStates::MAIN_GAME:
+        case GamePlayStates::MainGame:
         {
-            updateGameTime();
+            UpdateGameTime();
 
-            gameUpdate();
+            GameUpdate();
 
-            if(m_before_warning)
+            if (mBeforeWarning)
             {
-                if(m_game_time<=m_when_activate_warning)
-                    CGameScen::setGamePlayState(GamePlayStates::WARNING);
+                if (mGameTime <= mWhenActivateWarning)
+                    GameScene::SetGamePlayState(GamePlayStates::Warning);
             }
-            else if(m_game_time<=0)
+            else if (mGameTime <= 0)
             {
-                if(setGamePlayState(CGameScen::GamePlayStates::MARIO_DEAD))
-                    m_mario.reset();
+                if (SetGamePlayState(GameScene::GamePlayStates::MarioDead))
+                    mMario.reset();
             }
 
             break;
         }
 
         ///-----
-        case GamePlayStates::WARNING:
+        case GamePlayStates::Warning:
         {
-            updateGameTime();
+            UpdateGameTime();
 
-            gameUpdate();
+            GameUpdate();
 
-            if(m_game_play_state==GamePlayStates::WARNING)
+            if (mGamePlayState == GamePlayStates::Warning)
             {
-                if(m_timer<CScen::s_duration_scen)
+                if (mTimer < Scene::sDurationScene)
                 {
-                    CMarioGame::s_music_manager.resume();
+                    MarioGame::sMusicManager.resume();
 
-                    setGamePlayState(GamePlayStates::MAIN_GAME);
+                    SetGamePlayState(GamePlayStates::MainGame);
                 }
 
-            }else
-                CMarioGame::s_music_manager.resume();
+            } else
+                MarioGame::sMusicManager.resume();
 
             break;
         }
 
         ///-----
-        case GamePlayStates::MARIO_DEAD:
+        case GamePlayStates::MarioDead:
         {
-            if(m_timer<CScen::s_duration_scen)
+            if (mTimer < Scene::sDurationScene)
             {
-                if(CMario::getLivesMario()<=0)
-                    CGameScen::setGameState(GameStates::GAME_OVER);
+                if (Mario::GetLivesMario() <= 0)
+                    GameScene::SetGameState(GameStates::GameOver);
                 else
                 {
-                    removeNewGameObjects();
-                    CMarioGame::instance().changeScen(new CLoadingGameScen(CMarioGame::instance().getCurrentLevelName()));
-                    CEnteringPipe::resetActivatedPipes();
+                    RemoveNewGameObjects();
+                    MarioGame::Instance().ChangeScene(new LoadingGameScene(MarioGame::Instance().GetCurrentLevelName()));
+                    EnteringPipe::ResetActivatedPipes();
                     return;
                 }
-            }else
-                gameUpdate();
+            } else
+                GameUpdate();
 
             break;
         }
 
         ///----
-        case GamePlayStates::ENTERING_TO_PIPE:
+        case GamePlayStates::EnteringToPipe:
         {
-            if(m_timer<CScen::s_duration_scen)
-                CEnteringPipe::getActivatePipe()->setUndergroundLvl();
+            if (mTimer < Scene::sDurationScene)
+                EnteringPipe::GetActivatePipe()->SetUndergroundLevel();
             else
-                CEnteringPipe::getActivatePipe()->enteringAnimation();
+                EnteringPipe::GetActivatePipe()->EnteringAnimation();
 
             break;
         }
 
         ///----
-        case GamePlayStates::LEAVING_UNDERGROUND_WORLD_BY_PIPE:
+        case GamePlayStates::LeavingUndergroundWorldByPipe:
         {
-            if(m_timer<CScen::s_duration_scen)
-                CEnteringPipe::getActivatePipe()->setBeforeWorld();
+            if (mTimer < Scene::sDurationScene)
+                EnteringPipe::GetActivatePipe()->SetBeforeWorld();
             else
-                CEnteringPipe::getActivatePipe()->enteringAnimation();
+                EnteringPipe::GetActivatePipe()->EnteringAnimation();
 
             break;
         }
 
         ///----
-        case GamePlayStates::RETURN_TO_BEFORE_WORLD:
+        case GamePlayStates::ReturnToBeforeWorld:
         {
-            if(CEnteringPipe::getActivatePipe()->isTheEndEnteringAnimation())
-                CEnteringPipe::getActivatePipe()->reasumeGame();
+            if (EnteringPipe::GetActivatePipe()->IsTheEndEnteringAnimation())
+                EnteringPipe::GetActivatePipe()->ResumeGame();
             else
-               CEnteringPipe::getActivatePipe()->enteringAnimation();
+               EnteringPipe::GetActivatePipe()->EnteringAnimation();
 
             break;
         }
 
         ///----
-        case GamePlayStates::CHANGING_LVL_MARIO:
+        case GamePlayStates::ChangingLevelMario:
         {
-            m_mario->changingLvl();
+            mMario->ChangingLevel();
             break;
         }
 
         ///-------
-        case GamePlayStates::LVL_COMPLETED:
+        case GamePlayStates::LevelCompleted:
         {
-            if(m_mario_in_castle)
+            if (mMarioInCastle)
             {
-                switch(m_level_completed_state)
+                switch (mLevelCompletedState)
                 {
-                case LevelCompletedStates::COUNTING_POINTS_FOR_LVL_TIME:
+                case LevelCompletedStates::CountingPointsForLevelTime:
                 {
-                    const int is_minute=m_game_time-1;
-                    m_game_time-=18.0f*s_frame_time;
+                    const int isMinute = mGameTime - 1;
+                    mGameTime -= 18.0f * sFrameTime;
 
-                    if(m_game_time<=0)
+                    if (mGameTime <= 0)
                     {
-                        m_level_completed_state=LevelCompletedStates::COUNTING_POINTS_FOR_LIVES_MARIO;
-                        m_game_time=0;
-                        setTimer(0.3f);
+                        mLevelCompletedState = LevelCompletedStates::CountingPointsForLivesMario;
+                        mGameTime = 0;
+                        SetTimer(0.3f);
                     }
 
-                    CGUI::setTime(m_game_time);
+                    Gui::SetTime(mGameTime);
 
-                    if((int)m_game_time==is_minute)
-                        this->addPoints(50);
+                    if ((int)mGameTime == isMinute)
+                        this->AddPoints(50);
 
                     break;
                 }
 
-                case LevelCompletedStates::COUNTING_POINTS_FOR_LIVES_MARIO:
+                case LevelCompletedStates::CountingPointsForLivesMario:
                 {
-                    if(m_timer<CScen::s_duration_scen)
+                    if (mTimer < Scene::sDurationScene)
                     {
-                        if(CMario::getLivesMario()-m_number_lives_to_count>0)
+                        if (Mario::GetLivesMario() - mNumberLivesToCount > 0)
                         {
-                            setTimer(0.3f);
-                            CMarioGame::s_sound_manager.play("kick");
-                            addPoints(1000);
-                            m_number_lives_to_count++;
+                            SetTimer(0.3f);
+                            MarioGame::sSoundManager.play("kick");
+                            AddPoints(1000);
+                            mNumberLivesToCount++;
                         }
                         else
                         {
-                            m_number_lives_to_count=0;
-                            setTimer(2.0f);
-                            m_level_completed_state=LevelCompletedStates::NEXT_LEVEL;
+                            mNumberLivesToCount = 0;
+                            SetTimer(2.0f);
+                            mLevelCompletedState = LevelCompletedStates::NextLevel;
                         }
                     }
 
                     break;
                 }
 
-                case LevelCompletedStates::NEXT_LEVEL:
+                case LevelCompletedStates::NextLevel:
                 {
-                    if(m_timer<CScen::s_duration_scen)
+                    if (mTimer < Scene::sDurationScene)
                     {
-                        if(CMarioGame::instance().isItLastLevel())
-                            setGameState(GameStates::WIN_GAME);
+                        if (MarioGame::Instance().IsLastLevel())
+                            SetGameState(GameStates::WinGame);
                         else
                         {
-                            if(CMarioGame::instance().getCompletedLvlsNumber()==CMarioGame::instance().getLvlIndex())
-                                CMarioGame::instance().increaseCompletedLvlsNumber();
+                            if (MarioGame::Instance().GetCompletedLevelsNumber() == MarioGame::Instance().GetLevelIndex())
+                                MarioGame::Instance().IncreaseCompletedLevelsNumber();
 
-                            removeNewGameObjects();
+                            RemoveNewGameObjects();
 
-                            CMarioGame::instance().setNextlevel();
-                            CMarioGame::instance().changeScen(new CLoadingGameScen(CMarioGame::instance().getCurrentLevelName()));
-                            CEnteringPipe::resetActivatedPipes();
+                            MarioGame::Instance().SetNextLevel();
+                            MarioGame::Instance().ChangeScene(new LoadingGameScene(MarioGame::Instance().GetCurrentLevelName()));
+                            EnteringPipe::ResetActivatedPipes();
 
                             return;
                         }
@@ -389,54 +391,54 @@ void CGameScen::update()
                 }
             }
 
-            gameUpdate();
+            GameUpdate();
             break;
         }
 
         ///--------
-        case GamePlayStates::BOWSER_DEFEAT:
+        case GamePlayStates::BowserDefeat:
         {
-            if(m_bowser_is_dying)
+            if (mBowserIsDying)
             {
-                if(m_timer<CScen::s_duration_scen)
+                if (mTimer < Scene::sDurationScene)
                 {
-                    m_physical_objs->clear();
-                    m_not_physical_objs->clear();
+                    mPhysicalObjs->clear();
+                    mNotPhysicalObjs->clear();
 
-                    setTimer(1.0f);
-                    m_bowser_is_dying=false;
+                    SetTimer(1.0f);
+                    mBowserIsDying = false;
 
-                    CMarioGame::s_sound_manager.play("bowser_falls");
+                    MarioGame::sSoundManager.play("bowser_falls");
                 }
-                else if(m_timer-0.1f>CScen::s_duration_scen&&m_sounds_timer<CScen::s_duration_scen)
+                else if (mTimer - 0.1f > Scene::sDurationScene && mSoundsTimer < Scene::sDurationScene)
                 {
-                    CMarioGame::s_sound_manager.play("bump");
-                    m_sounds_timer=CScen::s_duration_scen+0.4f;
+                    MarioGame::sSoundManager.play("bump");
+                    mSoundsTimer = Scene::sDurationScene + 0.4f;
                 }
 
             }
             else
             {
-                if(m_mario)
+                if (mMario)
                 {
-                    if(m_timer<CScen::s_duration_scen)
+                    if (mTimer < Scene::sDurationScene)
                     {
-                        CMarioGame::s_sound_manager.play("world_clear");
-                        CGUI::setVisibleMainLables(true);
+                        MarioGame::sSoundManager.play("world_clear");
+                        Gui::SetVisibleMainLabels(true);
 
-                        m_mario.reset();
+                        mMario.reset();
                     }
                 }
-                else gameUpdate();
+                else GameUpdate();
             }
 
             break;
         }
 
         ///-----
-        case GamePlayStates::FIGHT_WITH_BOWSER:
+        case GamePlayStates::FightWithBowser:
         {
-            gameUpdate();
+            GameUpdate();
             break;
         }
 
@@ -446,30 +448,30 @@ void CGameScen::update()
     }
 
     ///--------------------------
-    case GameStates::GAME_OVER:
+    case GameStates::GameOver:
     {
-        if(m_timer<CScen::s_duration_scen)
+        if (mTimer < Scene::sDurationScene)
         {
-            removeNewGameObjects();
-            CMarioGame::instance().changeScen(new CMenuScen());
-            CEnteringPipe::resetActivatedPipes();
+            RemoveNewGameObjects();
+            MarioGame::Instance().ChangeScene(new MenuScene());
+            EnteringPipe::ResetActivatedPipes();
             return;
 
         }
         else
-            gameUpdate();
+            GameUpdate();
 
         break;
     }
 
     ///--------------------------
-    case GameStates::WIN_GAME:
+    case GameStates::WinGame:
     {
-        if(m_timer<CScen::s_duration_scen)
+        if (mTimer < Scene::sDurationScene)
         {
-            removeNewGameObjects();
-            CMarioGame::instance().changeScen(new CMenuScen());
-            CEnteringPipe::resetActivatedPipes();
+            RemoveNewGameObjects();
+            MarioGame::Instance().ChangeScene(new MenuScene());
+            EnteringPipe::ResetActivatedPipes();
             return;
         }
 
@@ -479,69 +481,68 @@ void CGameScen::update()
 }
 
 ///-------------------------
-inline map<CGameObject::KindCollision,CBlock*> CGameScen::howCollisionsWithBlocks(const CPhysicaltObject* obj,bool &none_collision)
+inline std::map<GameObject::KindCollision, Block*> GameScene::HowCollisionsWithBlocks(const PhysicalObject* pObj, bool& pNoneCollision)
 {
-    map<CGameObject::KindCollision,CBlock*> collisions;
-    collisions[CGameObject::KindCollision::TOP]=nullptr;
-    collisions[CGameObject::KindCollision::BOTTOM]=nullptr;
-    collisions[CGameObject::KindCollision::RIGHT_SIDE]=nullptr;
-    collisions[CGameObject::KindCollision::LEFT_SIDE]=nullptr;
+    std::map<GameObject::KindCollision, Block*> collisions;
+    collisions[GameObject::KindCollision::Top] = nullptr;
+    collisions[GameObject::KindCollision::Bottom] = nullptr;
+    collisions[GameObject::KindCollision::RightSide] = nullptr;
+    collisions[GameObject::KindCollision::LeftSide] = nullptr;
 
-    for(const auto &block:*m_blocks)
+    for (const auto& block : *mBlocks)
     {
-        if(!block->isVisible())continue;
+        if (!block->IsVisible()) continue;
 
-        const CGameObject::KindCollision how_collision=obj->howCollision(*block);
+        const GameObject::KindCollision howCollision = pObj->HowCollision(*block);
 
-        if(how_collision!=CGameObject::KindCollision::NONE)
+        if (howCollision != GameObject::KindCollision::None)
         {
-            none_collision=false;
+            pNoneCollision = false;
 
-            switch(how_collision)
+            switch (howCollision)
             {
-                case CGameObject::KindCollision::TOP:
+                case GameObject::KindCollision::Top:
                 {
-                   if(!collisions[CGameObject::KindCollision::TOP])
-                        collisions[CGameObject::KindCollision::TOP]=block.get();
+                   if (!collisions[GameObject::KindCollision::Top])
+                        collisions[GameObject::KindCollision::Top] = block.get();
                    else
                     {
-                        /// CZYLI GDY MAM GORNA KOLIZJE Z DWOMA BLOKAMI
-                        if(block->isHit())
+                        if (block->IsHit())
                             break;
                         else
-                        if(collisions[CGameObject::KindCollision::TOP]->isHit())
-                            collisions[CGameObject::KindCollision::TOP]=block.get();
+                        if (collisions[GameObject::KindCollision::Top]->IsHit())
+                            collisions[GameObject::KindCollision::Top] = block.get();
                         else
-                            collisions[CGameObject::KindCollision::TOP]=whichHitBlock(collisions[CGameObject::KindCollision::TOP],block.get(),obj);
+                            collisions[GameObject::KindCollision::Top] = WhichHitBlock(collisions[GameObject::KindCollision::Top], block.get(), pObj);
                     }
 
                    break;
                 }
 
-                case CGameObject::KindCollision::BOTTOM:
+                case GameObject::KindCollision::Bottom:
                 {
-                   if(obj->isInBottomCollision()&&!(block->isHit()||block->iamDead()))break;
+                   if (pObj->IsInBottomCollision() && !(block->IsHit() || block->IsDead())) break;
 
-                   if(!collisions[CGameObject::KindCollision::BOTTOM])
-                        collisions[CGameObject::KindCollision::BOTTOM]=block.get();
+                   if (!collisions[GameObject::KindCollision::Bottom])
+                        collisions[GameObject::KindCollision::Bottom] = block.get();
                    else
-                        collisions[CGameObject::KindCollision::BOTTOM]=whichHitBlock(collisions[CGameObject::KindCollision::BOTTOM],block.get(),obj);
+                        collisions[GameObject::KindCollision::Bottom] = WhichHitBlock(collisions[GameObject::KindCollision::Bottom], block.get(), pObj);
 
                    break;
                 }
 
-                case CGameObject::KindCollision::RIGHT_SIDE:
+                case GameObject::KindCollision::RightSide:
                 {
-                    if(!collisions[CGameObject::KindCollision::RIGHT_SIDE])
-                        collisions[CGameObject::KindCollision::RIGHT_SIDE]=block.get();
+                    if (!collisions[GameObject::KindCollision::RightSide])
+                        collisions[GameObject::KindCollision::RightSide] = block.get();
 
                     break;
                 }
 
-                case CGameObject::KindCollision::LEFT_SIDE:
+                case GameObject::KindCollision::LeftSide:
                 {
-                    if(!collisions[CGameObject::KindCollision::LEFT_SIDE])
-                        collisions[CGameObject::KindCollision::LEFT_SIDE]=block.get();
+                    if (!collisions[GameObject::KindCollision::LeftSide])
+                        collisions[GameObject::KindCollision::LeftSide] = block.get();
 
                     break;
                 }
@@ -554,368 +555,367 @@ inline map<CGameObject::KindCollision,CBlock*> CGameScen::howCollisionsWithBlock
 }
 
 ///-----------------
-inline void CGameScen::physicalObjBlockCollision()
+inline void GameScene::PhysicalObjBlockCollision()
 {
-    for(auto &obj:*m_physical_objs)
+    for (auto& obj : *mPhysicalObjs)
     {
-        if(!obj->isVisible())continue;
+        if (!obj->IsVisible()) continue;
 
-        bool none_collision=true;
-        map<CGameObject::KindCollision,CBlock*> collisions_with_blocks=howCollisionsWithBlocks(obj.get(),none_collision);
-        obj->physicGameWithBlock(collisions_with_blocks,none_collision);
+        bool noneCollision = true;
+        std::map<GameObject::KindCollision, Block*> collisionsWithBlocks = HowCollisionsWithBlocks(obj.get(), noneCollision);
+        obj->PhysicGameWithBlock(collisionsWithBlocks, noneCollision);
     }
 }
 
 ///--------------------
-inline void CGameScen::marioBlockCollision()
+inline void GameScene::MarioBlockCollision()
 {
-    bool none_collision=true;
-    map<CGameObject::KindCollision,CBlock*> collisions_with_blocks=howCollisionsWithBlocks(m_mario.get(),none_collision);
-    m_mario->physicGameWithBlock(collisions_with_blocks,none_collision);
+    bool noneCollision = true;
+    std::map<GameObject::KindCollision, Block*> collisionsWithBlocks = HowCollisionsWithBlocks(mMario.get(), noneCollision);
+    mMario->PhysicGameWithBlock(collisionsWithBlocks, noneCollision);
 }
 
 ///-----------------
-inline void CGameScen::marioGameObjsCollision()
+inline void GameScene::MarioGameObjsCollision()
 {
-    for(auto &obj:*m_not_physical_objs)
+    for (auto& obj : *mNotPhysicalObjs)
     {
-        if(!obj->isVisible())continue;
+        if (!obj->IsVisible()) continue;
 
-        const CGameObject::KindCollision how_collision=m_mario->howCollision(*obj);
+        const GameObject::KindCollision howCollision = mMario->HowCollision(*obj);
 
-        if(how_collision!=CGameObject::KindCollision::NONE)
-            obj->actOnObject(m_mario.get(),how_collision);
+        if (howCollision != GameObject::KindCollision::None)
+            obj->ActOnObject(mMario.get(), howCollision);
     }
 
     ///-------
-    for(auto &obj:*m_physical_objs)
+    for (auto& obj : *mPhysicalObjs)
     {
-        if(!obj->isVisible())continue;
+        if (!obj->IsVisible()) continue;
 
-        const CGameObject::KindCollision how_collision=m_mario->howCollision(*obj);
+        const GameObject::KindCollision howCollision = mMario->HowCollision(*obj);
 
-        if(how_collision!=CGameObject::KindCollision::NONE)
-            obj->actOnObject(m_mario.get(),how_collision);
+        if (howCollision != GameObject::KindCollision::None)
+            obj->ActOnObject(mMario.get(), howCollision);
     }
 }
 
 ///------------
 
-inline void CGameScen::gameObjsGameObjsCollisions()
+inline void GameScene::GameObjsGameObjsCollisions()
 {
-    ///FIZYCZNE Z FIZYCZNYMI
-    for(auto &first_phy_obj:*m_physical_objs)
+    /// PHYSICAL WITH PHYSICAL
+    for (auto& firstPhyObj : *mPhysicalObjs)
     {
-        if(!first_phy_obj->isVisible())continue;
+        if (!firstPhyObj->IsVisible()) continue;
 
-        for(auto &second_phy_obj:*m_physical_objs)
+        for (auto& secondPhyObj : *mPhysicalObjs)
         {
-            if(!second_phy_obj->isVisible())continue;
+            if (!secondPhyObj->IsVisible()) continue;
 
-            if(first_phy_obj!=second_phy_obj)
+            if (firstPhyObj != secondPhyObj)
             {
-               CGameObject::KindCollision how_collision=second_phy_obj->howCollision(*first_phy_obj);
+               GameObject::KindCollision howCollision = secondPhyObj->HowCollision(*firstPhyObj);
 
-               if(how_collision!=CGameObject::KindCollision::NONE)
-                   first_phy_obj->actOnObject(second_phy_obj.get(),how_collision);
+               if (howCollision != GameObject::KindCollision::None)
+                   firstPhyObj->ActOnObject(secondPhyObj.get(), howCollision);
             }
         }
     }
 
-    ///FIZYCZNE Z NIEFIZYCZNYMI
-    for(auto &phy_obj:*m_physical_objs)
+    /// PHYSICAL WITH NON-PHYSICAL
+    for (auto& phyObj : *mPhysicalObjs)
     {
-        if(!phy_obj->isVisible())continue;
+        if (!phyObj->IsVisible()) continue;
 
-        for(auto &not_phy_obj:*m_not_physical_objs)
+        for (auto& notPhyObj : *mNotPhysicalObjs)
         {
-            if(!not_phy_obj->isVisible())continue;
+            if (!notPhyObj->IsVisible()) continue;
 
-            CGameObject::KindCollision how_collision=phy_obj->howCollision(*not_phy_obj);
+            GameObject::KindCollision howCollision = phyObj->HowCollision(*notPhyObj);
 
-            if(how_collision!=CGameObject::KindCollision::NONE)
-                not_phy_obj->actOnObject(phy_obj.get(),how_collision);
+            if (howCollision != GameObject::KindCollision::None)
+                notPhyObj->ActOnObject(phyObj.get(), howCollision);
 
-            /// REAKCJA DZIALA W DWIE STRONY
-            how_collision=not_phy_obj->howCollision(*phy_obj);
+            /// REACTION WORKS BOTH WAYS
+            howCollision = notPhyObj->HowCollision(*phyObj);
 
-            if(how_collision!=CGameObject::KindCollision::NONE)
-                phy_obj->actOnObject(not_phy_obj.get(),how_collision);
+            if (howCollision != GameObject::KindCollision::None)
+                phyObj->ActOnObject(notPhyObj.get(), howCollision);
         }
     }
 }
 
 ///------------------------
-void CGameScen::draw(const unique_ptr<sf::RenderWindow>& window)
+void GameScene::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    window->setView(m_view);
-    window->draw(m_background);
+    pWindow->setView(mView);
+    pWindow->draw(mBackground);
 
-    for(auto &obj:*m_blocks)
-    if(isObjectVisible(obj->getBounds(),true))
+    for (auto& obj : *mBlocks)
+    if (IsObjectVisible(obj->GetBounds(), true))
     {
-        obj->setVisible(true);
-        obj->draw(window);
+        obj->SetVisible(true);
+        obj->Draw(pWindow);
 
-    }else obj->setVisible(false);
+    } else obj->SetVisible(false);
 
-    for(auto &obj:*m_landscapes)
-    if(isObjectVisible(obj.getBounds()))
-        obj.draw(window);
+    for (auto& obj : *mLandscapes)
+    if (IsObjectVisible(obj.GetBounds()))
+        obj.Draw(pWindow);
 
-    for(auto &obj:*m_not_physical_objs)
-    if(isObjectVisible(obj->getBounds()))
+    for (auto& obj : *mNotPhysicalObjs)
+    if (IsObjectVisible(obj->GetBounds()))
     {
-        obj->setVisible(true);
-        obj->draw(window);
+        obj->SetVisible(true);
+        obj->Draw(pWindow);
 
-    }else obj->setVisible(false);
+    } else obj->SetVisible(false);
 
-    for(auto &obj:*m_physical_objs)
-    if(isObjectVisible(obj->getBounds()))
+    for (auto& obj : *mPhysicalObjs)
+    if (IsObjectVisible(obj->GetBounds()))
     {
-        obj->setVisible(true);
-        obj->draw(window);
+        obj->SetVisible(true);
+        obj->Draw(pWindow);
 
-    }else obj->setVisible(false);
+    } else obj->SetVisible(false);
 
-    if(m_mario)
-        m_mario->draw(window);
+    if (mMario)
+        mMario->Draw(pWindow);
 }
 
 ///--------------------
-inline void CGameScen::gameUpdate()
+inline void GameScene::GameUpdate()
 {
-    /// WYWOLANIE STATYCZNYCH METOD
-    CMysterBox::updateStaticAnimation();
-    CCoin::updateStaticAnimation();
-    CWaterWaves::updateStaticAnimation();
-    CLavaWaves::updateStaticAnimation();
+    /// STATIC METHOD CALLS
+    MysteryBox::UpdateStaticAnimation();
+    Coin::UpdateStaticAnimation();
+    WaterWaves::UpdateStaticAnimation();
+    LavaWaves::UpdateStaticAnimation();
 
-    /// UPDATE OBIEKTOW
+    /// UPDATE OBJECTS
 
-    if(m_mario)
+    if (mMario)
     {
-        moveCamera();
-        m_mario->update();
+        MoveCamera();
+        mMario->Update();
     }
 
-    for(auto &obj:*m_blocks)
-    if(obj->isVisible())obj->update();
+    for (auto& obj : *mBlocks)
+    if (obj->IsVisible()) obj->Update();
 
-    for(auto &obj:*m_physical_objs)
-    if(obj->isVisible())obj->update();
+    for (auto& obj : *mPhysicalObjs)
+    if (obj->IsVisible()) obj->Update();
 
-    for(auto &obj:*m_not_physical_objs)
-    if(obj->isVisible())obj->update();
+    for (auto& obj : *mNotPhysicalObjs)
+    if (obj->IsVisible()) obj->Update();
 
-    /// SPRAWDZANIE KOLIZJI Z BLOCKAMI
-    if(m_mario)
-        marioBlockCollision();
+    /// CHECK COLLISIONS WITH BLOCKS
+    if (mMario)
+        MarioBlockCollision();
 
-    physicalObjBlockCollision();
+    PhysicalObjBlockCollision();
 
-    /// SPRAWDZANIE KOLIZJI MIEDZY OBJEKTAMI
-    if(m_mario)
-        marioGameObjsCollision();
+    /// CHECK COLLISIONS BETWEEN OBJECTS
+    if (mMario)
+        MarioGameObjsCollision();
 
-    gameObjsGameObjsCollisions();
+    GameObjsGameObjsCollisions();
 
-    /// USUWANIE OBIEKTOW I DODAWANIE NOWYCH
-    if(m_my_removed_objects.size()!=0)
-    updateRemovedGameObjects();
+    /// REMOVE AND ADD OBJECTS
+    if (mMyRemovedObjects.size() != 0)
+    UpdateRemovedGameObjects();
 
-    if(m_my_new_objects.size()!=0)
-    updateNewGameObjects();
+    if (mMyNewObjects.size() != 0)
+    UpdateNewGameObjects();
 }
 
 ///-----------------------
-inline void CGameScen::updateNewGameObjects()
+inline void GameScene::UpdateNewGameObjects()
 {
-    /// OKRESLAM DO KTOREGO KONTENERA OBIEKT WRZUCIC
-    for(auto *new_obj:m_my_new_objects)
+    /// DETERMINE WHICH CONTAINER TO ADD OBJECT TO
+    for (auto* newObj : mMyNewObjects)
     {
-        CBlock * new_block=dynamic_cast<CBlock*>(new_obj);
+        Block* newBlock = dynamic_cast<Block*>(newObj);
 
-        if(new_block)
-            m_blocks->push_front(unique_ptr<CBlock>(new_block));
+        if (newBlock)
+            mBlocks->push_front(std::unique_ptr<Block>(newBlock));
         else
         {
-            CPhysicaltObject * new_phy_obj=dynamic_cast<CPhysicaltObject*>(new_obj);
+            PhysicalObject* newPhyObj = dynamic_cast<PhysicalObject*>(newObj);
 
-            if(new_phy_obj)
-                m_physical_objs->push_back(unique_ptr<CPhysicaltObject>(new_phy_obj));
+            if (newPhyObj)
+                mPhysicalObjs->push_back(std::unique_ptr<PhysicalObject>(newPhyObj));
             else
-                m_not_physical_objs->push_back(unique_ptr<CGameObject>(new_obj));
+                mNotPhysicalObjs->push_back(std::unique_ptr<GameObject>(newObj));
         }
     }
 
-    m_my_new_objects.clear();
+    mMyNewObjects.clear();
 }
 
 ///------------------------
-inline void CGameScen::updateRemovedGameObjects()
+inline void GameScene::UpdateRemovedGameObjects()
 {
-    /// OKRESLAM Z KTOREGO KONTENERA USUNAC
-    for(auto *removed_obj:m_my_removed_objects)
+    /// DETERMINE WHICH CONTAINER TO REMOVE FROM
+    for (auto* removedObj : mMyRemovedObjects)
     {
-        CBlock * removed_block=dynamic_cast<CBlock*>(removed_obj);
+        Block* removedBlock = dynamic_cast<Block*>(removedObj);
 
-        if(removed_block)
-            m_blocks->erase(find_if(m_blocks->begin(),m_blocks->end(),[removed_block](const unique_ptr<CBlock> &obj)
-            {return removed_block==obj.get();}));
+        if (removedBlock)
+            mBlocks->erase(std::find_if(mBlocks->begin(), mBlocks->end(), [removedBlock](const std::unique_ptr<Block>& obj)
+            {return removedBlock == obj.get(); }));
         else
         {
-            CMario * removed_mario=dynamic_cast<CMario*>(removed_obj);
+            Mario* removedMario = dynamic_cast<Mario*>(removedObj);
 
-            if(removed_mario)
-                m_mario.reset();
+            if (removedMario)
+                mMario.reset();
             else
             {
-                CPhysicaltObject * removed_phys_obj=dynamic_cast<CPhysicaltObject*>(removed_obj);
+                PhysicalObject* removedPhysObj = dynamic_cast<PhysicalObject*>(removedObj);
 
-                if(removed_phys_obj)
+                if (removedPhysObj)
                 {
-                    CMoveableBlock::removeDeadObjOnMoveableBlock(removed_phys_obj);
+                    MoveableBlock::RemoveDeadObjOnMoveableBlock(removedPhysObj);
 
-                    m_physical_objs->erase(find_if(m_physical_objs->begin(),m_physical_objs->end(),[removed_phys_obj](const unique_ptr<CPhysicaltObject> &obj)
-                    {return removed_phys_obj==obj.get();}));
+                    mPhysicalObjs->erase(std::find_if(mPhysicalObjs->begin(), mPhysicalObjs->end(), [removedPhysObj](const std::unique_ptr<PhysicalObject>& obj)
+                    {return removedPhysObj == obj.get(); }));
 
-                }else
-                    m_not_physical_objs->erase(find_if(m_not_physical_objs->begin(),m_not_physical_objs->end(),[removed_obj](const unique_ptr<CGameObject> &obj)
-                    {return removed_obj==obj.get();}));
+                } else
+                    mNotPhysicalObjs->erase(std::find_if(mNotPhysicalObjs->begin(), mNotPhysicalObjs->end(), [removedObj](const std::unique_ptr<GameObject>& obj)
+                    {return removedObj == obj.get(); }));
             }
         }
     }
 
-    m_my_removed_objects.clear();
+    mMyRemovedObjects.clear();
 }
 
-///-------- MNIEJ WAZNE METODY---------///
+///-------- LESS IMPORTANT METHODS ---------///
 
-inline void CGameScen::moveCamera()
+inline void GameScene::MoveCamera()
 {
-    if(m_mario->getCurrentPosition().x>=CMarioGame::s_size_window.x/2)
+    if (mMario->GetCurrentPosition().x >= MarioGame::sSizeWindow.x / 2)
     {
-        float road=m_mario->getCurrentPosition().x-m_mario->getPreviousPosition().x;
+        float road = mMario->GetCurrentPosition().x - mMario->GetPreviousPosition().x;
 
-        m_background.move(road,0);
-        m_bounds_view.left+=road;
-        m_view.move(road,0);
+        mBackground.move(road, 0);
+        mBoundsView.left += road;
+        mView.move(road, 0);
 
-        CGUI::moveMainLabels(road);
+        Gui::MoveMainLabels(road);
 
-    }else
+    } else
     {
-        m_view.setCenter(sf::Vector2f(CMarioGame::s_size_window.x/2,CMarioGame::s_size_window.y/2));
-        m_background.setPosition(0,0);
-        CGUI::setPositionMainLabels(CMarioGame::s_size_window.x/2.0f);
+        mView.setCenter(sf::Vector2f(MarioGame::sSizeWindow.x / 2, MarioGame::sSizeWindow.y / 2));
+        mBackground.setPosition(0, 0);
+        Gui::SetPositionMainLabels(MarioGame::sSizeWindow.x / 2.0f);
     }
 }
 
 ///-----------
-inline CBlock* CGameScen::whichHitBlock(CBlock* first_block,CBlock* second_block,const CPhysicaltObject* obj)
+inline Block* GameScene::WhichHitBlock(Block* pFirstBlock, Block* pSecondBlock, const PhysicalObject* pObj)
 {
-    /// BARDZO WAZNE
-    if(first_block->getCurrentPosition().x>second_block->getCurrentPosition().x)
-        swap(first_block,second_block);
+    if (pFirstBlock->GetCurrentPosition().x > pSecondBlock->GetCurrentPosition().x)
+        std::swap(pFirstBlock, pSecondBlock);
 
-    if(obj->getCurrentPosition().x<=first_block->getCurrentPosition().x+first_block->getSize().x/2.0f)
-        return first_block;
+    if (pObj->GetCurrentPosition().x <= pFirstBlock->GetCurrentPosition().x + pFirstBlock->GetSize().x / 2.0f)
+        return pFirstBlock;
     else
-        return second_block;
+        return pSecondBlock;
 }
 
 ///----------
-inline bool CGameScen::isObjectVisible(const sf::FloatRect& bounds,bool larger_bounds)
+inline bool GameScene::IsObjectVisible(const sf::FloatRect& pBounds, bool pLargerBounds)
 {
-    if(larger_bounds)/// POZWALA WCZESNIEJ DANY OBIEKT ZACZAC RYSOWAC
-        return bounds.intersects(sf::FloatRect(m_bounds_view.left-CScen::s_tile_size*2,m_bounds_view.top,m_bounds_view.width+CScen::s_tile_size*4,m_bounds_view.height));
+    if (pLargerBounds)
+        return pBounds.intersects(sf::FloatRect(mBoundsView.left - Scene::sTileSize * 2, mBoundsView.top, mBoundsView.width + Scene::sTileSize * 4, mBoundsView.height));
     else
-        return bounds.intersects(m_bounds_view);
+        return pBounds.intersects(mBoundsView);
 }
 
 ///----
-void CGameScen::setDoubleBoundsView()
+void GameScene::SetDoubleBoundsView()
 {
-    m_bounds_view.left-=static_cast<int>(CMarioGame::s_size_window.x);
-    m_bounds_view.width+=CMarioGame::s_size_window.x*2;
+    mBoundsView.left -= static_cast<int>(MarioGame::sSizeWindow.x);
+    mBoundsView.width += MarioGame::sSizeWindow.x * 2;
 }
 
 ///-----------
-void CGameScen::addPoints(int points)
+void GameScene::AddPoints(int pPoints)
 {
-    m_points+=points;
-    CGUI::setPoints(m_points);
+    mPoints += pPoints;
+    Gui::SetPoints(mPoints);
 }
 
 ///-----
-inline void CGameScen::updateGameTime()
+inline void GameScene::UpdateGameTime()
 {
-    m_game_time-=s_frame_time;
-    CGUI::setTime(m_game_time);
+    mGameTime -= sFrameTime;
+    Gui::SetTime(mGameTime);
 }
 
 ///--------
-void CGameScen::changePositionView(float valuee)
+void GameScene::ChangePositionView(float pValue)
 {
-    m_background.move(valuee,0);
-    m_view.move(valuee,0);
-    m_bounds_view.left+=valuee;
-    CGUI::moveMainLabels(valuee);
+    mBackground.move(pValue, 0);
+    mView.move(pValue, 0);
+    mBoundsView.left += pValue;
+    Gui::MoveMainLabels(pValue);
 }
 
 ///-------------
-const sf::Vector2f& CGameScen::getMarioPosition()const
+const sf::Vector2f& GameScene::GetMarioPosition() const
 {
-    if(m_mario)
-        return m_mario->getCurrentPosition();
+    if (mMario)
+        return mMario->GetCurrentPosition();
     else
-        return m_view.getCenter();
+        return mView.getCenter();
 }
 
 ///--------
-inline void CGameScen::createExtinguishingEfect(string name)
+inline void GameScene::CreateExtinguishingEffect(std::string pName)
 {
-    /// SCIEMNIANIE TLA
-    sf::Sprite *sprite=CGUI::createSprite("LoadingScen",sf::Vector2f(CMarioGame::instance().getWindow()->getView().getCenter().x,
-    CMarioGame::s_size_window.y),1,true);
+    /// DARKENING BACKGROUND
+    sf::Sprite* sprite = Gui::CreateSprite("LoadingScen", sf::Vector2f(MarioGame::Instance().GetWindow()->getView().getCenter().x,
+    MarioGame::sSizeWindow.y), 1, true);
 
     sprite->setColor(sf::Color::Black);
 
-    std::function<bool(std::unique_ptr<CAnimator>&)> sprite_action =[value_transparency=0.0f](std::unique_ptr<CAnimator>& animator)mutable
+    std::function<bool(std::unique_ptr<Animator>&)> spriteAction = [valueTransparency = 0.0f](std::unique_ptr<Animator>& pAnimator) mutable
     {
-        sf::Color color(animator->getSprite().getColor());
+        sf::Color color(pAnimator->GetSprite().getColor());
 
-        if(value_transparency<255)
+        if (valueTransparency < 255)
         {
-            color.a=0+value_transparency;
-            value_transparency+=0.5f;
+            color.a = 0 + valueTransparency;
+            valueTransparency += 0.5f;
         }
         else
-            color.a=255;
+            color.a = 255;
 
-        animator->getSprite().setColor(color);
+        pAnimator->GetSprite().setColor(color);
 
-        return (!CMarioGame::instance().isThisScen<CGameScen>());
+        return (!MarioGame::Instance().IsThisScene<GameScene>());
     };
 
-    CGUI::addGuiObject(new CSpecialEffects(new CSprite(sprite),sprite_action));
+    Gui::AddGuiObject(new SpecialEffects(new SpriteAnimator(sprite), spriteAction));
 
-    /// POJAWIANIE SIE NAPISU
-    sf::Text *text=CGUI::createText(name,m_view.getCenter(),sf::Color::White,"menu_font",true,50);
+    /// APPEARING TEXT
+    sf::Text* text = Gui::CreateText(pName, mView.getCenter(), sf::Color::White, "menu_font", true, 50);
 
-    std::function<bool(std::unique_ptr<sf::Text>&)> text_action =[](std::unique_ptr<sf::Text>& text)
+    std::function<bool(std::unique_ptr<sf::Text>&)> textAction = [](std::unique_ptr<sf::Text>& pText)
     {
-        return (!CMarioGame::instance().isThisScen<CGameScen>());
+        return (!MarioGame::Instance().IsThisScene<GameScene>());
     };
 
-    CGUI::addGuiObject(new CFlowText(text,text_action,0.5f));
+    Gui::AddGuiObject(new FlowText(text, textAction, 0.5f));
 }
 
 ///------------
-inline void CGameScen::removeNewGameObjects()
+inline void GameScene::RemoveNewGameObjects()
 {
-    for (auto obj : m_my_new_objects)delete obj;
-    m_my_new_objects.clear();
+    for (auto obj : mMyNewObjects) delete obj;
+    mMyNewObjects.clear();
 }

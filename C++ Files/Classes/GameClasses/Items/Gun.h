@@ -1,51 +1,43 @@
 #pragma once
 #include "../Blocks/Block.h"
 
-using namespace std;
+#include <vector>
 
-class CGun: public CStaticBlock
-{
-    class CBullet:public CGameObject
-    {
-        const float m_speed=2.0f;
-        const bool m_right_dir;
+class Gun : public StaticBlock {
+    class GunBullet : public GameObject {
+        const float mSpeed = 2.0f;
+        const bool mRightDir;
 
-        int m_range=1500;
+        int mRange = 1500;
 
-        bool m_the_end_range=false;
+        bool mTheEndRange = false;
 
     public:
 
-        CBullet(sf::Vector2f,bool);
-        ~CBullet(){}
+        GunBullet(sf::Vector2f pPos, bool pRightDir);
+        ~GunBullet() {}
 
-        void update()override;
+        void Update() override;
 
-        void actOnMe(KindAction)override;
-        void actOnObject(CGameObject*,KindCollision)override;
+        void ActOnMe(KindAction pAction) override;
+        void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
 
-        bool isVisible()const override {return true;}
-
+        bool IsVisible() const override { return true; }
     };
 
-    float m_when_shoot;
+    float mWhenShoot;
 
-    inline void setWhenShoot();
+    inline void SetWhenShoot();
 
 public:
 
-    enum class KindGun
-    {
-        SMALL=32,
-        BIG=64
+    enum class KindGun {
+        Small = 32,
+        Big = 64
     };
 
-    CGun(sf::Vector2f,KindGun);
-    ~CGun(){}
+    Gun(sf::Vector2f pPos, KindGun pKindGun);
+    ~Gun() {}
 
-    void update()override;
+    void Update() override;
 };
-
-
-
-

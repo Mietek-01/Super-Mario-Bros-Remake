@@ -1,59 +1,59 @@
 #include "Enemies.h"
 #include "../Mario.h"
 
+#include <vector>
 
-CRedTurtle::CRedTurtle(sf::Vector2f pos,KindMovement kind_movement,bool created_by_bowser)
-:CPhysicaltObject(new CAnimations,Parentage::ENEMY,pos,kind_movement)
-,m_created_by_bowser(created_by_bowser)
+RedTurtle::RedTurtle(sf::Vector2f pPos, KindMovement pKindMovement, bool pCreatedByBowser)
+    : PhysicalObject(new Animations, Parentage::Enemy, pPos, pKindMovement)
+    , mCreatedByBowser(pCreatedByBowser)
 {
-    m_value_acceleration=0.6f;
+    mValueAcceleration = 0.6f;
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({385,82,30,30});
-    m_frame_animation.push_back({416,84,32,28});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({385, 82, 30, 30});
+    frameAnimation.push_back({416, 84, 32, 28});
 
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Enemies_right"],m_frame_animation,2.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Enemies_right"], frameAnimation, 2.5f, kScaleToTile);
 
     ///-----
-    m_frame_animation.clear();
-    m_frame_animation.push_back({64,84,32,28});
-    m_frame_animation.push_back({96,82,30,30});
+    frameAnimation.clear();
+    frameAnimation.push_back({64, 84, 32, 28});
+    frameAnimation.push_back({96, 82, 30, 30});
 
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.5f, kScaleToTile);
 
-    if(m_right_dir_reversal)
-        m_animations->play(CAnimations::R_MOVE,m_current_position);
+    if (mIsRightDirReversal)
+        mAnimations->Play(Animations::RightMove, mCurrentPosition);
     else
-        m_animations->play(CAnimations::L_MOVE,m_current_position);
+        mAnimations->Play(Animations::LeftMove, mCurrentPosition);
 }
 
 ///-----
-void CRedTurtle::actOnObject(CGameObject* obj,KindCollision how_collision)
+void RedTurtle::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
+    if (pObj->GetParentage() == Parentage::Mario)
     {
-        CMario *mario=dynamic_cast<CMario* >(obj);
-        mario->setDamage(m_damage_value);
+        Mario* mario = dynamic_cast<Mario*>(pObj);
+        mario->SetDamage(mDamageValue);
 
-        obj->actOnMe(KindAction::HIT);
+        pObj->ActOnMe(KindAction::Hit);
     }
-
 }
 
 ///-----
-void CRedTurtle::actOnMe(KindAction which_action)
+void RedTurtle::ActOnMe(KindAction pWhichAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    if(which_action==KindAction::HIT)
-        createBeatsObjSpecialEfect();
+    if (pWhichAction == KindAction::Hit)
+        CreateBeatObjectEffect();
 }
 
 ///---------
-void CRedTurtle::updateForCollisionWithBlock(KindCollision how_collision ,CBlock* block)
+void RedTurtle::UpdateForCollisionWithBlock(KindCollision pHowCollision, Block* pBlock)
 {
-    if(m_created_by_bowser&&block->getCurrentPosition().y<CScen::s_tile_size*3)
+    if (mCreatedByBowser && pBlock->GetCurrentPosition().y < Scene::sTileSize * 3)
         return;
 
-    CPhysicaltObject::updateForCollisionWithBlock(how_collision,block);
+    PhysicalObject::UpdateForCollisionWithBlock(pHowCollision, pBlock);
 }

@@ -1,117 +1,100 @@
 #include "EventHandler.h"
 #include "GUIClasses/GUI.h"
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
-std::map<CEventHandler::DecisionsPlayer,int> CEventHandler::s_registered_keys;
-std::map<CEventHandler::DecisionsPlayer,bool> CEventHandler::s_enabled_decisions;
-std::map<CEventHandler::DecisionsPlayer,bool> CEventHandler::s_deactivate_decisions;
+using namespace std;
+
+std::map<EventHandler::DecisionsPlayer, int> EventHandler::sRegisteredKeys;
+std::map<EventHandler::DecisionsPlayer, bool> EventHandler::sEnabledDecisions;
+std::map<EventHandler::DecisionsPlayer, bool> EventHandler::sDeactivateDecisions;
 
 ///----------
-CEventHandler::CEventHandler()
-{
-    CEventHandler::setDefaultRegisteredKeys();
-    CEventHandler::resetDecisions();
+EventHandler::EventHandler() {
+    EventHandler::SetDefaultRegisteredKeys();
+    EventHandler::ResetDecisions();
 }
 
 ///---------
-void CEventHandler::handleEvents(const unique_ptr<sf::RenderWindow>&window)
-{
-        sf::Event event;
+void EventHandler::HandleEvents(const unique_ptr<sf::RenderWindow>& pWindow) {
+    sf::Event sfEvent;
 
-        while(window->pollEvent(event))
-        {
-            switch(event.type)
-            {
-                case sf::Event::Closed:
-                {
-                    window->close();
+    while (pWindow->pollEvent(sfEvent)) {
+        switch (sfEvent.type) {
+            case sf::Event::Closed: {
+                pWindow->close();
+                break;
+            }
+
+            case sf::Event::KeyPressed: {
+                if (sfEvent.key.code == sf::Keyboard::Escape) {
+                    mAllEvents[Event::PausedMenu]();
                     break;
                 }
 
-                case sf::Event::KeyPressed:
-                {
-                    if(event.key.code==sf::Keyboard::Escape)
-                    {
-                        m_all_events[Event::PAUSED_MENU]();
-                        break;
-                    }
-
-                    if(CGUI::isMenuActive())
-                        CGUI::handleMenus(event.key.code);
-                    else
-                    {
-                        for(auto& obj:s_registered_keys)
-                        if(obj.second==int(event.key.code))
-                        {
-                            s_enabled_decisions[obj.first]=true;
+                if (Gui::IsMenuActive())
+                    Gui::HandleMenus(sfEvent.key.code);
+                else {
+                    for (auto& obj : sRegisteredKeys)
+                        if (obj.second == int(sfEvent.key.code)) {
+                            sEnabledDecisions[obj.first] = true;
                             break;
                         }
-                    }
-
-                    break;
                 }
 
-                case sf::Event::KeyReleased:
-                {
-                    for(auto& obj:s_registered_keys)
-                    if(obj.second==int(event.key.code))
-                    {
-                        s_deactivate_decisions[obj.first]=true;
+                break;
+            }
+
+            case sf::Event::KeyReleased: {
+                for (auto& obj : sRegisteredKeys)
+                    if (obj.second == int(sfEvent.key.code)) {
+                        sDeactivateDecisions[obj.first] = true;
                         break;
                     }
-                    break;
-                }
+                break;
+            }
         }
     }
-
 }
 
 ///-------
-bool CEventHandler::isOccupyThisKeyCode(int key_code)
-{
-    for(auto i:s_registered_keys)
-        if(i.second==key_code)return true;
+bool EventHandler::IsOccupyThisKeyCode(int pKeyCode) {
+    for (auto i : sRegisteredKeys)
+        if (i.second == pKeyCode) return true;
 
     return false;
 }
 
 ///----------
-void CEventHandler::changeRegisteredKeys(DecisionsPlayer how_decision_to_change,int for_how_key)
-{
-    s_registered_keys[how_decision_to_change]=for_how_key;
+void EventHandler::ChangeRegisteredKeys(DecisionsPlayer pDecision, int pKeyCode) {
+    sRegisteredKeys[pDecision] = pKeyCode;
 }
 
 ///-----------
-void CEventHandler::setDefaultRegisteredKeys()
-{
-    s_registered_keys[DecisionsPlayer::CLICK_JUMP]=sf::Keyboard::Space;
-    s_registered_keys[DecisionsPlayer::CLICK_LEFT_RUN]=sf::Keyboard::Left;
-    s_registered_keys[DecisionsPlayer::CLICK_RIGHT_RUN]=sf::Keyboard::Right;
-    s_registered_keys[DecisionsPlayer::CLICK_CROUCH]=sf::Keyboard::Down;
-    s_registered_keys[DecisionsPlayer::CLICK_SHOOT]=sf::Keyboard::S;
+void EventHandler::SetDefaultRegisteredKeys() {
+    sRegisteredKeys[DecisionsPlayer::ClickJump] = sf::Keyboard::Space;
+    sRegisteredKeys[DecisionsPlayer::ClickLeftRun] = sf::Keyboard::Left;
+    sRegisteredKeys[DecisionsPlayer::ClickRightRun] = sf::Keyboard::Right;
+    sRegisteredKeys[DecisionsPlayer::ClickCrouch] = sf::Keyboard::Down;
+    sRegisteredKeys[DecisionsPlayer::ClickShoot] = sf::Keyboard::S;
 }
 
 ///---------
-void CEventHandler::resetDecisions()
-{
-    for(auto &obj:s_enabled_decisions)obj.second=false;
-    for(auto &obj:s_deactivate_decisions)obj.second=false;
+void EventHandler::ResetDecisions() {
+    for (auto& obj : sEnabledDecisions) obj.second = false;
+    for (auto& obj : sDeactivateDecisions) obj.second = false;
 }
 
 ///------
-void CEventHandler::addEvent(Event event,std::function<void()>action)
-{
-    assert(m_all_events.find(event)==m_all_events.end());
+void EventHandler::AddEvent(Event pEvent, std::function<void()> pAction) {
+    assert(mAllEvents.find(pEvent) == mAllEvents.end());
 
-    m_all_events[event]=action;
+    mAllEvents[pEvent] = pAction;
 }
 
 ///----
-string CEventHandler::convertKeyToString(int key_code)
-{
-    switch(key_code)
-    {
+string EventHandler::ConvertKeyToString(int pKeyCode) {
+    switch (pKeyCode) {
 
         case sf::Keyboard::Space: return "SPACE";
         case sf::Keyboard::Left: return "LEFT ARROW";
@@ -150,6 +133,6 @@ string CEventHandler::convertKeyToString(int key_code)
         case sf::Keyboard::Q: return "Q";
         case sf::Keyboard::V: return "V";
 
-        default:return "";
+        default: return "";
     }
 }

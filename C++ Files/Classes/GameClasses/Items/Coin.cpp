@@ -2,90 +2,92 @@
 #include "../../Scens/GameScen.h"
 #include "../../GUIClasses/FlowText.h"
 
-CAnimations CCoin::s_static_animator;
-int CCoin::s_count_gathered_coins=0;
+#include <memory>
+#include <vector>
 
-CCoin::CCoin(sf::Vector2f pos)
-:CGameObject(new CSprite(CGUI::createSprite("Items",{0,0,14,30},pos,m_scale_to_tile,true)),Parentage::ITEM,pos)
+Animations Coin::sStaticAnimator;
+int Coin::sCountGatheredCoins = 0;
+
+Coin::Coin(sf::Vector2f pPos)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("Items", {0, 0, 14, 30}, pPos, kScaleToTile, true)), Parentage::Item, pPos)
 {
 }
 
 ///-----
-void CCoin::actOnObject(CGameObject* obj,KindCollision kind_collision)
+void Coin::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        actOnMe(KindAction::HIT);
+    if (pObject->GetParentage() == Parentage::Mario)
+        ActOnMe(KindAction::Hit);
 }
 
 ///----
-void CCoin::actOnMe(KindAction which_action)
+void Coin::ActOnMe(KindAction pAction)
 {
-    if(which_action==KindAction::HIT)
+    if (pAction == KindAction::Hit)
     {
-        CAnimations * falling_apart_animation=creatFallingApartCoinAnimation();
-        m_current_position.y-=CScen::s_tile_size/2.0f;
-        falling_apart_animation->setPosition(m_current_position);
+        Animations* fallingApartAnimation = CreateFallingApartCoinAnimation();
+        mCurrentPosition.y -= Scene::sTileSize / 2.0f;
+        fallingApartAnimation->SetPosition(mCurrentPosition);
 
-        CGuiObject* obj=new CSpecialEffects(falling_apart_animation,CSpecialEffects::KindUpdate::ONE_LOOP_ANIMATION,0);
+        GuiObject* obj = new SpecialEffects(fallingApartAnimation, SpecialEffects::KindUpdate::OneLoopAnimation, 0);
 
-        CGUI::addGuiObject(obj);
+        Gui::AddGuiObject(obj);
 
-        CMarioGame::instance().getScen<CGameScen>().addPoints(m_my_value_points);
+        GameScene::AddPoints(mValuePoints);
 
-        CMarioGame::s_sound_manager.play("coin");
+        MarioGame::sSoundManager.play("coin");
 
-        s_count_gathered_coins++;
-        CGUI::setCoinCounter(s_count_gathered_coins);
+        sCountGatheredCoins++;
+        Gui::SetCoinCounter(sCountGatheredCoins);
 
-        removeObject(this);
+        RemoveObject(this);
     }
 }
 
 ///------
-void CCoin::draw(const unique_ptr<sf::RenderWindow>& window)
+void Coin::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    s_static_animator.setPosition(m_current_position);
-    s_static_animator.draw(window);
+    sStaticAnimator.SetPosition(mCurrentPosition);
+    sStaticAnimator.Draw(pWindow);
 }
 
 ///-----
-void CCoin::setStaticAnimation()
+void Coin::SetStaticAnimation()
 {
-    CAnimations *animation=creatFlashingCoinAnimation();
-    s_static_animator=*animation;
-    s_static_animator.play(CAnimations::STANDARD,{0,0});
+    Animations* animation = CreateFlashingCoinAnimation();
+    sStaticAnimator = *animation;
+    sStaticAnimator.Play(Animations::Standard, {0, 0});
 
     delete animation;
 }
 
 ///------
-CAnimations* CCoin::creatFallingApartCoinAnimation()
+Animations* Coin::CreateFallingApartCoinAnimation()
 {
-    CAnimations* animation = new CAnimations();
-    vector<sf::IntRect> m_frames_animation;
+    Animations* animation = new Animations();
+    std::vector<sf::IntRect> framesAnimation;
 
-    m_frames_animation.push_back(sf::IntRect(12,123,15,15));
-    m_frames_animation.push_back(sf::IntRect(44,115,34,33));
-    m_frames_animation.push_back(sf::IntRect(81,115,40,32));
-    m_frames_animation.push_back(sf::IntRect(120,115,42,32));
-    m_frames_animation.push_back(sf::IntRect(161,121,38,24));
+    framesAnimation.push_back(sf::IntRect(12, 123, 15, 15));
+    framesAnimation.push_back(sf::IntRect(44, 115, 34, 33));
+    framesAnimation.push_back(sf::IntRect(81, 115, 40, 32));
+    framesAnimation.push_back(sf::IntRect(120, 115, 42, 32));
+    framesAnimation.push_back(sf::IntRect(161, 121, 38, 24));
 
-    animation->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Items"],m_frames_animation,2.0f,m_scale_to_tile,true);
+    animation->Create(Animations::Standard, MarioGame::sTextureManager["Items"], framesAnimation, 2.0f, kScaleToTile, true);
     return animation;
 }
 
 ///-----
-CAnimations* CCoin::creatFlashingCoinAnimation()
+Animations* Coin::CreateFlashingCoinAnimation()
 {
-    CAnimations *animation=new CAnimations();
-    vector<sf::IntRect> m_frames_animation;
+    Animations* animation = new Animations();
+    std::vector<sf::IntRect> framesAnimation;
 
-    m_frames_animation.push_back(sf::IntRect(9,85,14,30));
-    m_frames_animation.push_back(sf::IntRect(39,85,20,30));
-    m_frames_animation.push_back(sf::IntRect(74,85,14,30));
-    m_frames_animation.push_back(sf::IntRect(110,85,10,30));
+    framesAnimation.push_back(sf::IntRect(9, 85, 14, 30));
+    framesAnimation.push_back(sf::IntRect(39, 85, 20, 30));
+    framesAnimation.push_back(sf::IntRect(74, 85, 14, 30));
+    framesAnimation.push_back(sf::IntRect(110, 85, 10, 30));
 
-    animation->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Items"],m_frames_animation,3.0f,m_scale_to_tile,true);
+    animation->Create(Animations::Standard, MarioGame::sTextureManager["Items"], framesAnimation, 3.0f, kScaleToTile, true);
     return animation;
 }
-

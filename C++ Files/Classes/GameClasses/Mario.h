@@ -3,129 +3,125 @@
 #include "../EventHandler.h"
 #include "Shield.h"
 
-using namespace std;
+#include <map>
+#include <memory>
 
-class CMario: public CPhysicaltObject,public CShield
-{
+class Mario : public PhysicalObject, public Shield {
 
 public:
 
-    enum class LevelMario
-    {
-        SMALL_MARIO,
-        BIG_MARIO
+    enum class LevelMario {
+        SmallMario,
+        BigMario
     };
 
-    CMario(sf::Vector2f);
-    ~CMario();
+    Mario(sf::Vector2f pPos);
+    ~Mario();
 
-    void draw(const unique_ptr<sf::RenderWindow>&) override;
-    void update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) override;
+    void Update() override;
 
-    void actOnObject(CGameObject*,KindCollision)override{}
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override {}
+    void ActOnMe(KindAction pAction) override;
 
-    void changingLvl();
-    void hop(float)override;
+    void ChangingLevel();
+    void Hop(float pForce) override;
 
-    static void createDeathAnimation(const sf::Vector2f&);
+    static void CreateDeathAnimation(const sf::Vector2f& pPos);
 
-    /// GETTERY
-    static CMario::LevelMario getLevelMario(){return s_level_mario;}
-    static short getLivesMario() { return s_lives_mario; }
-    static void resetLivesMario() { s_lives_mario = s_basic_number_lives_mario; }
-    static void resetLvlMario() { s_level_mario = LevelMario::SMALL_MARIO; }
-    
-    float getHowLongChangingLvl()const {return m_changing_lvl_time;}
-    bool iAmCrouching()const {return m_iam_crouching;}
-    bool isInRightReversal()const {return m_right_dir_reversal;}
+    /// Getters
+    static Mario::LevelMario GetLevelMario() { return sLevelMario; }
+    static short GetLivesMario() { return sLivesMario; }
+    static void ResetLivesMario() { sLivesMario = sBasicNumberLivesMario; }
+    static void ResetLevelMario() { sLevelMario = LevelMario::SmallMario; }
 
-    /// SETTERY
-    void setShield();
+    float GetHowLongChangingLevel() const { return mChangingLevelTime; }
+    bool IsCrouching() const { return mIsCrouching; }
+    bool IsInRightReversal() const { return mIsRightDirReversal; }
+
+    /// Setters
+    void SetShield();
 
 private:
 
-    class CBullet:public CPhysicaltObject
-    {
-        float m_range;
+    class Bullet : public PhysicalObject {
+        float mRange;
 
-        const float m_lenght_range=600;
-        const int m_damage_value=100;
+        const float mLengthRange = 600;
+        const int mDamageValue = 100;
 
-        void updateForCollisionWithBlock(KindCollision,CBlock*)override;
+        void UpdateForCollisionWithBlock(KindCollision pCollision, Block* pBlock) override;
 
     public:
 
-        CBullet(sf::Vector2f,bool,bool=false);
-        ~CBullet(){}
+        Bullet(sf::Vector2f pPos, bool pIsRight, bool pIsFast = false);
+        ~Bullet() {}
 
-        void update()override;
+        void Update() override;
 
-        void actOnMe(KindAction)override;
-        void actOnObject(CGameObject*,KindCollision )override;
+        void ActOnMe(KindAction pAction) override;
+        void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
 
     };
 
-    enum MyKindsAnimations
-    {
-        L_LVL_UP,
-        R_LVL_UP,
-        L_LVL_DOWN,
-        R_LVL_DOWN,
-        L_SHOOT,
-        R_SHOOT,
-        L_CROUCH,
-        R_CROUCH
+    enum MyKindsAnimations {
+        LeftLevelUp,
+        RightLevelUp,
+        LeftLevelDown,
+        RightLevelDown,
+        LeftShoot,
+        RightShoot,
+        LeftCrouch,
+        RightCrouch
     };
 
-    static short s_lives_mario;
-    static const short s_basic_number_lives_mario;
+    static short sLivesMario;
+    static const short sBasicNumberLivesMario;
 
-    static LevelMario s_level_mario;
+    static LevelMario sLevelMario;
 
-    bool m_flashing_mario=false;
-    bool m_visible_while_flashing=false;
-    bool m_iam_shooting=false;
-    bool m_iam_crouching=false;
-    bool m_curbing=false;
-    bool m_stop=false;
+    bool mFlashingMario = false;
+    bool mVisibleWhileFlashing = false;
+    bool mIsShooting = false;
+    bool mIsCrouching = false;
+    bool mCurbing = false;
+    bool mStop = false;
 
-    const float m_flashing_iterativity=0.1f;
-    const float m_changing_lvl_time=1.5f;
-    const float m_flashing_time=2.5f;
-    const float m_shooting_iterativity=0.4f;
+    const float mFlashingIterativity = 0.1f;
+    const float mChangingLevelTime = 1.5f;
+    const float mFlashingTime = 2.5f;
+    const float mShootingIterativity = 0.4f;
 
-    const float m_max_speed=5.0f;
-    const float m_movement_animation_speed=0.9f;
+    const float mMaxSpeed = 5.0f;
+    const float mMovementAnimationSpeed = 0.9f;
 
-    float m_shooting_iterativity_timer;
-    float m_flashing_iterativity_timer;
-    float m_changeing_lvl_timer;
-    float m_flashing_timer;
-    
-    float m_horizontal_velocity=0.0f;
+    float mShootingIterativityTimer;
+    float mFlashingIterativityTimer;
+    float mChangingLevelTimer;
+    float mFlashingTimer;
 
-    std::map<CEventHandler::DecisionsPlayer,bool> &m_enabled_decisions;
-    std::map<CEventHandler::DecisionsPlayer,bool> &m_deactivate_decisions;
+    float mHorizontalVelocity = 0.0f;
+
+    std::map<EventHandler::DecisionsPlayer, bool>& mEnabledDecisions;
+    std::map<EventHandler::DecisionsPlayer, bool>& mDeactivateDecisions;
 
     ///----METHODS
-    inline void createBigMarioAnimations();
-    inline void createSmalMarioAnimations();
-    inline bool flashing();
-    inline void collisionWithBoundsMap();
-    inline void handleMarioControll();
-    inline void shoot();
-    inline void crouch();
-    inline void animationUpdtate();
-    inline void remove();
-    inline void setFlashing(float);
-    inline void corectPositionWhenChangingOnBigMario(const sf::FloatRect&);
+    inline void CreateBigMarioAnimations();
+    inline void CreateSmallMarioAnimations();
+    inline bool Flashing();
+    inline void CollisionWithBoundsMap();
+    inline void HandleMarioControl();
+    inline void Shoot();
+    inline void Crouch();
+    inline void AnimationUpdate();
+    inline void Remove();
+    inline void SetFlashing(float pHowLong);
+    inline void CorrectPositionWhenChangingOnBigMario(const sf::FloatRect& pPrevBounds);
 
-    inline void run();
-    inline void curbing();
+    inline void Run();
+    inline void Curbing();
 
-    void falling() override;
-    void jump()override;
-    void updateForCollisionWithBlock(KindCollision,CBlock*)override;
+    void Falling() override;
+    void Jump() override;
+    void UpdateForCollisionWithBlock(KindCollision pCollision, Block* pBlock) override;
 };
-

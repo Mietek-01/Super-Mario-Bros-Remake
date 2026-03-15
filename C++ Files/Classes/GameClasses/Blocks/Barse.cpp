@@ -1,44 +1,44 @@
 #include "../Enemies/Bowser.h"
 
-CBowser::CBarse::CBarse(sf::Vector2f pos,bool active,bool go_up)
-:CStaticBlock({0,0,32,720},pos,"Barse")
-,m_active(active)
-,m_go_up(go_up)
+Bowser::Barse::Barse(sf::Vector2f pPos, bool pActive, bool pGoUp)
+    : StaticBlock({0, 0, 32, 720}, pPos, "Barse")
+    , mActive(pActive)
+    , mGoUp(pGoUp)
 {
-    m_current_position.y+=getBounds().height;
-    m_previous_position=m_current_position;
+    mCurrentPosition.y += GetBounds().height;
+    mPreviousPosition = mCurrentPosition;
 
-    m_animator->setPosition(m_current_position);
+    mAnimator->SetPosition(mCurrentPosition);
 }
 
 ///--------
-void CBowser::CBarse::update()
+void Bowser::Barse::Update()
 {
-    if(m_active)
+    if (mActive)
     {
-        m_previous_position=m_current_position;
+        mPreviousPosition = mCurrentPosition;
 
-        if(m_go_up)
+        if (mGoUp)
         {
-            m_current_position.y-=m_move_speed;
+            mCurrentPosition.y -= mMoveSpeed;
 
-            if(m_current_position.y-getBounds().height<=0)
+            if (mCurrentPosition.y - GetBounds().height <= 0)
             {
-                m_current_position.y=getBounds().height;
-                m_active=false;
+                mCurrentPosition.y = GetBounds().height;
+                mActive = false;
             }
         }
         else
         {
-            m_current_position.y+=m_move_speed;
+            mCurrentPosition.y += mMoveSpeed;
 
-            if(m_current_position.y-getBounds().height>=getBounds().height)
+            if (mCurrentPosition.y - GetBounds().height >= GetBounds().height)
             {
-                m_current_position.y=getBounds().height*2.0f;
-                m_active=false;
+                mCurrentPosition.y = GetBounds().height * 2.0f;
+                mActive = false;
             }
         }
 
-        m_animator->setPosition(m_current_position);
+        mAnimator->SetPosition(mCurrentPosition);
     }
 }

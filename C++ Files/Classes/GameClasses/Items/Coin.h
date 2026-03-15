@@ -1,30 +1,27 @@
 #pragma once
 #include "../GameObject.h"
 
-using namespace std;
+#include <memory>
 
-class CCoin: public CGameObject
-{
-    static CAnimations s_static_animator;
-    static int s_count_gathered_coins;
+class Coin : public GameObject {
+    static Animations sStaticAnimator;
+    static int sCountGatheredCoins;
 
 public:
 
-    CCoin(sf::Vector2f);
-    ~CCoin(){}
+    Coin(sf::Vector2f pPos);
+    ~Coin() {}
 
-    void draw(const unique_ptr<sf::RenderWindow>&) override;
-    void update()override{}
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) override;
+    void Update() override {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
+    void ActOnMe(KindAction pAction) override;
 
-    static void setStaticAnimation();
-    static void updateStaticAnimation(){s_static_animator.update();}
+    static void SetStaticAnimation();
+    static void UpdateStaticAnimation() { sStaticAnimator.Update(); }
 
-    static CAnimations* creatFallingApartCoinAnimation();
-    static CAnimations* creatFlashingCoinAnimation();
-    static void resetCountGatheredCoins(){s_count_gathered_coins=0;}
+    static Animations* CreateFallingApartCoinAnimation();
+    static Animations* CreateFlashingCoinAnimation();
+    static void ResetCountGatheredCoins() { sCountGatheredCoins = 0; }
 };
-
-

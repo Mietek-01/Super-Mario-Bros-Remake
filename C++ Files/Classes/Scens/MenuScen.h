@@ -2,23 +2,20 @@
 
 #include "Scen.h"
 
-using namespace std;
+#include <memory>
 
-class CMenuScen: public CScen
-{
-    static const sf::Vector2f s_pos_my_first_label;
-    static const sf::Vector2f s_pos_menus;
+class MenuScene : public Scene {
+    static const sf::Vector2f sPosMyFirstLabel;
+    static const sf::Vector2f sPosMenus;
 
-    inline void createMenu();
+    inline void CreateMenu();
 
 public:
 
-    CMenuScen();
-    ~CMenuScen();
+    MenuScene();
+    ~MenuScene();
 
-    void draw(const unique_ptr<sf::RenderWindow>& window) override{window->draw(m_background);}
-    void update() override {}
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) override { pWindow->draw(mBackground); }
+    void Update() override {}
 
 };
-
-

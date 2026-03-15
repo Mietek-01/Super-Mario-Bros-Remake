@@ -7,62 +7,58 @@
 #include "GUIObject.h"
 #include <functional>
 
-using namespace std;
+class Gui final {
+    static bool sIsAnyMenuActive;
+    static bool sIsMaintenanceLabel;
+    static bool sIsVisibleMainLabels;
 
-class CGUI final
-{
-    static bool s_is_any_menu_active;
-    static bool s_maintenance_label;
-    static bool s_visible_main_labels;
+    static std::vector<std::unique_ptr<sf::Text>> mMainLabels;
+    static std::vector<std::unique_ptr<Menu>> mMenus;
 
-    static std::vector<unique_ptr<sf::Text>> m_main_labels;
-    static std::vector<unique_ptr<CMenu>> m_menus;
+    /// NOT USING UNIQUE_PTR BECAUSE I NEED CONTROL OVER DELETION
+    static std::vector<GuiObject*> mGuiObjects;
 
-    /// NIE NA UNIQUE_PTR BO MUSZE MIEC KONTROLE NA USUWANIEM
-    static std::vector<CGuiObject*>  m_gui_objects;
-
-    static const unique_ptr<CMenu>& getCurrentMenu();
+    [[nodiscard]] static const std::unique_ptr<Menu>& GetCurrentMenu();
 
 public:
 
-    static const size_t s_basic_size_text;
+    static const size_t sBasicSizeText;
 
-    CGUI();
+    Gui();
 
-    void draw(unique_ptr<sf::RenderWindow>&);
-    void update();
+    void Draw(std::unique_ptr<sf::RenderWindow>&);
+    void Update();
 
-    /// METODY DO OBSLUGI GUIOBJECTS
-    static void resetGuiObjects();
-    static void addGuiObject(CGuiObject* obj){m_gui_objects.push_back(obj);}
+    /// METHODS FOR HANDLING GUIOBJECTS
+    static void ResetGuiObjects();
+    static void AddGuiObject(GuiObject* pObj) { mGuiObjects.push_back(pObj); }
 
-    ///METODY DO OBSLUGI GLOWNYCH ETYKIET
-    static void resetMainLabels();
-    static void moveMainLabels(float);
-    static void setPositionMainLabels(float);
+    ///METHODS FOR HANDLING MAIN LABELS
+    static void ResetMainLabels();
+    static void MoveMainLabels(float);
+    static void SetPositionMainLabels(float);
 
-    static void setTime(int);
-    static void setWorldName(const string &);
-    static void setPoints(int);
-    static void setCoinCounter(int);
-    static void setVisibleMainLables(bool value){s_visible_main_labels=value;}
+    static void SetTime(int);
+    static void SetWorldName(const std::string&);
+    static void SetPoints(int);
+    static void SetCoinCounter(int);
+    static void SetVisibleMainLabels(bool pValue) { sIsVisibleMainLabels = pValue; }
 
-    ///METODY DO OBSLUGI MENU
-    static void handleMenus(int);
-    static void removeCurrentMenu();
-    static void addMenu(CMenu*);
-    static bool isMenuActive(){return s_is_any_menu_active;}
-    static bool isLabelMaintenance(){return s_maintenance_label;}
-    static void setLabelMaintenance(bool value){s_maintenance_label=value;}
-    static void removeAllMenus(){m_menus.clear();s_is_any_menu_active=false;}
+    ///METHODS FOR HANDLING MENU
+    static void HandleMenus(int);
+    static void RemoveCurrentMenu();
+    static void AddMenu(Menu*);
+    [[nodiscard]] static bool IsMenuActive() { return sIsAnyMenuActive; }
+    [[nodiscard]] static bool IsLabelMaintenance() { return sIsMaintenanceLabel; }
+    static void SetLabelMaintenance(bool pValue) { sIsMaintenanceLabel = pValue; }
+    static void RemoveAllMenus() { mMenus.clear(); sIsAnyMenuActive = false; }
 
-    /// METODY POMOCNICZE
-    static sf::Text* createText(string,sf::Vector2f,sf::Color,string="arial",bool=true,size_t=s_basic_size_text);
-    static sf::RectangleShape* createRectangleShape(sf::IntRect,sf::Color,bool,bool=false,sf::Color=sf::Color::White);
-    static sf::Sprite * createSprite(string,sf::IntRect,sf::Vector2f,float,bool);
-    static sf::Sprite * createSprite(string,sf::Vector2f,float,bool);
-    static CMenu * creatAreYouSureMenu(function<void(int)>);
-    static string toString(int);
-    static int rand(const int&,const int&);
+    /// HELPER METHODS
+    static sf::Text* CreateText(std::string, sf::Vector2f, sf::Color, std::string = "arial", bool = true, size_t = sBasicSizeText);
+    static sf::RectangleShape* CreateRectangleShape(sf::IntRect, sf::Color, bool, bool = false, sf::Color = sf::Color::White);
+    static sf::Sprite* CreateSprite(std::string, sf::IntRect, sf::Vector2f, float, bool);
+    static sf::Sprite* CreateSprite(std::string, sf::Vector2f, float, bool);
+    static Menu* CreateAreYouSureMenu(std::function<void(int)>);
+    static std::string ToString(int);
+    static int Rand(const int&, const int&);
 };
-

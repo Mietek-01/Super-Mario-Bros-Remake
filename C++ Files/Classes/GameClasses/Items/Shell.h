@@ -1,19 +1,15 @@
 #pragma once
 #include "../PhysicalObject.h"
 
-class CShell:public CPhysicaltObject
-{
-    bool m_active=false;
+class Shell : public PhysicalObject {
+    bool mActive = false;
+
 public:
-    CShell(sf::Vector2f);
-    ~CShell(){}
+    Shell(sf::Vector2f pPos);
+    ~Shell() {}
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
+    void ActOnMe(KindAction pAction) override;
 
-    void update()override;
-
+    void Update() override;
 };
-
-
-

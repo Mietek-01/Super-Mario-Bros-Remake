@@ -2,67 +2,67 @@
 #include "Block.h"
 #include "../PhysicalObject.h"
 
-class CMysterBox:public CDynamicBlock
+#include <memory>
+
+class MysteryBox : public DynamicBlock
 {
 
-    class CMushroom: public CPhysicaltObject
+    class Mushroom : public PhysicalObject
     {
-        void updateForCollisionWithBlock(KindCollision,CBlock*)override;
+        void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
     public:
 
-        CMushroom(sf::Vector2f);
-        ~CMushroom(){}
+        Mushroom(sf::Vector2f);
+        ~Mushroom() {}
 
-        void actOnObject(CGameObject*,KindCollision)override;
-        void actOnMe(KindAction)override;
+        void ActOnObject(GameObject*, KindCollision) override;
+        void ActOnMe(KindAction) override;
     };
 
-    class CSpecialFlower: public CGameObject
+    class SpecialFlower : public GameObject
     {
     public:
 
-        CSpecialFlower(sf::Vector2f);
-        ~CSpecialFlower(){}
+        SpecialFlower(sf::Vector2f);
+        ~SpecialFlower() {}
 
-        void actOnObject(CGameObject*,KindCollision)override;
-        void actOnMe(KindAction)override;
+        void ActOnObject(GameObject*, KindCollision) override;
+        void ActOnMe(KindAction) override;
 
-        void update()override{};
+        void Update() override {};
     };
 
 public:
 
     enum class MyItem
     {
-        COIN,
-        MUSHROOM,
-        FLOWER
+        Coin,
+        Mushroom,
+        Flower
     };
 
-    CMysterBox(sf::Vector2f,MyItem);
-    ~CMysterBox(){}
+    MysteryBox(sf::Vector2f, MyItem);
+    ~MysteryBox() {}
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&) override;
-    void actOnMe(KindAction)override;
+    void Update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
+    void ActOnMe(KindAction) override;
 
-    static void setStaticAnimation();
-    static void updateStaticAnimation(){s_private_animator.update();}
+    static void SetStaticAnimation();
+    static void UpdateStaticAnimation() { sPrivateAnimator.Update(); }
 
 private:
 
-    const MyItem m_rand_item;
+    const MyItem mRandItem;
 
-    bool m_to_rand=true;
-    bool m_createing_item=false;
-    bool m_draw_question_mark=true;
+    bool mToRand = true;
+    bool mCreatingItem = false;
+    bool mDrawQuestionMark = true;
 
-    const float m_leaving_speed=-0.2f;
+    const float mLeavingSpeed = -0.2f;
 
-    CGameObject* m_my_obj=nullptr;
+    GameObject* mMyObj = nullptr;
 
-    static CAnimations s_private_animator;
+    static Animations sPrivateAnimator;
 };
-
-

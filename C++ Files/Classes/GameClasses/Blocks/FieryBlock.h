@@ -1,38 +1,36 @@
 #pragma once
 #include "Block.h"
 
-class CFieryBlock :public CStaticBlock
+class FieryBlock : public StaticBlock
 {
-    class CFieryLine:public CGameObject
+    class FieryLine : public GameObject
     {
-        const float m_speed=1.8f;
+        const float mSpeed = 1.8f;
 
     public:
 
         enum class Direction
         {
-            LEFT=232,
-            RIGHT=202
+            Left = 232,
+            Right = 202
 
-        }const m_dir;
+        } const mDir;
 
-        CFieryLine(sf::Vector2f,Direction);
-        ~CFieryLine(){}
+        FieryLine(sf::Vector2f, Direction);
+        ~FieryLine() {}
 
-        void update()override;
+        void Update() override;
 
-        void actOnMe(KindAction)override{};
-        void actOnObject(CGameObject*,KindCollision)override;
+        void ActOnMe(KindAction) override {};
+        void ActOnObject(GameObject*, KindCollision) override;
 
-        bool isVisible()const override {return true;}
+        bool IsVisible() const override { return true; }
 
     };
 
 public:
 
-    CFieryBlock(sf::Vector2f,const bool);
-    ~CFieryBlock(){}
+    FieryBlock(sf::Vector2f, const bool);
+    ~FieryBlock() {}
 
 };
-
-

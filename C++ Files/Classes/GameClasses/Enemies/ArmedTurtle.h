@@ -1,79 +1,75 @@
 #pragma once
 #include "../PhysicalObject.h"
 
-using namespace std;
+#include <memory>
+#include <vector>
 
-class CArmedTurtle:public CPhysicaltObject
-{
-    class CHammer:public CGameObject
-    {
-        int m_value_rotate=-8;
+class ArmedTurtle : public PhysicalObject {
+    class Hammer : public GameObject {
+        int mValueRotate = -8;
 
-        bool m_enabled=false;
-        bool m_right_dir_reversal;
+        bool mEnabled = false;
+        bool mIsRightDirReversal;
 
-        float m_horizontal_acceleration=-3.0f;
-        float m_force=-700.0f;
+        float mHorizontalAcceleration = -3.0f;
+        float mForce = -700.0f;
 
     public:
 
-        CHammer(sf::Vector2f,bool);
-        ~CHammer(){}
+        Hammer(sf::Vector2f, bool);
+        ~Hammer() {}
 
-        void actOnObject(CGameObject*,KindCollision)override;
-        void actOnMe(KindAction)override{}
+        void ActOnObject(GameObject*, KindCollision) override;
+        void ActOnMe(KindAction) override {}
 
-        void update()override;
+        void Update() override;
 
-        void setEnabled(bool);
-        void changeReversal(sf::Vector2f);
+        void SetEnabled(bool);
+        void ChangeReversal(sf::Vector2f);
 
-    }* m_my_hammer=nullptr;
+    }* mMyHammer = nullptr;
 
-    enum MyKindsAnimations
-    {
+    enum MyKindsAnimations {
         R_MOVE_WITH_HAMMER,
         L_MOVE_WITH_HAMMER,
         R_MOVE_THROWING_HAMMER,
         L_MOVE_THROWING_HAMMER,
-
     };
 
-    static const float s_length_road;
-    static const float s_correction_pos_hammer;
-    static const float s_force_hop;
+    static const float sLengthRoad;
+    static const float sCorrectionPosHammer;
+    static const float sForceHop;
 
-    const int m_after_what_time_jump;
-    const int m_after_what_time_throw_hammer;
+    const int mAfterWhatTimeJump;
+    const int mAfterWhatTimeThrowHammer;
 
-    float m_when_jump;
-    float m_when_throw_hammer;
-    float m_where_change_direction;
+    float mWhenJump;
+    float mWhenThrowHammer;
+    float mWhereChangeDirection;
 
-    int m_for_which_block_bottom_collision;/// POZWALA NA PRZESKAKIWANIE PRZEZ BLOCKI
+    int mForWhichBlockBottomCollision;
 
-    bool m_can_jump=false;
-    bool m_down_jump=false;
+    bool mCanJump = false;
+    bool mDownJump = false;
 
-    /// METHODS
-    inline void changeLookingDirection();
-    inline void changeMovementDirection();
-    inline bool randKindJump();
-    inline void createHammer();
-    inline void setWhenJump();
+    /// Methods
+    inline void ChangeLookingDirection();
+    inline void ChangeMovementDirection();
+    inline bool RandKindJump();
+    inline void CreateHammer();
+    inline void SetWhenJump();
 
-    void jump()override;
-    void updateForCollisionWithBlock(KindCollision, CBlock*)override;
+    void Jump() override;
+    void UpdateForCollisionWithBlock(KindCollision, Block*) override;
 
 public:
 
-    CArmedTurtle(sf::Vector2f);
-    ~CArmedTurtle(){}
+    ArmedTurtle(sf::Vector2f);
+    ~ArmedTurtle() {}
 
-    void update()override;
-    void draw(const unique_ptr<sf::RenderWindow>&)override;
+    void Update() override;
+    void Draw(const std::unique_ptr<sf::RenderWindow>&) override;
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override;
+    void ActOnObject(GameObject*, KindCollision) override;
+    void ActOnMe(KindAction) override;
 };
-

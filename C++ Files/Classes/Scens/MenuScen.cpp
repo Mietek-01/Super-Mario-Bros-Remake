@@ -4,95 +4,99 @@
 #include "../GameClasses/Mario.h"
 #include "../MarioGame.h"
 
-const sf::Vector2f CMenuScen::s_pos_my_first_label(350,400);
-const sf::Vector2f CMenuScen::s_pos_menus(970,350);
+#include <functional>
+#include <string>
+#include <vector>
+
+const sf::Vector2f MenuScene::sPosMyFirstLabel(350, 400);
+const sf::Vector2f MenuScene::sPosMenus(970, 350);
 
 ///-----
-CMenuScen::~CMenuScen()
+MenuScene::~MenuScene()
 {
-    CGUI::removeAllMenus();
+    Gui::RemoveAllMenus();
 }
 
 ///------
-CMenuScen::CMenuScen():CScen("MenuBackground")
+MenuScene::MenuScene() : Scene("MenuBackground")
 {
-    createMenu();
+    CreateMenu();
 }
 
 ///------
-inline void CMenuScen::createMenu()
+inline void MenuScene::CreateMenu()
 {
-    sf::Text * name;
-    vector<CLabel*> labels;
+    sf::Text* name;
+    std::vector<Label*> labels;
 
     ///-----------------------------START GAME LABEL-------------------------///
 
-    std::function<void(int)> start_game_action=[](int ascii)
+    std::function<void(int)> startGameAction = [](int pAscii)
     {
-        sf::Text * name;
-        const sf::IntRect bounds_menu(CMenuScen::s_pos_menus.x,CMenuScen::s_pos_menus.y,500,500);
+        sf::Text* name;
+        const sf::IntRect boundsMenu(MenuScene::sPosMenus.x, MenuScene::sPosMenus.y, 500, 500);
 
-        const sf::Vector2f pos_label={bounds_menu.left-bounds_menu.width/2.0f+CMenu::s_value_margin,
-                bounds_menu.top-bounds_menu.height/2.0f+CMenu::s_value_margin+10};
+        const sf::Vector2f posLabel = {boundsMenu.left - boundsMenu.width / 2.0f + Menu::sValueMargin,
+                boundsMenu.top - boundsMenu.height / 2.0f + Menu::sValueMargin + 10};
 
-        vector<CLabel*> labels;
+        std::vector<Label*> labels;
 
         /// WORLDS
 
-        size_t index_lvl=0;
+        size_t indexLevel = 0;
 
-        for(auto lvl_name:CMarioGame::instance().getLevelsNames())
+        for (auto levelName : MarioGame::Instance().GetLevelsNames())
         {
-            sf::Color color(250,250,255,100);
+            sf::Color color(250, 250, 255, 100);
 
-            if(index_lvl>CMarioGame::instance().getCompletedLvlsNumber())
-                color=sf::Color(250,250,255,35);
+            if (indexLevel > MarioGame::Instance().GetCompletedLevelsNumber())
+                color = sf::Color(250, 250, 255, 35);
 
-            name=CGUI::createText(lvl_name,{pos_label.x,pos_label.y+CMenu::s_value_margin*(index_lvl+1)},color,"menu_font",false);
+            name = Gui::CreateText(levelName, {posLabel.x, posLabel.y + Menu::sValueMargin * (indexLevel + 1)}, color, "menu_font", false);
 
-            labels.push_back(new CLabel(name,[lvl_name,index_lvl](int ascii)
+            labels.push_back(new Label(name, [levelName, indexLevel](int pAscii)
             {
-                if(index_lvl>CMarioGame::instance().getCompletedLvlsNumber())
+                if (indexLevel > MarioGame::Instance().GetCompletedLevelsNumber())
                     return;
 
-                CMario::resetLivesMario();
-                CGUI::resetMainLabels();
+                Mario::ResetLivesMario();
+                Gui::ResetMainLabels();
 
-                CMarioGame::instance().setIndexLevel(index_lvl);
-                CMarioGame::instance().changeScen(new CLoadingGameScen(lvl_name));
+                MarioGame::Instance().SetIndexLevel(indexLevel);
+                MarioGame::Instance().ChangeScene(new LoadingGameScene(levelName));
             }));
 
-            index_lvl++;
+            indexLevel++;
         }
 
         /// MAIN MENU
 
-        name=CGUI::createText("MAIN MENU",{pos_label.x,bounds_menu.top+bounds_menu.height/2.0f-CMenu::s_value_margin},sf::Color(250,250,255,100),"menu_font",false);
-        labels.push_back(CMenu::createReturnLabel(name));
+        name = Gui::CreateText("MAIN MENU", {posLabel.x, boundsMenu.top + boundsMenu.height / 2.0f - Menu::sValueMargin}, sf::Color(250, 250, 255, 100), "menu_font", false);
+        labels.push_back(Menu::CreateReturnLabel(name));
 
         ///----------///
 
-        sf::RectangleShape* background=CGUI::createRectangleShape(bounds_menu,sf::Color::Black,true,true);
-        CGUI::addMenu(new CMenu(true,labels,background,"SELECT WORLD"));
+        sf::RectangleShape* background = Gui::CreateRectangleShape(boundsMenu, sf::Color::Black, true, true);
+        Gui::AddMenu(new Menu(true, labels, background, "SELECT WORLD"));
     };
 
-    name=CGUI::createText("START GAME",s_pos_my_first_label,sf::Color::Black,"menu_font");
-    labels.push_back(new CLabel(name,start_game_action));
+    name = Gui::CreateText("START GAME", sPosMyFirstLabel, sf::Color::Black, "menu_font");
+    labels.push_back(new Label(name, startGameAction));
 
     ///-----------------------OPTIONS LABEL------------------------------////
 
-    labels.push_back(CMenu::createOptionLabel({s_pos_my_first_label.x,s_pos_my_first_label.y+CMenu::s_value_margin},CMenuScen::s_pos_menus,sf::Color::Black));
+    labels.push_back(Menu::CreateOptionLabel({sPosMyFirstLabel.x, sPosMyFirstLabel.y + Menu::sValueMargin}, MenuScene::sPosMenus, sf::Color::Black));
 
     ///------------------------ABOUT LABEL---------------------------------///
 
-    std::function<void(int)> about_action=[](int ascii)
+    std::function<void(int)> aboutAction = [](int pAscii)
     {
-        const sf::IntRect bounds_menu(CMenuScen::s_pos_menus.x,CMenuScen::s_pos_menus.y,530,500);
+        const sf::IntRect boundsMenu(MenuScene::sPosMenus.x, MenuScene::sPosMenus.y, 530, 500);
 
-        const sf::Vector2f pos_label={bounds_menu.left-bounds_menu.width/2.0f+CMenu::s_value_margin,
-                bounds_menu.top-bounds_menu.height/2.0f+CMenu::s_value_margin};
-        
-        const string my_describe=
+        const sf::Vector2f posLabel = {boundsMenu.left - boundsMenu.width / 2.0f + Menu::sValueMargin,
+                boundsMenu.top - boundsMenu.height / 2.0f + Menu::sValueMargin};
+
+        const std::string myDescribe =
         "HI, I AM MICHAL NIEDEK AND THIS IS\
         \nMY REMAKE OF SUPER MARIO BROS\
         \nGAME WITH A SMALL EXTENSION IN\
@@ -100,32 +104,32 @@ inline void CMenuScen::createMenu()
         \n\nHAVE A NICE GAME!\
         \n\n                                         GOOD LUCK!!!";
 
-        vector<CLabel*> labels;
+        std::vector<Label*> labels;
 
         ///---------///
 
-        sf::Text *name=CGUI::createText("MAIN MENU",{pos_label.x,bounds_menu.top+bounds_menu.height/2.0f-CMenu::s_value_margin},sf::Color(250,250,255,100),"menu_font",false);
-        labels.push_back(CMenu::createReturnLabel(name));
+        sf::Text* name = Gui::CreateText("MAIN MENU", {posLabel.x, boundsMenu.top + boundsMenu.height / 2.0f - Menu::sValueMargin}, sf::Color(250, 250, 255, 100), "menu_font", false);
+        labels.push_back(Menu::CreateReturnLabel(name));
 
-        sf::RectangleShape *background=CGUI::createRectangleShape(bounds_menu,sf::Color::Black,true,true);
-        sf::Text * about_me_text=CGUI::createText(my_describe,sf::Vector2f(pos_label.x-CMenu::s_value_margin*0.5,pos_label.y-CMenu::s_value_margin*0.5),sf::Color::White,"arial",false,30);
+        sf::RectangleShape* background = Gui::CreateRectangleShape(boundsMenu, sf::Color::Black, true, true);
+        sf::Text* aboutMeText = Gui::CreateText(myDescribe, sf::Vector2f(posLabel.x - Menu::sValueMargin * 0.5, posLabel.y - Menu::sValueMargin * 0.5), sf::Color::White, "arial", false, 30);
 
-        CGUI::addMenu(new CMenu(true,labels,background,about_me_text));
+        Gui::AddMenu(new Menu(true, labels, background, aboutMeText));
     };
 
-    name=CGUI::createText("ABOUT",{s_pos_my_first_label.x,s_pos_my_first_label.y+CMenu::s_value_margin*2},sf::Color::Black,"menu_font");
-    labels.push_back(new CLabel(name,about_action));
+    name = Gui::CreateText("ABOUT", {sPosMyFirstLabel.x, sPosMyFirstLabel.y + Menu::sValueMargin * 2}, sf::Color::Black, "menu_font");
+    labels.push_back(new Label(name, aboutAction));
 
     ///------------------------QUIT GAME LABEL---------------------------------///
 
-    std::function<void(int)> quite_game_action=[](int ascii)
+    std::function<void(int)> quitGameAction = [](int pAscii)
     {
-        CGUI::addMenu(CGUI::creatAreYouSureMenu([](int ascii){CMarioGame::instance().getWindow()->close();}));
+        Gui::AddMenu(Gui::CreateAreYouSureMenu([](int pAscii) { MarioGame::Instance().GetWindow()->close(); }));
     };
 
-    name=CGUI::createText("QUITE GAME",{s_pos_my_first_label.x,s_pos_my_first_label.y+CMenu::s_value_margin*3},sf::Color::Black,"menu_font");
-    labels.push_back(new CLabel(name,quite_game_action));
+    name = Gui::CreateText("QUIT GAME", {sPosMyFirstLabel.x, sPosMyFirstLabel.y + Menu::sValueMargin * 3}, sf::Color::Black, "menu_font");
+    labels.push_back(new Label(name, quitGameAction));
 
-    /// DODAJE MENU
-    CGUI::addMenu(new CMenu(true,labels,nullptr,nullptr,string("Menumshr")));
+    /// ADD MENU
+    Gui::AddMenu(new Menu(true, labels, nullptr, nullptr, std::string("Menumshr")));
 }

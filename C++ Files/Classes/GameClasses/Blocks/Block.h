@@ -1,58 +1,50 @@
 #pragma once
 #include "../GameObject.h"
 
-using namespace std;
+#include <string>
 
-class CBlock:public CGameObject
-{
-
+class Block : public GameObject {
 public:
+    Block(const sf::IntRect&, const sf::Vector2f&, const std::string);
+    virtual ~Block() {}
 
-    CBlock(const sf::IntRect&,const sf::Vector2f&,const string);
-    virtual ~CBlock(){}
+    virtual void ActOnObject(GameObject*, KindCollision) override;
 
-    virtual void actOnObject(CGameObject*,KindCollision)override;
-
-    bool isHit()const {return m_hit;}
+    [[nodiscard]] bool IsHit() const { return mIsHit; }
 
 protected:
-
-    bool m_hit=false;
-
+    bool mIsHit = false;
 };
 
 ///-------------///
-class CDynamicBlock :public CBlock
-{
-    static const float s_block_gravitation;
+class DynamicBlock : public Block {
+    static const float sBlockGravitation;
 
-    const float m_basic_y_positon;
-    const float m_jump_force=-300.0f;
+    const float mBasicYPosition;
+    const float mJumpForce = -300.0f;
 
 public:
-    CDynamicBlock(sf::IntRect,sf::Vector2f,string ="Tiles");
-    virtual ~CDynamicBlock(){}
+    DynamicBlock(sf::IntRect, sf::Vector2f, std::string = "Tiles");
+    virtual ~DynamicBlock() {}
 
-    virtual void update()override{if(m_hit)makeJump();}
-    virtual void actOnMe(KindAction)override;
+    virtual void Update() override { if (mIsHit) MakeJump(); }
+    virtual void ActOnMe(KindAction) override;
 
 protected:
+    float mForce;
 
-    float m_force;
-
-    void makeJump();
-    void creatRemoveBlock();
+    void MakeJump();
+    void CreateRemoveBlock();
 };
 
 ///-----------------------------///
-class CStaticBlock:public CBlock
-{
+class StaticBlock : public Block {
 public:
-    CStaticBlock(sf::IntRect bounds,sf::Vector2f pos,string name="Tiles")
-        :CBlock(bounds,pos,name){}
+    StaticBlock(sf::IntRect pBounds, sf::Vector2f pPos, std::string pName = "Tiles")
+        : Block(pBounds, pPos, pName) {}
 
-    virtual ~CStaticBlock(){}
+    virtual ~StaticBlock() {}
 
-    virtual void update()override{}
-    void actOnMe(KindAction)override{}
+    virtual void Update() override {}
+    void ActOnMe(KindAction) override {}
 };

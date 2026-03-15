@@ -1,84 +1,80 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <assert.h>
+#include <cassert>
 #include <map>
 #include <memory>
+#include <vector>
 
-using namespace std;
-
-class CAnimator
-{
+/// Base class providing sprite-based drawing and position management.
+class Animator {
 public:
+    virtual ~Animator() {}
 
-    virtual ~CAnimator(){}
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) { pWindow->draw(*mCurrentFrame); }
+    virtual void Update(const sf::Vector2f& pPosition) = 0;
 
-    void draw(const unique_ptr<sf::RenderWindow>&window){window->draw(*m_current_frame);}
-    virtual void update(const sf::Vector2f& )=0;
+    void SetPosition(const sf::Vector2f& pPosition) { mCurrentFrame->setPosition(pPosition); }
 
-    void setPosition(const sf::Vector2f& pos){m_current_frame->setPosition(pos);}
-
-    sf::FloatRect getGlobalBounds()const {return m_current_frame->getGlobalBounds();}
-    sf::Vector2f getPosition()const {return m_current_frame->getPosition();}
-    sf::Sprite& getSprite()const {assert(m_current_frame);return *m_current_frame;}
+    [[nodiscard]] sf::FloatRect GetGlobalBounds() const { return mCurrentFrame->getGlobalBounds(); }
+    [[nodiscard]] sf::Vector2f GetPosition() const { return mCurrentFrame->getPosition(); }
+    [[nodiscard]] sf::Sprite& GetSprite() const { assert(mCurrentFrame); return *mCurrentFrame; }
 
 protected:
-
-     sf::Sprite * m_current_frame=nullptr;
+    sf::Sprite* mCurrentFrame = nullptr;
 };
 
-///-------------------------------------------------------------///
-class CSprite: public CAnimator
-{
+/// ----------------------------------------------------------- ///
+/// Single-sprite animator with no animation logic.
+class SpriteAnimator : public Animator {
 public:
+    explicit SpriteAnimator(sf::Sprite* pSprite) { mCurrentFrame = pSprite; }
+    ~SpriteAnimator() { delete mCurrentFrame; }
 
-    CSprite(sf::Sprite* sprite){m_current_frame=sprite;}
-    ~CSprite(){delete m_current_frame;}
-
-    void update(const sf::Vector2f& pos)override {m_current_frame->setPosition(pos);}
+    void Update(const sf::Vector2f& pPosition) override { mCurrentFrame->setPosition(pPosition); }
 };
 
-///-------------------------------------------------------------///
-class CAnimations: public CAnimator
-{
-    int m_current_animation=-1;
-    map<int,pair< vector<sf::Sprite>,float> > m_animations;
+/// ----------------------------------------------------------- ///
+/// Multi-frame animator supporting named animation sequences.
+class Animations : public Animator {
+    int mCurrentAnimation = -1;
+    std::map<int, std::pair<std::vector<sf::Sprite>, float>> mAnimations;
 
-    int m_index_frame=0;
-    int m_count_frames=0;
-    float m_current_speed=0;
-    float m_timer=0.0f;
-    bool m_last_frame=false;
+    int mIndexFrame = 0;
+    int mCountFrames = 0;
+    float mCurrentSpeed = 0;
+    float mTimer = 0.0f;
+    bool mIsLastFrame = false;
 
-    inline void setCurrentFrame();
+    inline void SetCurrentFrame();
 
 public:
-
-    enum BasicKindsAnimations
-    {
-        L_MOVE=1000, /// BARDZO WAZNE BO W ENUMACH KLAS POCHODNYCH NIE MOGA ZACZYNAC SIE OD TEGO SAMEGO 0
-        R_MOVE,
-        L_STANDING,
-        R_STANDING,
-        L_JUMP,
-        R_JUMP,
-        STANDARD
+    /// Animation direction/state identifiers.
+    /// Values start at 1000 so derived-class enums can use lower ranges.
+    enum BasicKindsAnimations {
+        LeftMove = 1000,
+        RightMove,
+        LeftStanding,
+        RightStanding,
+        LeftJump,
+        RightJump,
+        Standard
     };
 
-    ~CAnimations(){}
+    ~Animations() {}
 
-	void create(int,const sf::Texture&,const sf::IntRect&,float,bool=true);
-	void create(int,const sf::Texture&,const std::vector<sf::IntRect>&,float,float,bool=true);
+    void Create(int pName, const sf::Texture& pTexture, const sf::IntRect& pRect, float pScale, bool pBottomOrigin = true);
+    void Create(int pName, const sf::Texture& pTexture, const std::vector<sf::IntRect>& pRects, float pSpeed, float pScale, bool pBottomOrigin = true);
 
-    void update(const sf::Vector2f&)override;
-    void update();
+    void Update(const sf::Vector2f& pPosition) override;
+    void Update();
 
-    void play(int,const sf::Vector2f&);
-    void reset(){m_animations.clear();m_current_frame=nullptr;}
+    void Play(int pName, const sf::Vector2f& pPosition);
+    void Reset() { mAnimations.clear(); mCurrentFrame = nullptr; }
 
-    void setSpeed(float);
-    void setIndexFrame(int,const sf::Vector2f&);
+    void SetSpeed(float pNewSpeed);
+    void SetIndexFrame(int pNewIndex, const sf::Vector2f& pPosition);
 
-    int getIndexFrame()const{return m_index_frame;}
-    int getAnimationName()const {return m_current_animation;}
-    bool islastFrame()const {return m_last_frame;}
+    [[nodiscard]] int GetIndexFrame() const { return mIndexFrame; }
+    [[nodiscard]] int GetAnimationName() const { return mCurrentAnimation; }
+    [[nodiscard]] bool IsLastFrame() const { return mIsLastFrame; }
 };

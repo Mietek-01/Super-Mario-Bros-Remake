@@ -1,262 +1,254 @@
 #include "Enemies.h"
 #include "../../Scens/GameScen.h"
-#include <math.h>
 
-///-------------CRedTurtleShall--------------///
+#include <cmath>
+#include <vector>
 
-CCreatorRedTurltes::CRedTurtleShall::CRedTurtleShall(sf::Vector2f pos,bool right_dir)
-:CPhysicaltObject(new CSprite(CGUI::createSprite("Enemies_right",{355,81,26,30},{pos.x,pos.y-1},m_scale_to_tile,true)),Parentage::ITEM,pos,static_cast<CPhysicaltObject::KindMovement>((int)!right_dir))
-,m_basic_y_pos(pos.y)
+///-------------RedTurtleShell--------------///
+
+CreatorRedTurtles::RedTurtleShell::RedTurtleShell(sf::Vector2f pPos, bool pRightDir)
+    : PhysicalObject(new SpriteAnimator(Gui::CreateSprite("Enemies_right", {355, 81, 26, 30}, {pPos.x, pPos.y - 1}, kScaleToTile, true)), Parentage::Item, pPos, static_cast<PhysicalObject::KindMovement>((int)!pRightDir))
+    , mBasicYPos(pPos.y)
 {
-    m_value_acceleration=1;
-    hop(-500);
+    mValueAcceleration = 1;
+    Hop(-500);
 }
 
 ///--------
-void CCreatorRedTurltes::CRedTurtleShall::updateForCollisionWithBlock(KindCollision how_collision,CBlock* block)
+void CreatorRedTurtles::RedTurtleShell::UpdateForCollisionWithBlock(KindCollision pHowCollision, Block* pBlock)
 {
-    if(m_current_position.y<m_basic_y_pos)
+    if (mCurrentPosition.y < mBasicYPos)
         return;
 
-    switch(how_collision)
+    switch (pHowCollision)
     {
-        case KindCollision::BOTTOM:
+    case KindCollision::Bottom:
         {
-            block->actOnObject(this,how_collision);
+            pBlock->ActOnObject(this, pHowCollision);
 
-            m_current_position.y-=0.1f;
-            addNewObject(new CRedTurtle(m_current_position,m_kind_movement));
+            mCurrentPosition.y -= 0.1f;
+            AddNewObject(new RedTurtle(mCurrentPosition, mKindMovement));
 
-            removeObject(this);
+            RemoveObject(this);
             return;
         }
 
-        case KindCollision::NONE:
+    case KindCollision::None:
         {
             return;
         }
-
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pHowCollision);
 }
 
 ///--------
-void CCreatorRedTurltes::CRedTurtleShall::actOnObject(CGameObject* obj,KindCollision how_collision)
+void CreatorRedTurtles::RedTurtleShell::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-      obj->actOnMe(KindAction::HIT);
+    if (pObj->GetParentage() == Parentage::Mario)
+        pObj->ActOnMe(KindAction::Hit);
 }
 
-///-------------CCreatorRedTurltes--------------///
-CCreatorRedTurltes::CCreatorRedTurltes(sf::Vector2f pos)
-:CGameObject(new CAnimations,Parentage::ENEMY,pos,1000)
-,m_acitivation_position(pos)
-,m_leave_position(pos.x+2300)
+///-------------CreatorRedTurtles--------------///
+CreatorRedTurtles::CreatorRedTurtles(sf::Vector2f pPos)
+    : GameObject(new Animations, Parentage::Enemy, pPos, 1000)
+    , mActivationPosition(pPos)
+    , mLeavePosition(pPos.x + 2300)
 {
-    m_animations->create(CAnimations::R_MOVE,CMarioGame::s_texture_manager["Enemies_right"],{448,127,32,49},m_scale_to_tile);
-    m_animations->create(CAnimations::L_MOVE,CMarioGame::s_texture_manager["Enemies_left"],{32,127,32,49},m_scale_to_tile);
-    m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Enemies_right"],{480,143,32,32},m_scale_to_tile);
+    mAnimations->Create(Animations::RightMove, MarioGame::sTextureManager["Enemies_right"], {448, 127, 32, 49}, kScaleToTile);
+    mAnimations->Create(Animations::LeftMove, MarioGame::sTextureManager["Enemies_left"], {32, 127, 32, 49}, kScaleToTile);
+    mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Enemies_right"], {480, 143, 32, 32}, kScaleToTile);
 
-    m_current_position.x-=CMarioGame::s_size_window.x/2.0f+100;
-    m_current_position.y = -500;/// ZAPOBIEGA PRZYJMOWANIA POCISKOW MARIA
-    m_animations->play(CAnimations::R_MOVE,m_current_position);
+    mCurrentPosition.x -= MarioGame::sSizeWindow.x / 2.0f + 100;
+    mCurrentPosition.y = -500;
+    mAnimations->Play(Animations::RightMove, mCurrentPosition);
 
-    setWhenLoadShoot();
+    SetWhenLoadShoot();
 }
 
 ///------
-void CCreatorRedTurltes::update()
+void CreatorRedTurtles::Update()
 {
-    if(!m_enable)
+    if (!mEnable)
     {
-        if(CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x > m_acitivation_position.x)
+        if (MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x > mActivationPosition.x)
         {
-            m_current_position.y = m_acitivation_position.y;
-            m_enable = true;
+            mCurrentPosition.y = mActivationPosition.y;
+            mEnable = true;
         }
-    }else
+    } else
     {
-        shoot();
-        move();
+        Shoot();
+        Move();
     }
 
-    m_animator->update(m_current_position);
+    mAnimator->Update(mCurrentPosition);
 }
 
 ///-----
-void CCreatorRedTurltes::actOnObject(CGameObject* obj,KindCollision how_collision)
+void CreatorRedTurtles::ActOnObject(GameObject* pObj, KindCollision pHowCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        if(how_collision==KindCollision::BOTTOM)
+    if (pObj->GetParentage() == Parentage::Mario)
+        if (pHowCollision == KindCollision::Bottom)
         {
-            corectObjectPositionOnMe(*obj,how_collision);
-            obj->actOnMe(KindAction::HOP);
+            CorrectObjectPositionOnMe(*pObj, pHowCollision);
+            pObj->ActOnMe(KindAction::Hop);
 
-            this->actOnMe(KindAction::HIT);
+            this->ActOnMe(KindAction::Hit);
         }
         else
-            obj->actOnMe(KindAction::HIT);
+            pObj->ActOnMe(KindAction::Hit);
 }
 
 ///-------
-void CCreatorRedTurltes::actOnMe(KindAction how_action)
+void CreatorRedTurtles::ActOnMe(KindAction pHowAction)
 {
-    if(how_action==KindAction::HIT)
-        createBeatsObjSpecialEfect(-100.0f);
+    if (pHowAction == KindAction::Hit)
+        CreateBeatObjectEffect(-100.0f);
 }
 
 ///-----
-inline void CCreatorRedTurltes::shoot()
+inline void CreatorRedTurtles::Shoot()
 {
-    if(m_leave_map&&!m_loading_shoot)return;
+    if (mLeaveMap && !mLoadingShoot) return;
 
-    if(m_when_load_shoot<CScen::getDurationScen())
+    if (mWhenLoadShoot < Scene::GetDurationScene())
     {
-        if(!m_loading_shoot)
+        if (!mLoadingShoot)
         {
-            m_animations->play(CAnimations::STANDARD,m_current_position);
-            m_loading_shoot=true;
-            setWhenShoot();
-
-        }else if(m_when_shoot<CScen::getDurationScen())
+            mAnimations->Play(Animations::Standard, mCurrentPosition);
+            mLoadingShoot = true;
+            SetWhenShoot();
+        } else if (mWhenShoot < Scene::GetDurationScene())
         {
-            m_loading_shoot=false;
-            setWhenLoadShoot();
+            mLoadingShoot = false;
+            SetWhenLoadShoot();
 
-            const bool reversal_to_mario=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x<m_current_position.x;
+            const bool reversalToMario = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x < mCurrentPosition.x;
 
-            addNewObject(new CRedTurtleShall(m_current_position,reversal_to_mario));
+            AddNewObject(new RedTurtleShell(mCurrentPosition, reversalToMario));
 
-            if(reversal_to_mario)
-                m_animations->play(CAnimations::L_MOVE,m_current_position);
+            if (reversalToMario)
+                mAnimations->Play(Animations::LeftMove, mCurrentPosition);
             else
-                m_animations->play(CAnimations::R_MOVE,m_current_position);
+                mAnimations->Play(Animations::RightMove, mCurrentPosition);
         }
-
     }
 }
 
 ///------
-inline void CCreatorRedTurltes::move()
+inline void CreatorRedTurtles::Move()
 {
-    const float mario_position=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x;
+    const float marioPosition = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x;
 
-    if(fabs(m_current_position.x-mario_position)>400)
-        m_double_speed=1.5f;
+    if (fabs(mCurrentPosition.x - marioPosition) > 400)
+        mDoubleSpeed = 1.5f;
     else
-        m_double_speed=1.0f;
+        mDoubleSpeed = 1.0f;
 
-    if(m_right_dir)
+    if (mRightDir)
     {
-        if(m_current_position.x>=m_leave_position&&m_current_position.x<mario_position)
+        if (mCurrentPosition.x >= mLeavePosition && mCurrentPosition.x < marioPosition)
         {
-            m_leave_map=true;
-            m_curbing=true;
+            mLeaveMap = true;
+            mCurbing = true;
         }
 
-        if(!m_curbing)
+        if (!mCurbing)
         {
-            m_speed+=m_value_acceleration;
-            if(m_speed>m_max_speed*m_double_speed)
-                m_speed=m_max_speed*m_double_speed;
+            mSpeed += mValueAcceleration;
+            if (mSpeed > mMaxSpeed * mDoubleSpeed)
+                mSpeed = mMaxSpeed * mDoubleSpeed;
 
-            // CZYLI GDY PRZESCIGNE MARIA
-            if(m_set_changing_dir_pos && mario_position < m_current_position.x)
-                setChangeDirPosition();
+            if (mSetChangingDirPos && marioPosition < mCurrentPosition.x)
+                SetChangeDirPosition();
 
-            // OKRESLAM KIEDY ZACZAC CHAMOWAC
-            if(!m_set_changing_dir_pos && m_current_position.x>m_change_dir_position-m_when_curbing)
-                m_curbing=true;
-        }else
+            if (!mSetChangingDirPos && mCurrentPosition.x > mChangeDirPosition - mWhenCurbing)
+                mCurbing = true;
+        } else
         {
-            m_speed-=m_value_acceleration*0.8;
-            if(m_speed<0)
+            mSpeed -= mValueAcceleration * 0.8;
+            if (mSpeed < 0)
             {
-               changeDirection();
-               m_speed=0.0f;
+                ChangeDirection();
+                mSpeed = 0.0f;
             }
         }
-
-    }else
+    } else
     {
-        if(!m_curbing)
+        if (!mCurbing)
         {
-            m_speed-=m_value_acceleration;
-            if(m_speed<-m_max_speed*m_double_speed)
-                m_speed=-m_max_speed*m_double_speed;
+            mSpeed -= mValueAcceleration;
+            if (mSpeed < -mMaxSpeed * mDoubleSpeed)
+                mSpeed = -mMaxSpeed * mDoubleSpeed;
 
-            if(m_leave_map)
+            if (mLeaveMap)
             {
-                m_current_position.y-=0.5f;
-                if(m_current_position.y<-10)
-                    removeObject(this);
-
-            }else
+                mCurrentPosition.y -= 0.5f;
+                if (mCurrentPosition.y < -10)
+                    RemoveObject(this);
+            } else
             {
-                if(m_set_changing_dir_pos && mario_position > m_current_position.x)
-                    setChangeDirPosition();
+                if (mSetChangingDirPos && marioPosition > mCurrentPosition.x)
+                    SetChangeDirPosition();
 
-                if(!m_set_changing_dir_pos&&m_current_position.x<m_change_dir_position+m_when_curbing)
-                    m_curbing=true;
+                if (!mSetChangingDirPos && mCurrentPosition.x < mChangeDirPosition + mWhenCurbing)
+                    mCurbing = true;
             }
-
-        }else
+        } else
         {
-            m_speed+=m_value_acceleration*0.8;
-            if(m_speed>0)
+            mSpeed += mValueAcceleration * 0.8;
+            if (mSpeed > 0)
             {
-                changeDirection();
-                m_speed=0.0f;
+                ChangeDirection();
+                mSpeed = 0.0f;
             }
         }
     }
 
-    m_current_position.x+=m_speed;
+    mCurrentPosition.x += mSpeed;
 }
 
 ///-------
-inline void CCreatorRedTurltes::setChangeDirPosition()
+inline void CreatorRedTurtles::SetChangeDirPosition()
 {
-    // GDY PRZESCIGNE MARIA
-    m_set_changing_dir_pos=false;
+    mSetChangingDirPos = false;
 
-    if(m_right_dir)
-        m_change_dir_position=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x+m_range;
+    if (mRightDir)
+        mChangeDirPosition = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x + mRange;
     else
-        m_change_dir_position=CMarioGame::instance().getScen<CGameScen>().getMarioPosition().x-m_range;
+        mChangeDirPosition = MarioGame::Instance().GetScene<GameScene>().GetMarioPosition().x - mRange;
 
-    if(!m_loading_shoot)
-    if(m_right_dir)
-        m_animations->play(CAnimations::L_MOVE,m_current_position);
-    else
-        m_animations->play(CAnimations::R_MOVE,m_current_position);
+    if (!mLoadingShoot)
+        if (mRightDir)
+            mAnimations->Play(Animations::LeftMove, mCurrentPosition);
+        else
+            mAnimations->Play(Animations::RightMove, mCurrentPosition);
 }
 
 ///-------
-inline void CCreatorRedTurltes::changeDirection()
+inline void CreatorRedTurtles::ChangeDirection()
 {
-    /// GDY DOJDE DO POZYCJI ZMIANY KIERUNKU
-    m_right_dir=!m_right_dir;
-    m_curbing=false;
-    m_set_changing_dir_pos=true;
+    mRightDir = !mRightDir;
+    mCurbing = false;
+    mSetChangingDirPos = true;
 }
 
 ///-------
-inline void CCreatorRedTurltes::setWhenLoadShoot()
+inline void CreatorRedTurtles::SetWhenLoadShoot()
 {
-    m_when_load_shoot=CScen::getDurationScen()+m_iterativity_loading_shoot;
+    mWhenLoadShoot = Scene::GetDurationScene() + mIterativityLoadingShoot;
 }
 
 ///-------
-inline void CCreatorRedTurltes::setWhenShoot()
+inline void CreatorRedTurtles::SetWhenShoot()
 {
-    m_when_shoot=CScen::getDurationScen()+m_loading_shoot_time;
+    mWhenShoot = Scene::GetDurationScene() + mLoadingShootTime;
 }
 
 ///--------
-void CCreatorRedTurltes::draw(const unique_ptr<sf::RenderWindow>&window)
+void CreatorRedTurtles::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    if(m_enable)
-        m_animator->draw(window);
+    if (mEnable)
+        mAnimator->Draw(pWindow);
 }

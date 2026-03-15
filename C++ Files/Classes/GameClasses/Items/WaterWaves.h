@@ -1,27 +1,22 @@
 #pragma once
 #include "../GameObject.h"
 
-using namespace std;
+#include <memory>
 
-class CWaterWaves: public CGameObject
-{
-    static CAnimations s_static_animator;
+class WaterWaves : public GameObject {
+    static Animations sStaticAnimator;
 
 public:
 
-    CWaterWaves(sf::Vector2f);
-    ~CWaterWaves(){}
+    WaterWaves(sf::Vector2f pPos);
+    ~WaterWaves() {}
 
-    void update()override{};
-    void draw(const unique_ptr<sf::RenderWindow>&)override;
+    void Update() override {}
+    void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow) override;
 
-    void actOnObject(CGameObject* obj,KindCollision how_collision)override{}
-    void actOnMe(KindAction kind_action)override{}
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override {}
+    void ActOnMe(KindAction pAction) override {}
 
-    static void setStaticAnimation();
-    static void updateStaticAnimation(){s_static_animator.update();}
+    static void SetStaticAnimation();
+    static void UpdateStaticAnimation() { sStaticAnimator.Update(); }
 };
-
-
-
-

@@ -3,75 +3,71 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 
-using namespace std;
-
-class CShield
-{
+/// Manages a damageable shield with an associated visual health-bar pointer.
+class Shield {
 protected:
 
-    class CShieldPointer
-    {
+    /// Visual indicator that tracks remaining shield health as a shrinking bar.
+    class ShieldPointer {
 
     public:
 
-        enum class KindsOrigin
-        {
-            LEFT,
-            RIGHT,
-            BOTTOM
+        enum class KindsOrigin {
+            Left,
+            Right,
+            Bottom
         };
 
-        void draw(const unique_ptr<sf::RenderWindow>&,sf::Vector2f);
-        void update();
+        void Draw(const std::unique_ptr<sf::RenderWindow>& pWindow, sf::Vector2f pPos);
+        void Update();
 
-        bool isTheEndShield()const{return m_the_end_shield;}
+        [[nodiscard]] bool IsShieldDepleted() const { return mIsShieldDepleted; }
 
     private:
 
-        static const short s_margin;
+        static const short sMargin;
 
-        const KindsOrigin m_kind_origin;
+        const KindsOrigin mKindOrigin;
 
-        unique_ptr<sf::Sprite> m_sprite;
+        std::unique_ptr<sf::Sprite> mSprite;
 
-        unique_ptr<sf::RectangleShape> m_first_rctg;
-        unique_ptr<sf::RectangleShape> m_second_rctg;
-        unique_ptr<sf::RectangleShape> m_damage_rctg;
+        std::unique_ptr<sf::RectangleShape> mFirstRect;
+        std::unique_ptr<sf::RectangleShape> mSecondRect;
+        std::unique_ptr<sf::RectangleShape> mDamageRect;
 
-        const float m_reduceing_shield_speed = 1.0f;
-        const float m_basic_shield_value;
-        const float m_shield_pointer_lenght;
-        const sf::Color m_color_damage_rctg=sf::Color::White;
+        const float mReducingShieldSpeed = 1.0f;
+        const float mBasicShieldValue;
+        const float mShieldPointerLength;
+        const sf::Color mColorDamageRect = sf::Color::White;
 
-        bool m_the_end_shield=false;
-        float m_extra_speed = 1.0f;
+        bool mIsShieldDepleted = false;
+        float mExtraSpeed = 1.0f;
 
-        ///METHODS
-        friend class CShield;
-        CShieldPointer(sf::RectangleShape*,sf::Color,KindsOrigin,int,sf::Sprite* =nullptr);
+        /// Methods
+        friend class Shield;
+        ShieldPointer(sf::RectangleShape* pFirstRect, sf::Color pColor, KindsOrigin pKindOrigin, int pShieldValue, sf::Sprite* pSprite = nullptr);
 
-        inline void updatePosition(sf::Vector2f);
-        inline void createDamageRectangle(float);
+        inline void UpdatePosition(sf::Vector2f pPos);
+        inline void CreateDamageRectangle(float pLengthDamage);
 
-        void reduceShieldPointer(float);
+        void ReduceShieldPointer(float pDamage);
     };
 
-    unique_ptr<CShieldPointer> m_shield_pointer;
+    std::unique_ptr<ShieldPointer> mShieldPointer;
 
-    void createShieldPointer(sf::RectangleShape*,sf::Color,CShieldPointer::KindsOrigin,sf::Sprite* =nullptr);
-    void reduceShield();
+    void CreateShieldPointer(sf::RectangleShape* pRect, sf::Color pColor, ShieldPointer::KindsOrigin pKindOrigin, sf::Sprite* pSprite = nullptr);
+    void ReduceShield();
 
 private:
 
-    int m_inflicted_damage=0;
-    int m_shield_value;
-    const int m_basic_shield_value;
+    int mInflictedDamage = 0;
+    int mShieldValue;
+    const int mBasicShieldValue;
 
 public:
 
-    CShield(int);
-    void setDamage(int damage){m_inflicted_damage=damage;}
-    int getShieldValue()const {return m_shield_value;}
+    explicit Shield(int pShieldValue);
+    void SetDamage(int pDamage) { mInflictedDamage = pDamage; }
+    [[nodiscard]] int GetShieldValue() const { return mShieldValue; }
 
 };
-

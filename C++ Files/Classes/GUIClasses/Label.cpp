@@ -1,41 +1,43 @@
 #include "Menu.h"
 
-CLabel::CLabel(sf::Text* text,function<void(int)> action)
-:m_basic_color(text->getFillColor())
-,m_my_name(text)
-,m_action(action)
+using namespace std;
+
+Label::Label(sf::Text* pText, function<void(int)> pAction)
+    : mBasicColor(pText->getFillColor())
+    , mName(pText)
+    , mAction(pAction)
 {
 }
 
 ///------
-CLabel::CLabel(sf::Text* text)
-:m_basic_color(text->getFillColor())
-,m_my_name(text)
+Label::Label(sf::Text* pText)
+    : mBasicColor(pText->getFillColor())
+    , mName(pText)
 {
 }
 
 ///------
-sf::Vector2f CLabel::getPosition()const
+sf::Vector2f Label::GetPosition() const
 {
-    return sf::Vector2f(m_my_name->getGlobalBounds().left,m_my_name->getGlobalBounds().top);
+    return sf::Vector2f(mName->getGlobalBounds().left, mName->getGlobalBounds().top);
 }
 
 ///------
-const unique_ptr<sf::RectangleShape>& CLabel::getRectangleShape(int which)const
+const unique_ptr<sf::RectangleShape>& Label::GetRectangleShape(int pWhich) const
 {
-    assert(which>=0&&which<m_rectangle_shape.size());
+    assert(pWhich >= 0 && pWhich < mRectangleShapes.size());
 
-    return m_rectangle_shape[which];
+    return mRectangleShapes[pWhich];
 }
 
 ///------
-void CLabel::draw(const unique_ptr<sf::RenderWindow>&window)
+void Label::Draw(const unique_ptr<sf::RenderWindow>& pWindow)
 {
-    window->draw(*m_my_name);
+    pWindow->draw(*mName);
 
-    if(m_text)
-        window->draw(*m_text);
+    if (mText)
+        pWindow->draw(*mText);
 
-    for(auto &obj:m_rectangle_shape)
-        window->draw(*obj);
+    for (auto& obj : mRectangleShapes)
+        pWindow->draw(*obj);
 }

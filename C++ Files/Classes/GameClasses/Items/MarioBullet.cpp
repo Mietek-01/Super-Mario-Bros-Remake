@@ -2,128 +2,128 @@
 #include "../Shield.h"
 #include "../Enemies/Enemies.h"
 
-CMario::CBullet::CBullet(sf::Vector2f pos,bool right_dir,bool doble_speed)
-:CPhysicaltObject(new CAnimations,Parentage::ITEM,pos)
+#include <vector>
+
+Mario::Bullet::Bullet(sf::Vector2f pPos, bool pIsRight, bool pIsFast)
+    : PhysicalObject(new Animations, Parentage::Item, pPos)
 {
-    m_jump_force=-400.0f;
-    m_range=pos.x;
+    mJumpForce = -400.0f;
+    mRange = pPos.x;
 
-    if(right_dir)
+    if (pIsRight)
     {
-        m_range+=m_lenght_range;
-        m_kind_movement=KindMovement::RIGHT_RUN;
-        m_right_dir_reversal=true;
+        mRange += mLengthRange;
+        mKindMovement = KindMovement::RightRun;
+        mIsRightDirReversal = true;
 
-    }else
+    } else
     {
-        m_range-=m_lenght_range;
-        m_kind_movement=KindMovement::LEFT_RUN;
-        m_right_dir_reversal=false;
+        mRange -= mLengthRange;
+        mKindMovement = KindMovement::LeftRun;
+        mIsRightDirReversal = false;
     }
 
-    if(doble_speed)
+    if (pIsFast)
     {
-        m_value_acceleration=5.0f;
-        m_range*=1.2f;
+        mValueAcceleration = 5.0f;
+        mRange *= 1.2f;
     }
     else
-        m_value_acceleration=3.5f;
+        mValueAcceleration = 3.5f;
 
-    vector<sf::IntRect> m_frame_animation;
-    m_frame_animation.push_back({0,1,16,14});
-    m_frame_animation.push_back({17,0,14,16});
+    std::vector<sf::IntRect> frameAnimation;
+    frameAnimation.push_back({0, 1, 16, 14});
+    frameAnimation.push_back({17, 0, 14, 16});
 
-    m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.3f,m_scale_to_tile);
+    mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.3f, kScaleToTile);
 
-    m_animations->setPosition(m_current_position);
+    mAnimations->SetPosition(mCurrentPosition);
 }
 
 ///----------
-void CMario::CBullet::update()
+void Mario::Bullet::Update()
 {
-    if((m_right_dir_reversal&&m_current_position.x>m_range)||
-       (!m_right_dir_reversal&&m_current_position.x<m_range))
-        removeObject(this);
+    if ((mIsRightDirReversal && mCurrentPosition.x > mRange) ||
+        (!mIsRightDirReversal && mCurrentPosition.x < mRange))
+        RemoveObject(this);
     else
-        CPhysicaltObject::update();
+        PhysicalObject::Update();
 }
 
 ///--------
-void CMario::CBullet::actOnMe(KindAction how_action)
+void Mario::Bullet::ActOnMe(KindAction pAction)
 {
-    if(m_dead)return;
+    if (mIsDead) return;
 
-    if(how_action==KindAction::HIT)
+    if (pAction == KindAction::Hit)
     {
-        CAnimations *hit_animation=new CAnimations;
+        Animations* hitAnimation = new Animations;
 
-        vector<sf::IntRect> m_frame_animation;
-        m_frame_animation.push_back({35,4,8,8});
-        m_frame_animation.push_back({49,1,13,14});
-        m_frame_animation.push_back({62,0,17,16});
+        std::vector<sf::IntRect> frameAnimation;
+        frameAnimation.push_back({35, 4, 8, 8});
+        frameAnimation.push_back({49, 1, 13, 14});
+        frameAnimation.push_back({62, 0, 17, 16});
 
-        hit_animation->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Mario_right"],m_frame_animation,1.5f,m_scale_to_tile);
-        hit_animation->setPosition(m_current_position);
+        hitAnimation->Create(Animations::Standard, MarioGame::sTextureManager["Mario_right"], frameAnimation, 1.5f, kScaleToTile);
+        hitAnimation->SetPosition(mCurrentPosition);
 
-        CGuiObject *obj=new CSpecialEffects(hit_animation,CSpecialEffects::ONE_LOOP_ANIMATION,0.0f);
-        CGUI::addGuiObject(obj);
+        GuiObject* obj = new SpecialEffects(hitAnimation, SpecialEffects::OneLoopAnimation, 0.0f);
+        Gui::AddGuiObject(obj);
 
-        removeObject(this);
+        RemoveObject(this);
     }
 }
 
 ///------------------
-void CMario::CBullet::updateForCollisionWithBlock(KindCollision how_collision,CBlock* block)
+void Mario::Bullet::UpdateForCollisionWithBlock(KindCollision pCollision, Block* pBlock)
 {
-    switch(how_collision)
+    switch (pCollision)
     {
-        case KindCollision::TOP:
+        case KindCollision::Top:
         {
             break;
         }
 
-        case KindCollision::BOTTOM:
+        case KindCollision::Bottom:
         {
-            jump();
+            Jump();
             break;
         }
 
-        case KindCollision::RIGHT_SIDE:
+        case KindCollision::RightSide:
         {
-            this->actOnMe(KindAction::HIT);
+            this->ActOnMe(KindAction::Hit);
             return;
         }
 
-        case KindCollision::LEFT_SIDE:
+        case KindCollision::LeftSide:
         {
-            this->actOnMe(KindAction::HIT);
+            this->ActOnMe(KindAction::Hit);
             return;
         }
 
-        case KindCollision::NONE:
+        case KindCollision::None:
         {
             return;
         }
-
     }
 
-    block->actOnObject(this,how_collision);
+    pBlock->ActOnObject(this, pCollision);
 }
 
 ///----------
-void CMario::CBullet::actOnObject(CGameObject* obj,KindCollision how_collision)
+void Mario::Bullet::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::ENEMY)
+    if (pObject->GetParentage() == Parentage::Enemy)
     {
-        CShield *obj_with_shield=dynamic_cast<CShield* >(obj);
+        Shield* objWithShield = dynamic_cast<Shield*>(pObject);
 
-        if(obj_with_shield)
-            obj_with_shield->setDamage(m_damage_value);
+        if (objWithShield)
+            objWithShield->SetDamage(mDamageValue);
 
-        if(!dynamic_cast<CArmoredTurtle*>(obj))
-            obj->actOnMe(KindAction::HIT);
+        if (!dynamic_cast<ArmoredTurtle*>(pObject))
+            pObject->ActOnMe(KindAction::Hit);
 
-        this->actOnMe(KindAction::HIT);
+        this->ActOnMe(KindAction::Hit);
     }
 }
-

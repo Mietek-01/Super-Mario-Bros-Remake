@@ -3,129 +3,121 @@
 #include <SFML/Audio.hpp>
 #include <map>
 #include <memory>
-#include <assert.h>
+#include <cassert>
+#include <string>
+#include <vector>
+#include <stdexcept>
 
-using namespace std;
-
+// Generic resource manager template for loading and retrieving assets
 template<typename T>
-class ResourceManager
-{
+class ResourceManager {
 public:
-    ResourceManager()=default;
-    ResourceManager(const ResourceManager&)=delete;
-    ResourceManager operator =(const ResourceManager&)=delete;
-    virtual ~ResourceManager(){}
+    ResourceManager() = default;
+    ResourceManager(const ResourceManager&) = delete;
+    ResourceManager operator=(const ResourceManager&) = delete;
+    virtual ~ResourceManager() {}
 
-    virtual void loadFromFile(string ,const string &);
-    const T& operator[](const string &);
-    const T& get(const string&);
+    virtual void LoadFromFile(std::string pName, const std::string& pFilePath);
+
+    [[nodiscard]] const T& operator[](const std::string& pName);
+    [[nodiscard]] const T& Get(const std::string& pName);
 
 protected:
-    map<string ,unique_ptr<T>> m_resources;
-
+    std::map<std::string, std::unique_ptr<T>> mResources;
 };
 
-
-///------
+/// General resource loading (textures, fonts, etc.)
 template<typename T>
-void ResourceManager<T>::loadFromFile(string name,const string &way_to_file)
-{
-    assert(m_resources.find(name)==m_resources.end());
-    m_resources[name]=unique_ptr<T>(new T);
+void ResourceManager<T>::LoadFromFile(std::string pName, const std::string& pFilePath) {
+    assert(mResources.find(pName) == mResources.end());
+    mResources[pName] = std::unique_ptr<T>(new T);
 
-    if(!m_resources[name]->loadFromFile(way_to_file))
-        throw runtime_error(("NIE MOGE ZALADOWAC PLIKU "+way_to_file).c_str());
+    if (!mResources[pName]->loadFromFile(pFilePath)) {
+        throw std::runtime_error(("Cannot load file: " + pFilePath).c_str());
+    }
 }
 
-///------
+/// Specialization for sf::Music which uses openFromFile and loops by default
 template<>
-inline void ResourceManager<sf::Music>::loadFromFile(string name,const string &way_to_file)
-{
-    assert(m_resources.find(name)==m_resources.end());
-    m_resources[name]=unique_ptr<sf::Music>(new sf::Music);
+inline void ResourceManager<sf::Music>::LoadFromFile(std::string pName, const std::string& pFilePath) {
+    assert(mResources.find(pName) == mResources.end());
+    mResources[pName] = std::unique_ptr<sf::Music>(new sf::Music);
 
-    if(!m_resources[name]->openFromFile(way_to_file))
-        throw runtime_error(("NIE MOGE ZALADOWAC PLIKU  "+way_to_file).c_str());
+    if (!mResources[pName]->openFromFile(pFilePath)) {
+        throw std::runtime_error(("Cannot load file: " + pFilePath).c_str());
+    }
 
-    m_resources[name]->setLoop(true);
+    mResources[pName]->setLoop(true);
 }
 
-///------
+/// Subscript operator for resource access by name
 template<typename T>
-const T& ResourceManager<T>:: operator[](const string &name)
-{
-    assert(m_resources.find(name)!=m_resources.end());
-    return (*m_resources[name]);
+const T& ResourceManager<T>::operator[](const std::string& pName) {
+    assert(mResources.find(pName) != mResources.end());
+    return (*mResources[pName]);
 }
 
-///------
+/// Named getter for resource access by name
 template<typename T>
-const T& ResourceManager<T>::get(const string &name)
-{
-    assert(m_resources.find(name)!=m_resources.end());
-    return (*m_resources[name]);
+const T& ResourceManager<T>::Get(const std::string& pName) {
+    assert(mResources.find(pName) != mResources.end());
+    return (*mResources[pName]);
 }
 
-///-------------------///
-using CTextureManager=ResourceManager<sf::Texture>;
-using CFontManager=ResourceManager<sf::Font>;
+// Type aliases for common resource managers
+using TextureManager = ResourceManager<sf::Texture>;
+using FontManager = ResourceManager<sf::Font>;
 
-class CMusicVolumeControler
-{
+// Controls volume level with increment/decrement support
+class MusicVolumeController {
 protected:
-
-    float m_volume=60;
+    float mVolume = 60;
 
 public:
+    [[nodiscard]] float GetVolume() const { return mVolume; }
 
-    float getVolume()const {return m_volume;}
-    void updateVolume(bool is_louder)
-    {
-        if(is_louder)
-        {
-            if(m_volume<100)
-                m_volume+=10;
-        }else
-        {
-            if(m_volume>0)
-                m_volume-=10;
+    void UpdateVolume(bool pIsLouder) {
+        if (pIsLouder) {
+            if (mVolume < 100) {
+                mVolume += 10;
+            }
+        } else {
+            if (mVolume > 0) {
+                mVolume -= 10;
+            }
         }
     }
 };
 
-///----------
-class CMusicManager:public ResourceManager<sf::Music>,public CMusicVolumeControler
-{
-    vector<string> m_played_musics;
+// Manages music playback with a stack of played tracks
+class MusicManager : public ResourceManager<sf::Music>, public MusicVolumeController {
+    std::vector<std::string> mPlayedMusics;
 
-    inline bool isPlayingMusic()const{return m_played_musics.size()!=0;}
-    sf::Music& getCurrentMusic();
-
-public:
-    ~CMusicManager(){}
-
-    void play(string);
-    void pause();
-    void resume();
-    void stop();
-    void updateMusicVolume(bool);
-    void playToDefineVolume();
-    void resetAllMusic();
-};
-
-///-----------
-class CSoundManager:public ResourceManager<sf::SoundBuffer>,public CMusicVolumeControler
-{
-    std::vector<sf::Sound> m_sounds;
+    [[nodiscard]] inline bool IsPlayingMusic() const { return mPlayedMusics.size() != 0; }
+    sf::Music& GetCurrentMusic();
 
 public:
+    ~MusicManager() {}
 
-    CSoundManager():m_sounds(25){}
-    ~CSoundManager(){}
-
-    void play(string);
-    void stop();
-    void pause();
-    void resume();
+    void Play(std::string pName);
+    void Pause();
+    void Resume();
+    void Stop();
+    void UpdateMusicVolume(bool pIsLouder);
+    void PlayToDefineVolume();
+    void ResetAllMusic();
 };
 
+// Manages sound effect playback using a pool of sound instances
+class SoundManager : public ResourceManager<sf::SoundBuffer>, public MusicVolumeController {
+    std::vector<sf::Sound> mSounds;
+
+public:
+    explicit SoundManager() : mSounds(25) {}
+    ~SoundManager() {}
+
+    void Play(std::string pName);
+    void Stop();
+    void Pause();
+    void Resume();
+};

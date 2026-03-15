@@ -1,79 +1,81 @@
 #include "LavaBullet.h"
 #include "../PhysicalObject.h"
 
-const float CLavaBullet::s_my_gravitation=1900;
+#include <vector>
 
-CLavaBullet::CLavaBullet(sf::Vector2f pos)
-:CGameObject(new CAnimations,Parentage::ITEM,{pos.x,pos.y+CScen::s_tile_size+10})
-,m_basic_position(m_current_position)
+const float LavaBullet::sMyGravitation = 1900;
+
+LavaBullet::LavaBullet(sf::Vector2f pPos)
+    : GameObject(new Animations, Parentage::Item, {pPos.x, pPos.y + Scene::sTileSize + 10})
+    , mBasicPosition(mCurrentPosition)
 {
-    vector<sf::IntRect> m_frame_animation;
+    std::vector<sf::IntRect> frameAnimation;
 
-    m_frame_animation.push_back({194,80,28,32});
-    m_frame_animation.push_back({226,80,28,32});
-    m_frame_animation.push_back({258,80,28,32});
+    frameAnimation.push_back({194, 80, 28, 32});
+    frameAnimation.push_back({226, 80, 28, 32});
+    frameAnimation.push_back({258, 80, 28, 32});
 
-    m_animations->create(CAnimations::STANDARD,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.5f,m_scale_to_tile);
-    m_animations->create(MyAnimations::GO_DOWN,CMarioGame::s_texture_manager["Enemies_left"],m_frame_animation,2.5f,m_scale_to_tile);
+    mAnimations->Create(Animations::Standard, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.5f, kScaleToTile);
+    mAnimations->Create(MyAnimations::GoDown, MarioGame::sTextureManager["Enemies_left"], frameAnimation, 2.5f, kScaleToTile);
 
-    m_animations->getSprite().setRotation(180);
-    m_animations->setIndexFrame(1,m_current_position);
+    mAnimations->GetSprite().setRotation(180);
+    mAnimations->SetIndexFrame(1, mCurrentPosition);
 
-    m_animations->getSprite().setRotation(180);
-    m_animations->setIndexFrame(2,m_current_position);
+    mAnimations->GetSprite().setRotation(180);
+    mAnimations->SetIndexFrame(2, mCurrentPosition);
 
-    m_animations->getSprite().setRotation(180);
+    mAnimations->GetSprite().setRotation(180);
 
-    setWhenJump();
+    SetWhenJump();
 }
 
 ///------
-void CLavaBullet::update()
+void LavaBullet::Update()
 {
-    if(m_basic_position.y>m_current_position.y||m_when_jump<CScen::getDurationScen())
-        move();
+    if (mBasicPosition.y > mCurrentPosition.y || mWhenJump < Scene::GetDurationScene())
+        Move();
 
-    m_animator->update(m_current_position);
+    mAnimator->Update(mCurrentPosition);
 }
 
 ///------
-void CLavaBullet::move()
+void LavaBullet::Move()
 {
-    m_previous_position=m_current_position;
+    mPreviousPosition = mCurrentPosition;
 
-    const float vertical_velocity = m_force * CScen::getFrameTime();
+    const float verticalVelocity = mForce * Scene::GetFrameTime();
 
-    m_force+=s_my_gravitation*CScen::getFrameTime();
-    m_current_position.y+=vertical_velocity;
+    mForce += sMyGravitation * Scene::GetFrameTime();
+    mCurrentPosition.y += verticalVelocity;
 
-    if(m_go_up&&vertical_velocity>0)
+    if (mGoUp && verticalVelocity > 0)
     {
-        m_go_up=false;
-        m_current_position.y-=getBounds().height;
-        m_current_position.x-=3;
+        mGoUp = false;
+        mCurrentPosition.y -= GetBounds().height;
+        mCurrentPosition.x -= 3;
 
-        m_animations->play(MyAnimations::GO_DOWN,m_current_position);
+        mAnimations->Play(MyAnimations::GoDown, mCurrentPosition);
     }
 
-    if(!m_go_up&&m_current_position.y>m_basic_position.y)
-        setWhenJump();
+    if (!mGoUp && mCurrentPosition.y > mBasicPosition.y)
+        SetWhenJump();
 }
 
 ///-----
-void CLavaBullet::actOnObject(CGameObject* obj,KindCollision how_collision)
+void LavaBullet::ActOnObject(GameObject* pObject, KindCollision pCollision)
 {
-    if(obj->getParentage()==Parentage::MARIO)
-        obj->actOnMe(KindAction::HIT);
+    if (pObject->GetParentage() == Parentage::Mario)
+        pObject->ActOnMe(KindAction::Hit);
 }
 
 ///------
-void CLavaBullet::setWhenJump()
+void LavaBullet::SetWhenJump()
 {
-    m_when_jump=CScen::getDurationScen()+rand()%3+1;
-    m_force=m_jump_force;
-    m_go_up=true;
+    mWhenJump = Scene::GetDurationScene() + rand() % 3 + 1;
+    mForce = mJumpForce;
+    mGoUp = true;
 
-    m_current_position=m_basic_position;
+    mCurrentPosition = mBasicPosition;
 
-    m_animations->play(CAnimations::STANDARD,m_current_position);
+    mAnimations->Play(Animations::Standard, mCurrentPosition);
 }

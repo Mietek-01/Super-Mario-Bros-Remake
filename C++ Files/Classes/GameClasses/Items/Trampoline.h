@@ -1,33 +1,25 @@
 #pragma once
 #include "../PhysicalObject.h"
 
-using namespace std;
+class Trampoline : public GameObject {
+    const float mSpeed = 1.2f;
+    const int mJumpForce = -1500;
 
-class CTrampoline: public CGameObject
-{
-    const float m_speed=1.2f;
-    const int m_jump_force=-1500;
+    bool mEnabled = false;
 
-    bool m_enable=false;
-
-    enum MyAnimations
-    {
-        TRAMPOLINE_ACTIVATION
+    enum MyAnimations {
+        TrampolineActivation
     };
 
-    inline void activate(CPhysicaltObject*);
+    inline void Activate(PhysicalObject* pObjectOnMe);
 
 public:
 
-    CTrampoline(sf::Vector2f);
-    ~CTrampoline(){}
+    Trampoline(sf::Vector2f pPos);
+    ~Trampoline() {}
 
-    void update()override;
+    void Update() override;
 
-    void actOnObject(CGameObject*,KindCollision)override;
-    void actOnMe(KindAction)override{}
+    void ActOnObject(GameObject* pObject, KindCollision pCollision) override;
+    void ActOnMe(KindAction pAction) override {}
 };
-
-
-
-

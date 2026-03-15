@@ -1,14 +1,15 @@
 #include "Scen.h"
 #include "../MarioGame.h"
 
-///STATICS
+using namespace std;
 
-const size_t CScen::s_tile_size=720/15;/// WYSOKOSC OKNA PRZEZ LICZBE KAFLI W PIONIE
-float CScen::s_duration_scen=0.0f;
-float CScen::s_frame_time=0.0f;
+/// Statics
 
-CScen::CScen(std::string name_bcg)
-{
-    s_duration_scen=0.0f;
-    m_background.setTexture(CMarioGame::s_texture_manager[name_bcg]);
+const size_t Scene::sTileSize = 720 / 15; /// Window height divided by vertical tile count
+float Scene::sDurationScene = 0.0f;
+float Scene::sFrameTime = 0.0f;
+
+Scene::Scene(std::string pNameBackground) {
+    sDurationScene = 0.0f;
+    mBackground.setTexture(MarioGame::sTextureManager[pNameBackground]);
 }

@@ -1,30 +1,30 @@
 #include "WaterWaves.h"
 
-CAnimations CWaterWaves::s_static_animator;
+#include <vector>
 
-CWaterWaves::CWaterWaves(sf::Vector2f pos)
-:CGameObject(new CSprite(CGUI::createSprite("Tiles",{0,0,32,32},pos,m_scale_to_tile,true)),Parentage::ITEM,pos)
+Animations WaterWaves::sStaticAnimator;
+
+WaterWaves::WaterWaves(sf::Vector2f pPos)
+    : GameObject(new SpriteAnimator(Gui::CreateSprite("Tiles", {0, 0, 32, 32}, pPos, kScaleToTile, true)), Parentage::Item, pPos)
 {
-
 }
 
 ///-----
-void CWaterWaves::setStaticAnimation()
+void WaterWaves::SetStaticAnimation()
 {
-    vector<sf::IntRect> m_frames_animation;
+    std::vector<sf::IntRect> framesAnimation;
 
-    m_frames_animation.push_back(sf::IntRect(0,32,32,32));
-    m_frames_animation.push_back(sf::IntRect(32,32,32,32));
-    m_frames_animation.push_back(sf::IntRect(64,32,32,32));
-    m_frames_animation.push_back(sf::IntRect(96,32,32,32));
+    framesAnimation.push_back(sf::IntRect(0, 32, 32, 32));
+    framesAnimation.push_back(sf::IntRect(32, 32, 32, 32));
+    framesAnimation.push_back(sf::IntRect(64, 32, 32, 32));
+    framesAnimation.push_back(sf::IntRect(96, 32, 32, 32));
 
-    s_static_animator.create(CAnimations::STANDARD,CMarioGame::s_texture_manager["AnimTiles"],m_frames_animation,2.0f,m_scale_to_tile,true);
+    sStaticAnimator.Create(Animations::Standard, MarioGame::sTextureManager["AnimTiles"], framesAnimation, 2.0f, kScaleToTile, true);
 }
 
 ///------
-void CWaterWaves::draw(const unique_ptr<sf::RenderWindow>& window)
+void WaterWaves::Draw(const std::unique_ptr<sf::RenderWindow>& pWindow)
 {
-    s_static_animator.setPosition(m_current_position);
-    s_static_animator.draw(window);
+    sStaticAnimator.SetPosition(mCurrentPosition);
+    sStaticAnimator.Draw(pWindow);
 }
-
